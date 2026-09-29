@@ -47,6 +47,8 @@ bin/lagunitas lab recuperar Nodo_Kika
 
 - [Guía de implementación](docs/guia-implementacion.md): instalación en laboratorio y en producción paso a paso.
 - [Manual de administración](docs/manual-administracion.md): operación diaria, alarmas, altas/bajas de equipos, backups y resolución de problemas.
+- Versiones Word de ambas: `docs/*.docx`. Se regeneran desde el Markdown con
+  `.venv/bin/pip install -r requirements-docs.txt` y `scripts/md2docx.py <origen.md> <destino.docx>`.
 - `docs/referencia/`: informe de la PPS, diagramas y documentos de la versión anterior.
 
 ## Estructura

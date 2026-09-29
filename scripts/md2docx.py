@@ -1,0 +1,186 @@
+#!/usr/bin/env python3
+"""Convierte la documentación Markdown del proyecto a Word (.docx).
+
+Uso:   .venv/bin/pip install python-docx
+       .venv/bin/python scripts/md2docx.py docs/guia-implementacion.md "docs/Guia de implementacion.docx"
+
+Soporta lo que usan las guías: títulos, párrafos con **negrita**, `código` y
+[enlaces](url), listas (con viñetas, numeradas y de verificación), tablas,
+bloques de código, citas y separadores.
+"""
+from __future__ import annotations
+
+import re
+import sys
+from pathlib import Path
+
+from docx import Document
+from docx.enum.table import WD_TABLE_ALIGNMENT
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
+from docx.shared import Cm, Pt, RGBColor
+
+AZUL = RGBColor(0x1F, 0x3A, 0x5F)
+GRIS = RGBColor(0x55, 0x5F, 0x66)
+INLINE = re.compile(r"(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|<[^>]+>|\*[^*]+\*)")
+
+
+def _sombrear(elemento, color: str) -> None:
+    shd = OxmlElement("w:shd")
+    shd.set(qn("w:val"), "clear")
+    shd.set(qn("w:color"), "auto")
+    shd.set(qn("w:fill"), color)
+    elemento.append(shd)
+
+
+def _inline(parrafo, texto: str) -> None:
+    for parte in INLINE.split(texto):
+        if not parte:
+            continue
+        if parte.startswith("**") and parte.endswith("**"):
+            parrafo.add_run(parte[2:-2]).bold = True
+        elif parte.startswith("`") and parte.endswith("`"):
+            r = parrafo.add_run(parte[1:-1])
+            r.font.name = "Consolas"
+            r.font.size = Pt(9)
+            r.font.color.rgb = RGBColor(0x8A, 0x1C, 0x3A)
+        elif parte.startswith("[") and "](" in parte:
+            txt, url = re.match(r"\[([^\]]+)\]\(([^)]+)\)", parte).groups()
+            r = parrafo.add_run(txt)
+            r.font.color.rgb = RGBColor(0x0A, 0x72, 0xB8)
+            r.underline = True
+            if url.startswith("http"):
+                parrafo.add_run(f" ({url})").font.color.rgb = GRIS
+        elif parte.startswith("<") and parte.endswith(">") and parte[1:5] == "http":
+            parrafo.add_run(parte[1:-1]).font.color.rgb = RGBColor(0x0A, 0x72, 0xB8)
+        elif parte.startswith("*") and parte.endswith("*") and len(parte) > 2:
+            parrafo.add_run(parte[1:-1]).italic = True
+        else:
+            parrafo.add_run(parte)
+
+
+def _tabla(doc, filas: list[list[str]]) -> None:
+    encabezado, datos = filas[0], [f for f in filas[1:] if not all(re.fullmatch(r":?-{3,}:?", c) for c in f)]
+    t = doc.add_table(rows=1, cols=len(encabezado))
+    t.style = "Table Grid"
+    t.alignment = WD_TABLE_ALIGNMENT.CENTER
+    for i, c in enumerate(encabezado):
+        celda = t.rows[0].cells[i]
+        celda.text = ""
+        _inline(celda.paragraphs[0], c)
+        for r in celda.paragraphs[0].runs:
+            r.bold = True
+            r.font.color.rgb = RGBColor(0xFF, 0xFF, 0xFF)
+        _sombrear(celda._tc.get_or_add_tcPr(), "1F3A5F")
+    for fila in datos:
+        celdas = t.add_row().cells
+        for i, c in enumerate(fila[:len(encabezado)]):
+            celdas[i].text = ""
+            _inline(celdas[i].paragraphs[0], c)
+    for fila in t.rows:
+        for celda in fila.cells:
+            for p in celda.paragraphs:
+                p.paragraph_format.space_after = Pt(2)
+                for r in p.runs:
+                    r.font.size = Pt(9)
+    doc.add_paragraph()
+
+
+def _codigo(doc, lineas: list[str]) -> None:
+    p = doc.add_paragraph()
+    p.paragraph_format.left_indent = Cm(0.3)
+    p.paragraph_format.space_after = Pt(8)
+    _sombrear(p._p.get_or_add_pPr(), "F2F4F6")
+    r = p.add_run("\n".join(lineas))
+    r.font.name = "Consolas"
+    r._element.rPr.rFonts.set(qn("w:eastAsia"), "Consolas")
+    r.font.size = Pt(8.5)
+
+
+def convertir(origen: Path, destino: Path) -> None:
+    doc = Document()
+    estilo = doc.styles["Normal"]
+    estilo.font.name = "Calibri"
+    estilo.font.size = Pt(10.5)
+    for s in doc.sections:
+        s.left_margin = s.right_margin = Cm(2.2)
+        s.top_margin = s.bottom_margin = Cm(2)
+    for nivel, tam in ((1, 20), (2, 15), (3, 12.5)):
+        h = doc.styles[f"Heading {nivel}"]
+        h.font.name = "Calibri"
+        h.font.size = Pt(tam)
+        h.font.color.rgb = AZUL
+
+    lineas = origen.read_text(encoding="utf-8").splitlines()
+    i = 0
+    while i < len(lineas):
+        linea = lineas[i]
+        if linea.startswith("```"):
+            bloque = []
+            i += 1
+            while i < len(lineas) and not lineas[i].startswith("```"):
+                bloque.append(lineas[i])
+                i += 1
+            _codigo(doc, bloque)
+        elif linea.startswith("|"):
+            filas = []
+            while i < len(lineas) and lineas[i].startswith("|"):
+                filas.append([c.strip() for c in lineas[i].strip().strip("|").split("|")])
+                i += 1
+            _tabla(doc, filas)
+            continue
+        elif m := re.match(r"^(#{1,4})\s+(.*)", linea):
+            nivel = len(m.group(1))
+            h = doc.add_heading(level=min(nivel, 3))
+            _inline(h, m.group(2))
+            if nivel == 1:
+                h.alignment = WD_ALIGN_PARAGRAPH.LEFT
+        elif re.match(r"^\s*-{3,}\s*$", linea):
+            p = doc.add_paragraph()
+            borde = OxmlElement("w:pBdr")
+            abajo = OxmlElement("w:bottom")
+            for k, v in (("w:val", "single"), ("w:sz", "6"), ("w:space", "1"), ("w:color", "C8CFD5")):
+                abajo.set(qn(k), v)
+            borde.append(abajo)
+            p._p.get_or_add_pPr().append(borde)
+        elif m := re.match(r"^(\s*)- \[( |x)\]\s+(.*)", linea):
+            p = doc.add_paragraph()
+            p.paragraph_format.left_indent = Cm(0.6)
+            p.add_run("☐ " if m.group(2) == " " else "☑ ")
+            _inline(p, m.group(3))
+        elif m := re.match(r"^(\s*)[-*]\s+(.*)", linea):
+            p = doc.add_paragraph(style="List Bullet" if not m.group(1) else "List Bullet 2")
+            _inline(p, m.group(2))
+        elif m := re.match(r"^(\s*)\d+\.\s+(.*)", linea):
+            p = doc.add_paragraph(style="List Number")
+            _inline(p, m.group(2))
+        elif linea.startswith(">"):
+            texto = []
+            while i < len(lineas) and lineas[i].startswith(">"):
+                texto.append(lineas[i].lstrip("> ").rstrip())
+                i += 1
+            p = doc.add_paragraph()
+            p.paragraph_format.left_indent = Cm(0.5)
+            _sombrear(p._p.get_or_add_pPr(), "FFF6E0")
+            _inline(p, " ".join(texto))
+            continue
+        elif linea.strip():
+            texto = [linea.strip()]
+            while (i + 1 < len(lineas) and lineas[i + 1].strip()
+                   and not re.match(r"^(#|```|\||\s*[-*]\s|\s*\d+\.\s|>|\s*-{3,}\s*$)", lineas[i + 1])):
+                i += 1
+                texto.append(lineas[i].strip())
+            _inline(doc.add_paragraph(), " ".join(texto))
+        i += 1
+
+    doc.core_properties.title = origen.stem
+    doc.core_properties.author = "Elías Coranti — PPS UNRC"
+    doc.save(destino)
+    print(f"  {destino}")
+
+
+if __name__ == "__main__":
+    if len(sys.argv) != 3:
+        sys.exit(__doc__)
+    convertir(Path(sys.argv[1]), Path(sys.argv[2]))
