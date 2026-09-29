@@ -2,11 +2,14 @@
 """Convierte la documentación Markdown del proyecto a Word (.docx).
 
 Uso:   .venv/bin/pip install python-docx
-       .venv/bin/python scripts/md2docx.py docs/guia-implementacion.md "docs/Guia de implementacion.docx"
+       .venv/bin/python scripts/md2docx.py [--portada docs/plantilla/portada-unrc.docx] \
+           docs/guia-implementacion.md "docs/Guia de implementacion.docx"
 
 Soporta lo que usan las guías: títulos, párrafos con **negrita**, `código` y
-[enlaces](url), listas (con viñetas, numeradas y de verificación), tablas,
-bloques de código, citas y separadores.
+[enlaces](url), listas (con viñetas, numeradas y de verificación, con líneas de
+continuación y bloques de código indentados), tablas, imágenes, bloques de
+código, citas y separadores. Con --portada, el documento parte de esa plantilla
+(portada institucional) y el contenido empieza en una página nueva.
 """
 from __future__ import annotations
 
@@ -16,13 +19,15 @@ from pathlib import Path
 
 from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
-from docx.enum.text import WD_ALIGN_PARAGRAPH
+from docx.enum.text import WD_ALIGN_PARAGRAPH, WD_BREAK
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.shared import Cm, Pt, RGBColor
 
 AZUL = RGBColor(0x1F, 0x3A, 0x5F)
 GRIS = RGBColor(0x55, 0x5F, 0x66)
+TAM_TITULO = {1: 20, 2: 15, 3: 12.5}
+MARCA_LISTA = re.compile(r"^(\s*)(- \[( |x)\]\s+|[-*]\s+|(\d+)\.\s+)(.*)")
 INLINE = re.compile(r"(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|<[^>]+>|\*[^*]+\*)")
 
 
@@ -98,31 +103,76 @@ def _codigo(doc, lineas: list[str]) -> None:
     r.font.size = Pt(8.5)
 
 
-def convertir(origen: Path, destino: Path) -> None:
-    doc = Document()
+def _imagen(doc, alt: str, ruta: Path) -> None:
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.add_run().add_picture(str(ruta), width=Cm(16))
+    if alt:
+        c = doc.add_paragraph()
+        c.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        r = c.add_run(alt)
+        r.italic = True
+        r.font.size = Pt(9)
+        r.font.color.rgb = GRIS
+
+
+def _item(doc, sangria: str, marca: str, check: str | None, numero: str | None, texto: str) -> None:
+    nivel = 1 if len(sangria) >= 2 else 0
+    if check is not None or numero is not None:
+        # Numeración literal: "List Number" de Word no reinicia entre listas.
+        p = doc.add_paragraph()
+        p.paragraph_format.left_indent = Cm(0.9 + 0.6 * nivel)
+        p.paragraph_format.first_line_indent = Cm(-0.6)
+        p.paragraph_format.space_after = Pt(3)
+        p.add_run(("☐" if check == " " else "☑") if check is not None else f"{numero}.")
+        p.add_run("\t")
+        p.paragraph_format.tab_stops.add_tab_stop(Cm(0.9 + 0.6 * nivel))
+    else:
+        p = doc.add_paragraph(style="List Bullet 2" if nivel else "List Bullet")
+    _inline(p, texto)
+
+
+def _titulo(doc, nivel: int, texto: str) -> None:
+    h = doc.add_heading(level=min(nivel, 3))
+    _inline(h, texto)
+    # Formato directo (no de estilo) para no alterar los títulos de la portada.
+    for r in h.runs:
+        r.font.name = "Calibri"
+        r.font.size = Pt(TAM_TITULO[min(nivel, 3)])
+        r.font.color.rgb = AZUL
+    h.alignment = WD_ALIGN_PARAGRAPH.LEFT
+
+
+def convertir(origen: Path, destino: Path, portada: Path | None = None) -> None:
+    doc = Document(str(portada)) if portada else Document()
     estilo = doc.styles["Normal"]
-    estilo.font.name = "Calibri"
-    estilo.font.size = Pt(10.5)
-    for s in doc.sections:
-        s.left_margin = s.right_margin = Cm(2.2)
-        s.top_margin = s.bottom_margin = Cm(2)
-    for nivel, tam in ((1, 20), (2, 15), (3, 12.5)):
-        h = doc.styles[f"Heading {nivel}"]
-        h.font.name = "Calibri"
-        h.font.size = Pt(tam)
-        h.font.color.rgb = AZUL
+    if portada:
+        doc.add_paragraph().add_run().add_break(WD_BREAK.PAGE)
+        # Word recalcula el índice (campo TOC de la plantilla) al abrir el documento.
+        actualizar = OxmlElement("w:updateFields")
+        actualizar.set(qn("w:val"), "true")
+        doc.settings.element.append(actualizar)
+    else:
+        estilo.font.name = "Calibri"
+        estilo.font.size = Pt(10.5)
+        for s in doc.sections:
+            s.left_margin = s.right_margin = Cm(2.2)
+            s.top_margin = s.bottom_margin = Cm(2)
 
     lineas = origen.read_text(encoding="utf-8").splitlines()
     i = 0
     while i < len(lineas):
         linea = lineas[i]
-        if linea.startswith("```"):
+        if linea.lstrip().startswith("```"):
+            sangria = len(linea) - len(linea.lstrip())
             bloque = []
             i += 1
-            while i < len(lineas) and not lineas[i].startswith("```"):
-                bloque.append(lineas[i])
+            while i < len(lineas) and not lineas[i].lstrip().startswith("```"):
+                bloque.append(lineas[i][sangria:] if lineas[i][:sangria].isspace() else lineas[i].lstrip())
                 i += 1
             _codigo(doc, bloque)
+        elif m := re.match(r"^!\[([^\]]*)\]\(([^)]+)\)\s*$", linea):
+            _imagen(doc, m.group(1), origen.parent / m.group(2))
         elif linea.startswith("|"):
             filas = []
             while i < len(lineas) and lineas[i].startswith("|"):
@@ -131,11 +181,7 @@ def convertir(origen: Path, destino: Path) -> None:
             _tabla(doc, filas)
             continue
         elif m := re.match(r"^(#{1,4})\s+(.*)", linea):
-            nivel = len(m.group(1))
-            h = doc.add_heading(level=min(nivel, 3))
-            _inline(h, m.group(2))
-            if nivel == 1:
-                h.alignment = WD_ALIGN_PARAGRAPH.LEFT
+            _titulo(doc, len(m.group(1)), m.group(2))
         elif re.match(r"^\s*-{3,}\s*$", linea):
             p = doc.add_paragraph()
             borde = OxmlElement("w:pBdr")
@@ -144,17 +190,15 @@ def convertir(origen: Path, destino: Path) -> None:
                 abajo.set(qn(k), v)
             borde.append(abajo)
             p._p.get_or_add_pPr().append(borde)
-        elif m := re.match(r"^(\s*)- \[( |x)\]\s+(.*)", linea):
-            p = doc.add_paragraph()
-            p.paragraph_format.left_indent = Cm(0.6)
-            p.add_run("☐ " if m.group(2) == " " else "☑ ")
-            _inline(p, m.group(3))
-        elif m := re.match(r"^(\s*)[-*]\s+(.*)", linea):
-            p = doc.add_paragraph(style="List Bullet" if not m.group(1) else "List Bullet 2")
-            _inline(p, m.group(2))
-        elif m := re.match(r"^(\s*)\d+\.\s+(.*)", linea):
-            p = doc.add_paragraph(style="List Number")
-            _inline(p, m.group(2))
+        elif m := MARCA_LISTA.match(linea):
+            texto = [m.group(5).strip()]
+            # Líneas de continuación: indentadas, sin marca de lista ni bloque de código.
+            while (i + 1 < len(lineas) and lineas[i + 1][:1].isspace() and lineas[i + 1].strip()
+                   and not MARCA_LISTA.match(lineas[i + 1])
+                   and not lineas[i + 1].lstrip().startswith(("```", "|", ">"))):
+                i += 1
+                texto.append(lineas[i].strip())
+            _item(doc, m.group(1), m.group(2), m.group(3), m.group(4), " ".join(texto))
         elif linea.startswith(">"):
             texto = []
             while i < len(lineas) and lineas[i].startswith(">"):
@@ -168,7 +212,7 @@ def convertir(origen: Path, destino: Path) -> None:
         elif linea.strip():
             texto = [linea.strip()]
             while (i + 1 < len(lineas) and lineas[i + 1].strip()
-                   and not re.match(r"^(#|```|\||\s*[-*]\s|\s*\d+\.\s|>|\s*-{3,}\s*$)", lineas[i + 1])):
+                   and not re.match(r"^(#|\s*```|\||!\[|\s*[-*]\s|\s*\d+\.\s|>|\s*-{3,}\s*$)", lineas[i + 1])):
                 i += 1
                 texto.append(lineas[i].strip())
             _inline(doc.add_paragraph(), " ".join(texto))
@@ -181,6 +225,10 @@ def convertir(origen: Path, destino: Path) -> None:
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    args = sys.argv[1:]
+    portada = None
+    if args[:1] == ["--portada"] and len(args) > 1:
+        portada, args = Path(args[1]), args[2:]
+    if len(args) != 2:
         sys.exit(__doc__)
-    convertir(Path(sys.argv[1]), Path(sys.argv[2]))
+    convertir(Path(args[0]), Path(args[1]), portada)

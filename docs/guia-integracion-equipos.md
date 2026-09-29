@@ -1,4 +1,4 @@
-# Guía de integración de equipos — Red Las Lagunitas
+# Guía de integración de equipos
 
 **Versión 2.2** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
 
@@ -10,7 +10,7 @@ en el inventario y cómo verificar que Zabbix obtiene todos sus datos. Complemen
 
 ---
 
-## 1. Flujo de integración (resumen)
+## Flujo de integración (resumen)
 
 Para **cada equipo** se sigue el mismo circuito:
 
@@ -21,11 +21,11 @@ Para **cada equipo** se sigue el mismo circuito:
 4. **Cargar en el inventario** (`config/inventory.produccion.yaml`) y validar:
    `bin/lagunitas -i config/inventory.produccion.yaml validar`.
 5. **Aprovisionar**: `bin/lagunitas aprovisionar`.
-6. **Verificar** en Zabbix (§10) y registrar la integración (fecha, responsable, observaciones).
+6. **Verificar** en Zabbix (ver *Verificación después de integrar*) y registrar la integración (fecha, responsable, observaciones).
 
 ---
 
-## 2. Qué se monitorea según el tipo de equipo
+## Qué se monitorea según el tipo de equipo
 
 | Tipo de equipo | Perfiles | Métricas principales | Pestañas en el detalle |
 |---|---|---|---|
@@ -40,7 +40,7 @@ red** (con su *Detalle técnico*) y en el SLA.
 
 ---
 
-## 3. Relevamiento y convenciones
+## Relevamiento y convenciones
 
 Para cada sitio (torre, nodo, hogar) completar una planilla con **todos los equipos que tienen IP**:
 
@@ -62,9 +62,9 @@ Zabbix como macro secreta.
 
 ---
 
-## 4. Ubiquiti airMAX (airOS 6 / airOS 8)
+## Ubiquiti airMAX (airOS 6 / airOS 8)
 
-### 4.1 Habilitar SNMP en el equipo
+### Habilitar SNMP en el equipo
 
 1. Entrar a la interfaz web del equipo: `https://<IP del equipo>`.
 2. Ir a la pestaña **Services** (ícono de engranaje en airOS 8).
@@ -81,7 +81,7 @@ Zabbix como macro secreta.
 > airOS no permite limitar SNMP por IP de origen en todas las versiones: restringir el acceso a
 > UDP/161 desde el firewall del Mikrotik y usar una comunidad no trivial.
 
-### 4.2 Probar desde el servidor
+### Probar desde el servidor
 
 ```bash
 bin/lagunitas probar-snmp 192.168.88.51
@@ -94,9 +94,9 @@ señal, ruido, CCQ, calidad y capacidad airMAX, y la línea
 - En equipos con **airOS 6** (serie M, por ejemplo NanoStation Loco M5) la **CPU** y la
   **temperatura** (`ubntHost*`) pueden aparecer con `✘`: el resto de las métricas funciona. En Zabbix
   esos dos ítems quedarán como *no soportados*; se pueden deshabilitar en ese host.
-- Si todo sale con `✘` o `Timeout`: ver §13.
+- Si todo sale con `✘` o `Timeout`: ver *Problemas frecuentes al integrar*.
 
-### 4.3 Cargar en el inventario
+### Cargar en el inventario
 
 Equipo principal del sitio:
 
@@ -124,7 +124,7 @@ Equipo principal del sitio:
 Si la Escuela recibe la señal del AP de Mesada, su `padre` debe ser `Mesada_AP_Escuela` (así, si
 cae ese AP, la Escuela queda "Sin servicio" y la alerta es una sola).
 
-### 4.4 Qué datos se obtienen y cómo leerlos
+### Qué datos se obtienen y cómo leerlos
 
 | Métrica | Buena | Aceptable | Mala | Qué indica |
 |---|---|---|---|---|
@@ -137,7 +137,7 @@ cae ese AP, la Escuela queda "Sin servicio" y la alerta es una sola).
 | Tasas TX/RX | según modelo | | | Modulación negociada (no es tráfico real) |
 | Estaciones asociadas | ≥ 1 en un AP | | 0 en un AP | Clientes conectados al AP |
 
-### 4.5 Alertas y umbrales (macros)
+### Alertas y umbrales (macros)
 
 | Alerta | Condición por defecto | Severidad | Macro para ajustar |
 |---|---|---|---|
@@ -164,9 +164,9 @@ umbral **solo para ese equipo** en el inventario, sin tocar el template:
 
 ---
 
-## 5. Router Mikrotik (RouterOS 6 / 7)
+## Router Mikrotik (RouterOS 6 / 7)
 
-### 5.1 Habilitar SNMP (terminal / Winbox → New Terminal)
+### Habilitar SNMP (terminal / Winbox → New Terminal)
 
 ```
 /system identity set name=Gateway_Mikrotik
@@ -180,7 +180,7 @@ umbral **solo para ese equipo** en el inventario, sin tocar el template:
 En Winbox: **IP → SNMP** (habilitar, *Communities* → agregar) y **IP → Firewall** (reglas).
 La comunidad por defecto `public` queda deshabilitada.
 
-### 5.2 Probar y cargar
+### Probar y cargar
 
 ```bash
 bin/lagunitas probar-snmp 192.168.88.1
@@ -200,7 +200,7 @@ inventario usar `perfiles: [icmp, mikrotik_snmp]`, `funcion: router` y el modelo
       "{$MIKROTIK.WAN.IFNAME}": "^ether1$"
 ```
 
-### 5.3 Alertas y umbrales
+### Alertas y umbrales
 
 | Alerta | Condición por defecto | Severidad | Macro |
 |---|---|---|---|
@@ -216,7 +216,7 @@ Referencia de batería VRLA 12 V (en reposo): 12,7 V ≈ 100 %, 12,4 V ≈ 75 %,
 
 ---
 
-## 6. Routers airCube (hogares)
+## Routers airCube (hogares)
 
 El airCube no ofrece SNMP ni una API documentada: se monitorea solo por **ICMP**.
 
@@ -239,7 +239,7 @@ Si el router del hogar está caído pero la radio responde, el problema es del l
 
 ---
 
-## 7. Access points UniFi (API de UniFi Network)
+## Access points UniFi (API de UniFi Network)
 
 1. En **UniFi Network**: *Settings → Control Plane → Integrations → Create API Key*. Guardarla en
    `.env` como `UNIFI_API_KEY` (se carga en Zabbix como macro secreta).
@@ -289,7 +289,7 @@ y memoria altas, reintentos altos por banda, reinicio y cambio de firmware.
 
 ---
 
-## 8. Otros equipos
+## Otros equipos
 
 - **Switches, cámaras, servidores, sensores con IP**: agregarlos con `perfiles: [icmp]`.
 - **Equipos con SNMP estándar** (switches administrables, UPS): se puede vincular a mano un template
@@ -298,7 +298,7 @@ y memoria altas, reintentos altos por banda, reinicio y cambio de firmware.
 
 ---
 
-## 9. Energía de los nodos solares
+## Energía de los nodos solares
 
 Los controladores de carga **Epever LS-E** instalados no tienen puerto de comunicación, por lo que
 Zabbix no puede leer la batería directamente. Alternativas, en orden de costo:
@@ -313,7 +313,7 @@ Zabbix no puede leer la batería directamente. Alternativas, en orden de costo:
 
 ---
 
-## 10. Verificación después de integrar
+## Verificación después de integrar
 
 - [ ] `bin/lagunitas verificar`: el equipo figura y no tiene ítems no soportados inesperados.
 - [ ] *Monitoring → Latest data* (filtrar por el equipo): los ítems tienen valores recientes.
@@ -328,7 +328,7 @@ Zabbix no puede leer la batería directamente. Alternativas, en orden de costo:
 
 ---
 
-## 11. Referencia de OIDs utilizados
+## Referencia de OIDs utilizados
 
 | Dato | OID | MIB |
 |---|---|---|
@@ -346,17 +346,17 @@ Zabbix no puede leer la batería directamente. Alternativas, en orden de costo:
 
 ---
 
-## 12. Problemas frecuentes al integrar
+## Problemas frecuentes al integrar
 
 | Síntoma | Causa probable | Solución |
 |---|---|---|
-| `probar-snmp`: *Timeout* | SNMP deshabilitado, comunidad distinta, firewall o ruta | Revisar §4.1/§5.1; probar ping; revisar reglas UDP/161 del Mikrotik y de la VPN |
+| `probar-snmp`: *Timeout* | SNMP deshabilitado, comunidad distinta, firewall o ruta | Revisar la habilitación de SNMP en el equipo; probar ping; revisar reglas UDP/161 del Mikrotik y de la VPN |
 | Solo `sysName`/`uptime` responden | El equipo no es airMAX ni Mikrotik | Integrarlo solo con `[icmp]` |
 | CPU/temperatura airMAX *no soportados* | airOS 6 (serie M) no expone `ubntHost` | Normal: deshabilitar esos dos ítems en el host |
-| Voltaje Mikrotik *no soportado* | Modelo sin sensor | Normal; considerar §9 |
+| Voltaje Mikrotik *no soportado* | Modelo sin sensor | Normal; ver *Energía de los nodos solares* |
 | Sin "enlace a Internet" descubierto | La WAN no se llama `pppoe-outN` | Ajustar `{$MIKROTIK.WAN.IFNAME}` |
 | Estaciones no aparecen | El descubrimiento corre cada 10 min | Esperar o *Execute now* en la regla de descubrimiento |
-| UniFi: *controlador no accesible* | IP o puerto del controlador cambiaron | `lsof` en el controlador (§7) y corregir `{$UNIFI.HOST}` / `{$UNIFI.PORT}` |
+| UniFi: *controlador no accesible* | IP o puerto del controlador cambiaron | `lsof` en el controlador (ver *Access points UniFi*) y corregir `{$UNIFI.HOST}` / `{$UNIFI.PORT}` |
 | UniFi: HTTP 401 | API key inválida o revocada | Crear una nueva y actualizar `UNIFI_API_KEY`; `aprovisionar --solo hosts` |
 | UniFi: HTTP 404 | Site o device ID incorrectos | `bin/lagunitas unifi-ids` |
 | Alerta duplicada "sin datos SNMP" + "sin respuesta" | — | No ocurre: "sin datos SNMP" depende de la caída ICMP del mismo equipo |

@@ -1,4 +1,4 @@
-# Guía de implementación — Monitoreo de la Red Las Lagunitas
+# Guía de implementación
 
 **Versión 2.2** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas (Alpa Corral, Córdoba)
 
@@ -12,7 +12,11 @@ Toda la configuración de Zabbix se genera automáticamente desde el **inventari
 
 ---
 
-## 1. Arquitectura
+## Arquitectura
+
+![Arquitectura del entorno de producción](img/arquitectura-produccion.png)
+
+Componentes del servidor de monitoreo:
 
 ```
                          ┌──────────────── Servidor de monitoreo ────────────────┐
@@ -28,7 +32,9 @@ Toda la configuración de Zabbix se genera automáticamente desde el **inventari
 
 | Componente | Descripción |
 |---|---|
-| Servidor | Linux (Ubuntu Server LTS) en el nodo UNRC, con alimentación estable |
+| Servidor | Linux (Ubuntu Server LTS) en una VM o contenedor LXC de Proxmox VE en la Cooperativa de Alpa Corral, con alimentación estable |
+| Administración remota | VPN L2TP/IPsec terminada en el Mikrotik de la red |
+| Respaldo | Backup diario comprimido (base + configuración) copiado a almacenamiento en la nube (Backblaze B2 / Google Drive) |
 | Stack | `deploy/produccion/docker-compose.yml`: MySQL, Zabbix server, frontend, agente y Caddy (HTTPS) |
 | Acceso web | `https://<ZBX_DOMAIN>` |
 | Equipos | Equipos reales de la red, alcanzados por ruteo o VPN desde el servidor |
@@ -54,7 +60,7 @@ contabiliza en la *disponibilidad del servicio*.
 
 ---
 
-## 2. Requisitos
+## Requisitos
 
 ### Servidor
 
@@ -63,7 +69,7 @@ contabiliza en la *disponibilidad del servicio*.
 | CPU | 2 vCPU | 4 vCPU |
 | RAM | 4 GB | 8 GB |
 | Disco | 40 GB SSD | 80 GB SSD (historial 90 días, tendencias 1 año) |
-| SO | Ubuntu Server 22.04/24.04 LTS | |
+| SO | Ubuntu Server 22.04/24.04 LTS (VM o LXC en Proxmox VE) | |
 | Energía | Con UPS | UPS + arranque automático de servicios |
 
 Software: Docker Engine 24+ con el plugin Compose v2, Git y Python 3.10+ (`python3-venv`).
@@ -75,13 +81,13 @@ Software: Docker Engine 24+ con el plugin Compose v2, Git y Python 3.10+ (`pytho
 - **SNMP v2c (UDP/161)** permitido desde la IP del servidor hacia los equipos airMAX y Mikrotik.
 - Para APs UniFi: acceso HTTPS al controlador UniFi (puerto de la API de integración).
 - Puertos entrantes al servidor: **443/TCP** y **80/TCP** (frontend y certificado).
-  **10051/TCP** solo si se usa un Zabbix proxy remoto (§3.11).
+  **10051/TCP** solo si se usa un Zabbix proxy remoto (ver *Zabbix proxy en Las Lagunitas*).
 
 ---
 
-## 3. Instalación
+## Instalación
 
-### 3.1 Preparar el servidor
+### Preparar el servidor
 
 ```bash
 sudo apt update && sudo apt install -y ca-certificates curl git python3-venv
@@ -92,7 +98,7 @@ sudo timedatectl set-timezone America/Argentina/Cordoba
 sudo ufw allow OpenSSH && sudo ufw allow 443/tcp && sudo ufw allow 80/tcp && sudo ufw enable
 ```
 
-### 3.2 Obtener el proyecto y configurar secretos
+### Obtener el proyecto y configurar secretos
 
 ```bash
 sudo mkdir -p /opt/zabbix-lagunitas && sudo chown $USER /opt/zabbix-lagunitas
@@ -110,14 +116,16 @@ cp .env.example .env
   - `LAGUNITAS_INVENTORY=config/inventory.produccion.yaml`
   - `SNMP_COMMUNITY` (comunidad SNMP de los equipos; no usar `public`)
   - `UNIFI_API_KEY` si hay APs UniFi
-  - `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` para notificaciones (§3.9)
+  - `TELEGRAM_BOT_TOKEN` / `TELEGRAM_CHAT_ID` para notificaciones (ver *Notificaciones por Telegram*)
   - con `CADDY_TLS=internal`, agregar `ZABBIX_VERIFY_TLS=false` (certificado propio)
+
+Permisos de los archivos de secretos:
 
 ```bash
 chmod 600 .env deploy/produccion/.env
 ```
 
-### 3.3 Levantar el stack
+### Levantar el stack
 
 ```bash
 cd /opt/zabbix-lagunitas/deploy/produccion
@@ -127,7 +135,7 @@ docker compose ps          # los 5 servicios en "running" / "healthy"
 
 La primera vez MySQL tarda 1–2 minutos en crear el esquema.
 
-### 3.4 Primer acceso y endurecimiento
+### Primer acceso y endurecimiento
 
 1. Entrar a `https://<ZBX_DOMAIN>` con el usuario `Admin` y la contraseña por defecto de Zabbix
    (`zabbix`) y **cambiarla de inmediato** (*User settings → Profile → Change password*).
@@ -136,7 +144,7 @@ La primera vez MySQL tarda 1–2 minutos en crear el esquema.
    como `ZABBIX_API_TOKEN` y dejar vacíos `ZABBIX_USER` y `ZABBIX_PASSWORD`.
 3. *Administration → General → GUI*: zona horaria por defecto `America/Argentina/Cordoba`.
 
-### 3.5 Preparar los equipos de la red
+### Preparar los equipos de la red
 
 Cada equipo debe responder ping desde el servidor y, según su tipo, tener SNMP habilitado o una
 API key creada. El paso a paso por tipo de equipo (radios airMAX, Mikrotik, airCube, UniFi) está
@@ -149,7 +157,7 @@ bin/lagunitas probar-snmp <IP_EQUIPO>          # radios airMAX y Mikrotik
 bin/lagunitas unifi-ids <IP_CONTROLADOR> <PUERTO>   # APs UniFi
 ```
 
-### 3.6 Completar el inventario
+### Completar el inventario
 
 `config/inventory.produccion.yaml` contiene la topología relevada en campo (gateway, 4 torres,
 9 nodos, hogares e instituciones). Para cada elemento completar:
@@ -172,7 +180,7 @@ Validar el archivo sin tocar Zabbix:
 bin/lagunitas validar
 ```
 
-### 3.7 Aprovisionar
+### Aprovisionar
 
 ```bash
 bin/lagunitas aprovisionar
@@ -196,7 +204,7 @@ El proceso es **idempotente**: puede ejecutarse las veces que haga falta; actual
 sin duplicar. Los cambios hechos a mano en Zabbix sobre estos objetos se pisan en el siguiente
 aprovisionamiento: toda modificación permanente se hace en el inventario o en el código.
 
-### 3.8 Verificar
+### Verificar
 
 ```bash
 bin/lagunitas verificar
@@ -214,7 +222,7 @@ Lista hosts faltantes, ítems no soportados y problemas abiertos. En el frontend
 - [ ] Prueba de alarma controlada: desconectar (o bloquear el ping de) un equipo de borde y
       confirmar la alerta y su recuperación.
 
-### 3.9 Notificaciones por Telegram
+### Notificaciones por Telegram
 
 1. Crear un bot con **@BotFather** (`/newbot`) y copiar el token.
 2. Agregar el bot a un grupo de operadores y obtener el `chat_id` (por ejemplo con
@@ -226,7 +234,7 @@ Lista hosts faltantes, ítems no soportados y problemas abiertos. En el frontend
 La acción *Las Lagunitas - Notificar caídas* avisa problemas de severidad **Average o mayor**,
 envía un recordatorio a los 30 minutos si siguen abiertos y avisa la recuperación.
 
-### 3.10 Backups
+### Backups
 
 ```bash
 COMPOSE_DIR=/opt/zabbix-lagunitas/deploy/produccion /opt/zabbix-lagunitas/scripts/backup.sh /var/backups/zabbix
@@ -238,12 +246,19 @@ Programarlo diariamente con `crontab -e`:
 0 3 * * * COMPOSE_DIR=/opt/zabbix-lagunitas/deploy/produccion /opt/zabbix-lagunitas/scripts/backup.sh /var/backups/zabbix >> /var/log/zabbix-backup.log 2>&1
 ```
 
-Copiar periódicamente `/var/backups/zabbix` fuera del servidor. Restauración:
+Copiar los respaldos **fuera del servidor**, por ejemplo con [rclone](https://rclone.org) hacia
+Backblaze B2 o Google Drive (configurar el destino una vez con `rclone config`):
+
+```
+30 3 * * * rclone sync /var/backups/zabbix remoto-backup:zabbix-lagunitas >> /var/log/zabbix-backup.log 2>&1
+```
+
+Restauración:
 `COMPOSE_DIR=/opt/zabbix-lagunitas/deploy/produccion scripts/restore.sh <archivo>`.
 
-### 3.11 (Opcional) Zabbix proxy en Las Lagunitas
+### (Opcional) Zabbix proxy en Las Lagunitas
 
-Si el enlace entre el servidor (UNRC) y la red comunitaria es inestable, instalar un **Zabbix
+Si el enlace entre el servidor y la red comunitaria es inestable, instalar un **Zabbix
 proxy** dentro de la red (por ejemplo en una Raspberry Pi junto al Mikrotik). El proxy hace los
 chequeos localmente y guarda los datos si se corta el enlace, reenviándolos al volver. En ese
 caso los hosts se asignan al proxy (*Monitored by proxy*) y el servidor debe aceptar conexiones
@@ -251,7 +266,7 @@ en 10051/TCP.
 
 ---
 
-## 4. Checklist de puesta en producción
+## Checklist de puesta en producción
 
 - [ ] Contraseña de `Admin` cambiada; provisionador con API token.
 - [ ] `.env` y `deploy/produccion/.env` con permisos 600; secretos fuera del repositorio.
@@ -261,12 +276,13 @@ en 10051/TCP.
 - [ ] Todos los equipos operativos "En línea"; sin ítems no soportados inesperados.
 - [ ] Prueba de caída y recuperación realizada y documentada.
 - [ ] Notificaciones probadas (Telegram o email).
-- [ ] Backup diario programado y **una restauración de prueba** realizada.
+- [ ] Backup diario programado, copia fuera del servidor (nube) y **una restauración de prueba** realizada.
+- [ ] Acceso remoto de administración por la VPN L2TP/IPsec del Mikrotik verificado.
 - [ ] Servidor con UPS y Docker habilitado al arranque.
 
 ---
 
-## 5. Decisiones de diseño
+## Decisiones de diseño
 
 - **Configuración como código.** Evita configuraciones manuales imposibles de reproducir: el
   inventario YAML describe la red y el provisionador la refleja en Zabbix.
@@ -283,7 +299,7 @@ en 10051/TCP.
 
 ---
 
-## 6. Referencia del CLI
+## Referencia del CLI
 
 ```
 bin/lagunitas aprovisionar [--solo PASO ...]      # crea/actualiza la configuración en Zabbix

@@ -1,4 +1,4 @@
-# Manual de administración — Monitoreo de la Red Las Lagunitas
+# Manual de administración
 
 **Versión 2.2** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
 
@@ -9,7 +9,7 @@ equipos en la [Guía de integración de equipos](guia-integracion-equipos.md).
 
 ---
 
-## 1. Conceptos clave
+## Conceptos clave
 
 | Concepto | Significado |
 |---|---|
@@ -36,7 +36,7 @@ equipos en la [Guía de integración de equipos](guia-integracion-equipos.md).
 
 ---
 
-## 2. Acceso
+## Acceso
 
 Frontend: `https://<ZBX_DOMAIN>` (nombre definido en la instalación).
 
@@ -47,12 +47,20 @@ grupo *Operadores Las Lagunitas*, rol *User role*; en la pestaña *Media* cargar
 
 ---
 
-## 3. Uso diario: el Centro de monitoreo
+## Uso diario: el Centro de monitoreo
 
-*Dashboards → Las Lagunitas - Centro de monitoreo*. Tiene cinco páginas (pestañas inferiores);
+*Dashboards → Las Lagunitas - Centro de monitoreo*. Tiene cinco páginas: *Estado de la red*, *Equipos*, *Detalle por equipo*, *AP UniFi* y *SLA*;
 con **Start slideshow** rotan automáticamente, útil para una pantalla fija.
 
-### 3.1 Página "Equipos" (widget Red Las Lagunitas)
+### Página "Estado de la red"
+
+- **Panal de equipos**: un hexágono por equipo monitoreado, verde o rojo.
+- **Problemas por severidad** y **Alertas activas** en tiempo real.
+- **Mapa de topología**: mismas convenciones que el esquema de campo (línea sólida = operativo,
+  discontinua = en proceso, punteada = sin configurar). Un tramo se pinta **rojo y grueso**
+  cuando cae el equipo del extremo. Clic en un equipo → *Detalle del equipo* o *Problemas*.
+
+### Página "Equipos" (widget Red Las Lagunitas)
 
 - **Tarjetas superiores**: Total · En línea · Advertencias · Caídos · Sin servicio · Sin datos ·
   No monitoreados. Un clic en una tarjeta filtra la tabla.
@@ -82,25 +90,17 @@ Significado de los estados:
 |---|---|---|
 | **En línea** | Responde y sin problemas. | — |
 | **Advertencia** | Responde, pero con pérdida o latencia altas (u otra advertencia). | Revisar calidad del enlace. |
-| **Caído** | No responde y su trigger de caída está activo. | Atender (ver §4). |
+| **Caído** | No responde y su trigger de caída está activo. | Atender (ver *Alarmas*). |
 | **Sin servicio** | No responde porque cayó un equipo del que depende (se indica cuál). | Atender la causa raíz, no este equipo. |
-| **Sin datos** | Zabbix no recibe valores hace más de 5 min (item con error o chequeo detenido). | Ver §9. |
+| **Sin datos** | Zabbix no recibe valores hace más de 5 min (item con error o chequeo detenido). | Ver *Resolución de problemas*. |
 | **No monitoreado** | Tramo en proceso / sin configurar, o equipo en mantenimiento. | — |
 
-### 3.2 Página "Estado de la red"
-
-- **Panal de equipos**: un hexágono por equipo monitoreado, verde o rojo.
-- **Problemas por severidad** y **Alertas activas** en tiempo real.
-- **Mapa de topología**: mismas convenciones que el esquema de campo (línea sólida = operativo,
-  discontinua = en proceso, punteada = sin configurar). Un tramo se pinta **rojo y grueso**
-  cuando cae el equipo del extremo. Clic en un equipo → *Detalle del equipo* o *Problemas*.
-
-### 3.3 Página "Detalle por equipo"
+### Página "Detalle por equipo"
 
 Navegador de equipos agrupado por rol: al elegir uno, todos los widgets de la página (estado,
 disponibilidad 24 h / 7 d, latencia, gráficos y problemas) muestran ese equipo.
 
-### 3.4 Páginas "AP UniFi" y "SLA"
+### Páginas "AP UniFi" y "SLA"
 
 - *AP UniFi*: CPU, memoria, clientes, reintentos, tráfico del uplink y estado del controlador.
 - *SLA*: cumplimiento mensual por equipo (servicio) y ranking de disponibilidad de 7 días.
@@ -110,9 +110,9 @@ generado por el template.
 
 ---
 
-## 4. Alarmas
+## Alarmas
 
-### 4.1 Triggers configurados
+### Triggers configurados
 
 **Template Lagunitas - Disponibilidad ICMP** (todos los equipos de la red):
 
@@ -137,7 +137,7 @@ generado por el template.
 Las advertencias dependen del trigger de caída del mismo equipo, y el trigger de caída de cada
 equipo depende del de su padre: **una caída troncal genera una sola alerta**.
 
-### 4.2 Qué hacer ante una caída
+### Qué hacer ante una caída
 
 1. Abrir el equipo en la página *Equipos* → pestaña *Dependencias* para ver el impacto.
 2. Revisar si otros equipos del mismo tramo están "Sin servicio" (confirma que el problema es de
@@ -149,30 +149,30 @@ equipo depende del de su padre: **una caída troncal genera una sola alerta**.
    (queda en el historial del problema).
 5. Al volver el equipo, el problema se cierra solo (recuperación automática).
 
-### 4.3 Mantenimientos programados
+### Mantenimientos programados
 
 Antes de trabajar en una torre (cambio de batería, realineación), crear un mantenimiento para no
 generar alertas: *Data collection → Maintenance → Create maintenance period*, elegir los hosts
 (la torre y, si corresponde, los equipos que dependen de ella) y el horario. Durante el
 mantenimiento los equipos se ven como "No monitoreados" en el widget.
 
-### 4.4 Ajustar umbrales
+### Ajustar umbrales
 
 Los umbrales son **macros**. Para cambiarlos en un solo equipo (por ejemplo un enlace largo con
 más latencia): *Data collection → Hosts → <equipo> → Macros → Inherited and host macros* y
 sobrescribir `{$ICMP.LATENCIA.WARN}`. Para cambiarlos en toda la red, editar el valor por
 defecto en `lagunitas/templates.py` y ejecutar `bin/lagunitas aprovisionar --solo templates`.
 
-### 4.5 Notificaciones
+### Notificaciones
 
 La acción *Las Lagunitas - Notificar caídas* avisa (≥ Average) al grupo *Operadores Las
 Lagunitas* por todos sus medios, repite a los 30 minutos si el problema sigue y avisa la
 recuperación. Los problemas suprimidos (mantenimiento) no se notifican. Configuración de
-Telegram: ver la Guía de implementación §4.9.
+Telegram: ver la Guía de implementación, sección *Notificaciones por Telegram*.
 
 ---
 
-### 4.6 Cómo leer las métricas de radio y energía
+### Cómo leer las métricas de radio y energía
 
 | Métrica | Bien | Revisar | Mal | Acción típica |
 |---|---|---|---|---|
@@ -187,9 +187,9 @@ Telegram: ver la Guía de implementación §4.9.
 
 Detalle completo y alertas asociadas en la [Guía de integración de equipos](guia-integracion-equipos.md).
 
-## 5. Reportes
+## Reportes
 
-### 5.1 Reports → Disponibilidad de la red
+### Reports → Disponibilidad de la red
 
 1. Filtros: **Tipo de reporte** (técnico o gerencial), **Período** (hoy, 24 h, 7 días, 30 días, mes
    actual, mes anterior o personalizado con fechas), **Grupo**, **Equipo**, **Tipo de equipo**
@@ -212,7 +212,7 @@ Detalle completo y alertas asociadas en la [Guía de integración de equipos](gu
 La vista *gerencial* oculta los datos técnicos (indicador, disponibilidad propia, MTTR, mayor
 caída): pensada para rendir cuentas a la comunidad o a financiadores.
 
-### 5.2 Detalle técnico de un equipo
+### Detalle técnico de un equipo
 
 Botón **Ver detalle** del reporte (o *Detalle técnico (7 días)* desde el modal del widget):
 
@@ -236,14 +236,14 @@ Botón **Ver detalle** del reporte (o *Detalle técnico (7 días)* desde el moda
   horas-evento, primero, último, reconocido y marca **FLAPPING** (3 o más repeticiones); al final,
   los eventos individuales.
 
-### 5.3 Services → SLA report
+### Services → SLA report
 
 Reporte nativo de Zabbix del SLA mensual por servicio (equipo operativo). Útil para ver la
 evolución mes a mes.
 
 ---
 
-## 6. Gestión de equipos
+## Gestión de equipos
 
 Todas las operaciones se hacen editando el inventario y re-aprovisionando.
 
@@ -274,7 +274,7 @@ historial) o quitarlo del inventario y borrar el host en *Data collection → Ho
 [Guía de integración de equipos](guia-integracion-equipos.md).
 
 **Agregar los equipos secundarios de un sitio** (AP que retransmite, router del hogar): bloque
-`dispositivos:` dentro del sitio (ver la guía de integración, §4.3 y §6).
+`dispositivos:` dentro del sitio (ver la guía de integración, secciones *Cargar en el inventario* y *Routers airCube*).
 
 **Ajustar un umbral para un solo equipo** (por ejemplo, un enlace largo con señal naturalmente
 más baja): clave `macros:` en su bloque del inventario, por ejemplo
@@ -285,7 +285,7 @@ ciclos, roles o estados inválidos.
 
 ---
 
-## 7. Pruebas de alarma controladas
+## Pruebas de alarma controladas
 
 Conviene probar periódicamente (por ejemplo, después de cada cambio en la red o una vez por mes)
 que la cadena de alertas funciona:
@@ -299,16 +299,16 @@ que la cadena de alertas funciona:
 4. Reconectarlo: el problema se cierra solo y llega el aviso de recuperación.
 5. Registrar la prueba (fecha, equipo, tiempos de detección y de notificación).
 
-Para trabajos planificados en una torre, crear antes un **mantenimiento** (§4.3) para no disparar
+Para trabajos planificados en una torre, crear antes un **mantenimiento** (ver *Mantenimientos programados*) para no disparar
 alertas.
 
 ---
 
-## 8. Mantenimiento del sistema
+## Mantenimiento del sistema
 
 | Tarea | Cómo |
 |---|---|
-| Backup | `COMPOSE_DIR=/opt/zabbix-lagunitas/deploy/produccion scripts/backup.sh /var/backups/zabbix` (base comprimida + export YAML de templates y mapa). Programado por cron diario (Guía de implementación §3.10). |
+| Backup | `COMPOSE_DIR=/opt/zabbix-lagunitas/deploy/produccion scripts/backup.sh /var/backups/zabbix` (base comprimida + export YAML de templates y mapa). Programado por cron diario (Guía de implementación, sección *Backups*). |
 | Restauración | `COMPOSE_DIR=/opt/zabbix-lagunitas/deploy/produccion scripts/restore.sh /var/backups/zabbix/zabbix_AAAAMMDD_HHMM.sql.gz` (pide confirmación). |
 | Chequeo de salud | `bin/lagunitas verificar` |
 | Exportar templates | `bin/lagunitas exportar` → `zabbix/export/*.yaml` (importables en otro Zabbix). |
@@ -318,7 +318,7 @@ alertas.
 
 ---
 
-## 9. Resolución de problemas
+## Resolución de problemas
 
 **Un equipo aparece "Sin datos".** *Monitoring → Latest data* filtrando por el equipo: si el item
 muestra un ícono de error, pasar el mouse para ver el motivo. Comprobar que el equipo responda
@@ -336,7 +336,7 @@ al reiniciarse). Verificar con `bin/lagunitas unifi-ids <ip-controlador> <puerto
 API key y los IDs de site/dispositivo.
 
 **Un equipo SNMP no reporta datos de radio o energía.** `bin/lagunitas probar-snmp <ip>` muestra
-qué responde el equipo. Causas y soluciones en la guía de integración (§12).
+qué responde el equipo. Causas y soluciones en la guía de integración (sección *Problemas frecuentes al integrar*).
 
 **El widget "Red Las Lagunitas" no aparece o el reporte no está en el menú.**
 `bin/lagunitas aprovisionar --solo modulos` (registra y habilita los módulos); verificar en
@@ -357,7 +357,7 @@ vacío + `bin/lagunitas aprovisionar` (recrea toda la configuración, sin el his
 
 ---
 
-## 10. Referencia rápida
+## Referencia rápida
 
 ```bash
 cd /opt/zabbix-lagunitas
