@@ -1,0 +1,1078 @@
+zabbix_export:
+  version: '7.0'
+  images:
+    - name: House_(48)
+      imagetype: '1'
+      encodedImage: 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
+    - name: House_(64)
+      imagetype: '1'
+      encodedImage: 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
+    - name: Hub_(48)
+      imagetype: '1'
+      encodedImage: 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
+    - name: Satellite_antenna_(64)
+      imagetype: '1'
+      encodedImage: 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
+    - name: Switch_(48)
+      imagetype: '1'
+      encodedImage: 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
+  maps:
+    - name: 'Las Lagunitas - Topología'
+      width: '1000'
+      height: '1010'
+      label_type: '0'
+      label_location: '0'
+      highlight: '1'
+      expandproblem: '1'
+      markelements: '1'
+      show_unack: '0'
+      severity_min: '2'
+      show_suppressed: '0'
+      grid_size: '50'
+      grid_show: '1'
+      grid_align: '1'
+      label_format: '0'
+      label_type_host: '2'
+      label_type_hostgroup: '2'
+      label_type_trigger: '2'
+      label_type_map: '2'
+      label_type_image: '2'
+      label_string_host: ''
+      label_string_hostgroup: ''
+      label_string_trigger: ''
+      label_string_map: ''
+      label_string_image: ''
+      expand_macros: '0'
+      background: {  }
+      iconmap: {  }
+      urls: {  }
+      selements:
+        - elementtype: '0'
+          elements:
+            - host: Kika
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '130'
+          'y': '125'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '99'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: CheoMaricel
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '400'
+          'y': '125'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '100'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: AlePatricio
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '660'
+          'y': '130'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '101'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Franco
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '885'
+          'y': '130'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '102'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Nodo_CheoMaricel
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '355'
+          'y': '235'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '91'
+          icon_off:
+            name: Switch_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Nodo_AlePatricio
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '590'
+          'y': '235'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '92'
+          icon_off:
+            name: Switch_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Nodo_Kika
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '150'
+          'y': '240'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '90'
+          icon_off:
+            name: Switch_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Nodo_Franco_2
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '740'
+          'y': '245'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '94'
+          icon_off:
+            name: Switch_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Esther
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '885'
+          'y': '265'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '104'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Nodo_Franco
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '625'
+          'y': '305'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '93'
+          icon_off:
+            name: Switch_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: AP-U7-Pro-Wall
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '110'
+          'y': '330'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '112'
+          icon_off:
+            name: Hub_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Escuela_Rural
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '745'
+          'y': '370'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '103'
+          icon_off:
+            name: House_(64)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Union_de_los_Rios
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '160'
+          'y': '430'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '86'
+          icon_off:
+            name: Satellite_antenna_(64)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Rodeo_del_Padre
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '360'
+          'y': '430'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '87'
+          icon_off:
+            name: Satellite_antenna_(64)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Mesada
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '625'
+          'y': '490'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '95'
+          icon_off:
+            name: Switch_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: JuanCarlos
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '870'
+          'y': '510'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '106'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Ex_Aserradero
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '160'
+          'y': '585'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '88'
+          icon_off:
+            name: Satellite_antenna_(64)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: El_Carrizal
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '360'
+          'y': '585'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '89'
+          icon_off:
+            name: Satellite_antenna_(64)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Nodo_JuanCarlos
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '535'
+          'y': '595'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '96'
+          icon_off:
+            name: Switch_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: FabianLucianaLasGuindas
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '855'
+          'y': '615'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '107'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Cerro_Blanco
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '185'
+          'y': '710'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '98'
+          icon_off:
+            name: Switch_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Nodo_DonJulio
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '785'
+          'y': '715'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '97'
+          icon_off:
+            name: Switch_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Walter
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '400'
+          'y': '730'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '105'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Gladys
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '70'
+          'y': '840'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '108'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: EulaliaDomingo
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '440'
+          'y': '840'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '109'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Martin
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '710'
+          'y': '840'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '110'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: DonJulio
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '890'
+          'y': '840'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '111'
+          icon_off:
+            name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+      shapes:
+        - type: '0'
+          x: '0'
+          'y': '0'
+          width: '1000'
+          height: '34'
+          text: 'Red Comunitaria y Científica Las Lagunitas — Topología'
+          font: '9'
+          font_size: '14'
+          font_color: FFFFFF
+          text_halign: '0'
+          text_valign: '0'
+          border_type: '0'
+          border_width: '1'
+          border_color: '000000'
+          background_color: 1F3A5F
+          zindex: '0'
+        - type: '0'
+          x: '10'
+          'y': '935'
+          width: '970'
+          height: '70'
+          text: ''
+          font: '9'
+          font_size: '11'
+          font_color: '000000'
+          text_halign: '0'
+          text_valign: '0'
+          border_type: '1'
+          border_width: '1'
+          border_color: 9E9E9E
+          background_color: ''
+          zindex: '0'
+        - type: '0'
+          x: '88'
+          'y': '947'
+          width: '140'
+          height: '20'
+          text: Operativo
+          font: '9'
+          font_size: '10'
+          font_color: '000000'
+          text_halign: '1'
+          text_valign: '0'
+          border_type: '0'
+          border_width: '1'
+          border_color: '000000'
+          background_color: ''
+          zindex: '1'
+        - type: '0'
+          x: '308'
+          'y': '947'
+          width: '140'
+          height: '20'
+          text: 'En proceso'
+          font: '9'
+          font_size: '10'
+          font_color: '000000'
+          text_halign: '1'
+          text_valign: '0'
+          border_type: '0'
+          border_width: '1'
+          border_color: '000000'
+          background_color: ''
+          zindex: '1'
+        - type: '0'
+          x: '528'
+          'y': '947'
+          width: '140'
+          height: '20'
+          text: 'Sin configurar'
+          font: '9'
+          font_size: '10'
+          font_color: '000000'
+          text_halign: '1'
+          text_valign: '0'
+          border_type: '0'
+          border_width: '1'
+          border_color: '000000'
+          background_color: ''
+          zindex: '1'
+        - type: '0'
+          x: '680'
+          'y': '941'
+          width: '300'
+          height: '56'
+          text: |
+            Ícono/enlace rojo = equipo caído
+            Gris = tramo aún no monitoreado
+            Clic en un equipo -> Detalle del equipo
+          font: '9'
+          font_size: '9'
+          font_color: '000000'
+          text_halign: '1'
+          text_valign: '0'
+          border_type: '0'
+          border_width: '1'
+          border_color: '000000'
+          background_color: ''
+          zindex: '1'
+      lines:
+        - x1: '20'
+          y1: '957'
+          x2: '80'
+          y2: '957'
+          line_type: '1'
+          line_width: '2'
+          line_color: 2E7D32
+          zindex: '1'
+        - x1: '240'
+          y1: '957'
+          x2: '300'
+          y2: '957'
+          line_type: '3'
+          line_width: '2'
+          line_color: F9A825
+          zindex: '1'
+        - x1: '460'
+          y1: '957'
+          x2: '520'
+          y2: '957'
+          line_type: '2'
+          line_width: '2'
+          line_color: 9E9E9E
+          zindex: '1'
+      links:
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '90'
+          selementid2: '99'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Kika/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '91'
+          selementid2: '100'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/CheoMaricel/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '92'
+          selementid2: '101'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/AlePatricio/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '3'
+          color: 9E9E9E
+          label: ''
+          selementid1: '94'
+          selementid2: '102'
+          linktriggers: {  }
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '86'
+          selementid2: '91'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Nodo_CheoMaricel/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '87'
+          selementid2: '92'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Nodo_AlePatricio/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '86'
+          selementid2: '90'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Nodo_Kika/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '4'
+          color: F9A825
+          label: ''
+          selementid1: '93'
+          selementid2: '94'
+          linktriggers: {  }
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '103'
+          selementid2: '104'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Esther/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '4'
+          color: F9A825
+          label: ''
+          selementid1: '87'
+          selementid2: '93'
+          linktriggers: {  }
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '95'
+          selementid2: '103'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Escuela_Rural/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '86'
+          selementid2: '87'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Rodeo_del_Padre/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '86'
+          selementid2: '88'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Ex_Aserradero/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '89'
+          selementid2: '95'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Mesada/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '3'
+          color: 9E9E9E
+          label: ''
+          selementid1: '96'
+          selementid2: '106'
+          linktriggers: {  }
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '88'
+          selementid2: '89'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/El_Carrizal/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '3'
+          color: 9E9E9E
+          label: ''
+          selementid1: '89'
+          selementid2: '96'
+          linktriggers: {  }
+        - drawtype: '4'
+          color: F9A825
+          label: ''
+          selementid1: '89'
+          selementid2: '98'
+          linktriggers: {  }
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '89'
+          selementid2: '105'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Walter/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '4'
+          color: F9A825
+          label: ''
+          selementid1: '89'
+          selementid2: '110'
+          linktriggers: {  }
+        - drawtype: '3'
+          color: 9E9E9E
+          label: ''
+          selementid1: '96'
+          selementid2: '107'
+          linktriggers: {  }
+        - drawtype: '3'
+          color: 9E9E9E
+          label: ''
+          selementid1: '96'
+          selementid2: '97'
+          linktriggers: {  }
+        - drawtype: '3'
+          color: 9E9E9E
+          label: ''
+          selementid1: '98'
+          selementid2: '108'
+          linktriggers: {  }
+        - drawtype: '3'
+          color: 9E9E9E
+          label: ''
+          selementid1: '98'
+          selementid2: '109'
+          linktriggers: {  }
+        - drawtype: '3'
+          color: 9E9E9E
+          label: ''
+          selementid1: '97'
+          selementid2: '111'
+          linktriggers: {  }

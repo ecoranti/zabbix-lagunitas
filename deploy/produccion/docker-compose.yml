@@ -1,6 +1,13 @@
 # =============================================================================
-#  Stack Zabbix 7.0 LTS — Red Las Lagunitas (entorno LAB)
-#  Secretos y parámetros en .env (ver .env.example). Producción: deploy/produccion/
+#  Stack Zabbix 7.0 LTS — Red Las Lagunitas (PRODUCCIÓN)
+#
+#  Servidor Linux (Ubuntu 22.04/24.04 LTS) en el nodo UNRC, con alimentación
+#  estable y conectividad hacia la red de Las Lagunitas (VPN/ruteo al Mikrotik).
+#  Diferencias con el LAB:
+#    - Sin red simulada (lagunitas_net): los equipos reales se alcanzan por ruteo.
+#    - HTTPS con Caddy delante del frontend (certificado automático o interno).
+#    - Volúmenes con nombre, límites de logs y healthchecks.
+#  Ver docs/guia-implementacion.md
 # =============================================================================
 
 services:
@@ -10,23 +17,26 @@ services:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_bin
       - --log-bin-trust-function-creators=1
-      - --innodb-buffer-pool-size=512M
+      - --innodb-buffer-pool-size=${MYSQL_INNODB_BUFFER:-1G}
+      - --binlog-expire-logs-seconds=86400
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     volumes:
-      - ./mysql_data:/var/lib/mysql
-    networks:
-      - zabbix_net
+      - mysql_data:/var/lib/mysql
+    networks: [zabbix_net]
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
       interval: 10s
       timeout: 5s
       retries: 12
-      start_period: 30s
+      start_period: 60s
     restart: unless-stopped
+    logging: &logs
+      driver: json-file
+      options: {max-size: "20m", max-file: "5"}
 
   zabbix-server:
     image: zabbix/zabbix-server-mysql:ubuntu-7.0.30
@@ -36,20 +46,20 @@ services:
       MYSQL_USER: ${MYSQL_USER}
       MYSQL_PASSWORD: ${MYSQL_PASSWORD}
       ZBX_SERVER_NAME: ${ZBX_SERVER_NAME}
-      ZBX_STARTPINGERS: 4          # checks ICMP (fping) en paralelo
+      ZBX_STARTPINGERS: 4
       ZBX_STARTPOLLERS: 10
-      ZBX_STARTHTTPAGENTPOLLERS: 2 # items HTTP agent (API UniFi)
-      ZBX_CACHESIZE: 64M
+      ZBX_STARTSNMPPOLLERS: 2
+      ZBX_STARTHTTPAGENTPOLLERS: 2
+      ZBX_CACHESIZE: 128M
       ZBX_TIMEOUT: 10
     ports:
-      - "10051:10051"
-    networks:
-      - zabbix_net
-      - lagunitas_net
+      - "10051:10051"   # solo si se usan agentes activos o proxies remotos
+    networks: [zabbix_net]
     depends_on:
       mysql-server:
         condition: service_healthy
     restart: unless-stopped
+    logging: *logs
 
   zabbix-web:
     image: zabbix/zabbix-web-apache-mysql:ubuntu-7.0.30
@@ -61,24 +71,19 @@ services:
       ZBX_SERVER_HOST: zabbix-server
       ZBX_SERVER_NAME: ${ZBX_SERVER_NAME}
       PHP_TZ: ${PHP_TZ}
-    ports:
-      - "${ZABBIX_WEB_PORT:-8090}:8080"
     volumes:
-      # Módulos propios del frontend (widget "Red Las Lagunitas" y reporte de disponibilidad)
-      - ./zabbix/modules/lagunitas-red:/usr/share/zabbix/modules/lagunitas-red:ro
-      - ./zabbix/modules/lagunitas-reportes:/usr/share/zabbix/modules/lagunitas-reportes:ro
-    networks:
-      - zabbix_net
-    depends_on:
-      - zabbix-server
+      - ../../zabbix/modules/lagunitas-red:/usr/share/zabbix/modules/lagunitas-red:ro
+      - ../../zabbix/modules/lagunitas-reportes:/usr/share/zabbix/modules/lagunitas-reportes:ro
+    networks: [zabbix_net]
+    depends_on: [zabbix-server]
     healthcheck:
       test: ["CMD-SHELL", "curl -fs http://localhost:8080/ > /dev/null || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 5
     restart: unless-stopped
+    logging: *logs
 
-  # Agente para el auto-monitoreo del servidor (host "Zabbix server").
   zabbix-agent:
     image: zabbix/zabbix-agent2:ubuntu-7.0.30
     hostname: zabbix-agent
@@ -89,9 +94,32 @@ services:
       zabbix_net:
         aliases: [zabbix-agent]
     restart: unless-stopped
+    logging: *logs
+
+  # Proxy HTTPS. Con un dominio público (ZBX_DOMAIN=monitoreo.ejemplo.org) obtiene
+  # un certificado de Let's Encrypt; con una IP/nombre interno usa "tls internal".
+  caddy:
+    image: caddy:2.8
+    environment:
+      ZBX_DOMAIN: ${ZBX_DOMAIN}
+      CADDY_TLS: ${CADDY_TLS:-internal}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    networks: [zabbix_net]
+    depends_on: [zabbix-web]
+    restart: unless-stopped
+    logging: *logs
+
+volumes:
+  mysql_data:
+  caddy_data:
+  caddy_config:
 
 networks:
   zabbix_net:
     driver: bridge
-  lagunitas_net:
-    external: true

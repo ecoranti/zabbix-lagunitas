@@ -1,0 +1,320 @@
+# =============================================================================
+#  Inventario de la Red Comunitaria y Científica Las Lagunitas — entorno LAB
+# =============================================================================
+#  Fuente única de verdad: a partir de este archivo el provisionador crea/actualiza
+#  en Zabbix los grupos, hosts, tags, inventario, templates, dependencias entre
+#  triggers, el mapa de topología, los servicios/SLA y los dashboards; y el
+#  simulador de laboratorio levanta un contenedor por cada elemento operativo.
+#
+#  Topología relevada del "Gráfico esquemático" de campo (09/09/25):
+#    4 torres (backbone), 9 nodos intermedios, 13 hogares/instituciones.
+#
+#  Campos por elemento:
+#    host     Nombre técnico en Zabbix (sin espacios, no cambiar: es la clave).
+#    nombre   Nombre visible.
+#    rol      torre | nodo | hogar | institucion | ap
+#    ip       IP de gestión (en LAB: red Docker 10.50.0.0/24).
+#    padre    Elemento del que depende su conectividad (para dependencias de
+#             triggers: si cae el padre no se alerta por todos los hijos).
+#    estado   operativo | en_proceso | sin_configurar
+#             Solo los "operativo" se monitorean; el resto se crea deshabilitado
+#             (se ven en gris en el mapa) hasta que se pongan en servicio.
+#    perfiles Perfiles de monitoreo (ver "perfiles" al final).
+#    equipo   Hardware instalado, según relevamiento (informativo -> inventario).
+#    mapa     Posición [x, y] en el mapa de topología.
+# =============================================================================
+
+sitio: Las Lagunitas
+entorno: lab
+descripcion: Laboratorio Docker (Mac M3 / Colima) que replica la topología real.
+
+elementos:
+  # ---------------------------------------------------------------- Torres
+  - host: Union_de_los_Rios
+    nombre: Unión de los Ríos
+    rol: torre
+    ip: 10.50.0.11
+    padre: null
+    estado: operativo
+    perfiles: [icmp]
+    equipo: Torre backbone (enlaces PtP airMAX)
+    mapa: [160, 390]
+
+  - host: Rodeo_del_Padre
+    nombre: Rodeo del Padre
+    rol: torre
+    ip: 10.50.0.12
+    padre: Union_de_los_Rios
+    estado: operativo
+    perfiles: [icmp]
+    equipo: Torre backbone (enlaces PtP airMAX)
+    mapa: [360, 390]
+
+  - host: Ex_Aserradero
+    nombre: Ex Aserradero
+    rol: torre
+    ip: 10.50.0.13
+    padre: Union_de_los_Rios
+    estado: operativo
+    perfiles: [icmp]
+    equipo: Torre backbone (enlaces PtP airMAX)
+    mapa: [160, 545]
+
+  - host: El_Carrizal
+    nombre: El Carrizal
+    rol: torre
+    ip: 10.50.0.14
+    padre: Ex_Aserradero
+    estado: operativo
+    perfiles: [icmp]
+    equipo: Ubiquiti AirCube (router de torre)
+    mapa: [360, 545]
+
+  # ---------------------------------------------------------------- Nodos
+  - host: Nodo_Kika
+    nombre: Nodo Kika
+    rol: nodo
+    ip: 10.50.0.21
+    padre: Union_de_los_Rios
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [150, 200]
+
+  - host: Nodo_CheoMaricel
+    nombre: Nodo Cheo/Maricel
+    rol: nodo
+    ip: 10.50.0.22
+    padre: Union_de_los_Rios
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [355, 195]
+
+  - host: Nodo_AlePatricio
+    nombre: Nodo Ale/Patricio
+    rol: nodo
+    ip: 10.50.0.23
+    padre: Rodeo_del_Padre
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [590, 195]
+
+  - host: Nodo_Franco
+    nombre: Nodo Franco (1)
+    rol: nodo
+    ip: 10.50.0.24
+    padre: Rodeo_del_Padre
+    estado: en_proceso
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [625, 265]
+
+  - host: Nodo_Franco_2
+    nombre: Nodo Franco (2)
+    rol: nodo
+    ip: 10.50.0.29
+    padre: Nodo_Franco
+    estado: en_proceso
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [740, 205]
+
+  - host: Mesada
+    nombre: Mesada
+    rol: nodo
+    ip: 10.50.0.25
+    padre: El_Carrizal
+    estado: operativo
+    perfiles: [icmp]
+    equipo: Ubiquiti LiteBeam (SM) + LiteBeam (AP a Escuela)
+    mapa: [625, 450]
+
+  - host: Nodo_JuanCarlos
+    nombre: Nodo Juan Carlos
+    rol: nodo
+    ip: 10.50.0.26
+    padre: El_Carrizal
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [535, 555]
+
+  - host: Nodo_DonJulio
+    nombre: Nodo Don Julio
+    rol: nodo
+    ip: 10.50.0.28
+    padre: Nodo_JuanCarlos
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [785, 675]
+
+  - host: Cerro_Blanco
+    nombre: Cerro Blanco
+    rol: nodo
+    ip: 10.50.0.27
+    padre: El_Carrizal
+    estado: en_proceso
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [185, 670]
+
+  # ------------------------------------------------- Hogares / instituciones
+  - host: Kika
+    nombre: Kika
+    rol: hogar
+    ip: 10.50.0.31
+    padre: Nodo_Kika
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [130, 85]
+
+  - host: CheoMaricel
+    nombre: Cheo/Maricel
+    rol: hogar
+    ip: 10.50.0.32
+    padre: Nodo_CheoMaricel
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [400, 85]
+
+  - host: AlePatricio
+    nombre: Ale/Patricio
+    rol: hogar
+    ip: 10.50.0.33
+    padre: Nodo_AlePatricio
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [660, 90]
+
+  - host: Franco
+    nombre: Franco
+    rol: hogar
+    ip: 10.50.0.34
+    padre: Nodo_Franco_2
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [885, 90]
+
+  - host: Escuela_Rural
+    nombre: Escuela Rural
+    rol: institucion
+    ip: 10.50.0.15
+    padre: Mesada
+    estado: operativo
+    perfiles: [icmp]
+    equipo: Ubiquiti NanoLoco (SM) + AirCube
+    mapa: [745, 330]
+
+  - host: Esther
+    nombre: Esther
+    rol: hogar
+    ip: 10.50.0.35
+    padre: Escuela_Rural
+    estado: operativo
+    perfiles: [icmp]
+    equipo: Ubiquiti NanoLoco (SM) + AirCube
+    mapa: [885, 225]
+
+  - host: Walter
+    nombre: Walter
+    rol: hogar
+    ip: 10.50.0.38
+    padre: El_Carrizal
+    estado: operativo
+    perfiles: [icmp]
+    equipo: Ubiquiti NanoLoco + AirCube
+    mapa: [400, 690]
+
+  - host: JuanCarlos
+    nombre: Juan Carlos
+    rol: hogar
+    ip: 10.50.0.36
+    padre: Nodo_JuanCarlos
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [870, 470]
+
+  - host: FabianLucianaLasGuindas
+    nombre: Fabián/Luciana (Las Guindas)
+    rol: hogar
+    ip: 10.50.0.37
+    padre: Nodo_JuanCarlos
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [855, 575]
+
+  - host: Gladys
+    nombre: Gladys
+    rol: hogar
+    ip: 10.50.0.39
+    padre: Cerro_Blanco
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [70, 800]
+
+  - host: EulaliaDomingo
+    nombre: Eulalia/Domingo
+    rol: hogar
+    ip: 10.50.0.40
+    padre: Cerro_Blanco
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [440, 800]
+
+  - host: Martin
+    nombre: Martín
+    rol: hogar
+    ip: 10.50.0.41
+    padre: El_Carrizal
+    estado: en_proceso
+    perfiles: [icmp]
+    equipo: Ubiquiti NanoLoco (SM)
+    mapa: [710, 800]
+
+  - host: DonJulio
+    nombre: Don Julio
+    rol: hogar
+    ip: 10.50.0.42
+    padre: Nodo_DonJulio
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [890, 800]
+
+  # ------------------------------------------- Equipo real del laboratorio
+  # AP UniFi de la casa del alumno: único equipo físico del LAB. No forma parte
+  # de la topología de campo, por eso no tiene padre.
+  # IMPORTANTE (LAB sobre Colima): la red de Colima responde ICMP por cualquier
+  # IP externa, así que un ping al AP desde el LAB siempre "responde". Por eso
+  # aquí NO se usa el perfil icmp: la disponibilidad del AP sale del estado que
+  # informa la API de UniFi (ONLINE/OFFLINE). En producción (Linux) ICMP es real.
+  - host: AP-U7-Pro-Wall
+    nombre: AP U7 Pro Wall (real)
+    rol: ap
+    ip: 192.168.1.113
+    padre: null
+    estado: operativo
+    perfiles: [unifi_api]
+    equipo: Ubiquiti UniFi U7 Pro Wall
+    mapa: [110, 290]
+    macros:
+      "{$UNIFI.HOST}": 192.168.1.52
+      "{$UNIFI.PORT}": "11443"
+      "{$UNIFI.SITE.ID}": 88f7af54-98f8-306a-a1c7-c9349722b1f6
+      "{$UNIFI.DEVICE.ID}": afd2ff68-17b3-3b64-8473-8eebfbe60d12
+      # {$UNIFI.API.KEY} se carga desde la variable de entorno UNIFI_API_KEY
+      # como macro secreta: nunca se escribe en este archivo.
+
+# Enlaces entre elementos que no siguen la relación padre -> hijo (ninguno en LAB).
+enlaces_extra: []

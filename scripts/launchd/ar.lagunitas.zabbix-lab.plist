@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Arranque automático del laboratorio al iniciar sesión en macOS.
+  Instalación (reemplazar RUTA_DEL_REPO por la ruta real, ej. /Users/gala/zabbix-lab):
+    sed "s#RUTA_DEL_REPO#$PWD#g" scripts/launchd/ar.lagunitas.zabbix-lab.plist \
+      > ~/Library/LaunchAgents/ar.lagunitas.zabbix-lab.plist
+    launchctl load ~/Library/LaunchAgents/ar.lagunitas.zabbix-lab.plist
+  Desinstalar:
+    launchctl unload ~/Library/LaunchAgents/ar.lagunitas.zabbix-lab.plist
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>ar.lagunitas.zabbix-lab</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>-lc</string>
+		<string>ABRIR_NAVEGADOR=0 RUTA_DEL_REPO/start.sh</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>/tmp/zabbix-lab.log</string>
+	<key>StandardErrorPath</key>
+	<string>/tmp/zabbix-lab.log</string>
+</dict>
+</plist>

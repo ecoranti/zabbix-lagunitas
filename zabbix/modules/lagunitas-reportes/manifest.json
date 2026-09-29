@@ -1,0 +1,26 @@
+{
+	"manifest_version": 2.0,
+	"id": "lagunitas_reportes",
+	"name": "Reporte de disponibilidad - Las Lagunitas",
+	"namespace": "LagunitasReportes",
+	"version": "1.0.0",
+	"author": "Elías Coranti — PPS UNRC / Red Comunitaria y Científica Las Lagunitas",
+	"description": "Reporte técnico y gerencial de disponibilidad propia y de servicio (con dependencias), incidentes, MTTR y cumplimiento de SLA. Exporta CSV e imprime a PDF.",
+	"url": "https://github.com/ecoranti/zabbix-lagunitas",
+	"actions": {
+		"lagunitas.reporte": {
+			"class": "ReporteVista",
+			"view": "lagunitas.reporte",
+			"layout": "layout.htmlpage"
+		},
+		"lagunitas.reporte.csv": {
+			"class": "ReporteCsv",
+			"view": "lagunitas.reporte.csv",
+			"layout": "layout.csv"
+		}
+	},
+	"assets": {
+		"css": ["reporte.css"],
+		"js": ["reporte.js"]
+	}
+}
