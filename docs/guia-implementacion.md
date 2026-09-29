@@ -1,6 +1,6 @@
 # Guía de implementación — Monitoreo de la Red Las Lagunitas
 
-**Versión 2.0** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas (Alpa Corral, Córdoba)
+**Versión 2.1** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas (Alpa Corral, Córdoba)
 
 Esta guía explica cómo poner en marcha el sistema de monitoreo desde cero, tanto en el
 **laboratorio** (Mac con Docker/Colima y la red simulada) como en el **servidor de producción**
@@ -171,6 +171,10 @@ La primera vez MySQL tarda 1–2 minutos en crear el esquema.
 
 ### 4.5 Preparar los equipos de la red
 
+El paso a paso detallado por tipo de equipo (radios airMAX, Mikrotik, airCube, UniFi), con qué
+métricas y alertas aporta cada uno, está en la
+[Guía de integración de equipos](guia-integracion-equipos.md). Resumen:
+
 **Ubiquiti airMAX (PowerBeam, LiteBeam, NanoLoco):** en la interfaz de airOS → *Services* →
 *SNMP Agent*: habilitar, definir *SNMP Community* (la misma que `SNMP_COMMUNITY`) y el contacto /
 ubicación. Guardar y aplicar.
@@ -186,11 +190,11 @@ ubicación. Guardar y aplicar.
 
 **Routers AirCube:** solo requieren responder ping en su IP de gestión.
 
-Comprobar desde el servidor:
+Comprobar desde el servidor (usa la misma red que el Zabbix server):
 
 ```bash
 docker compose exec zabbix-server fping -c3 <IP_EQUIPO>
-docker compose exec zabbix-server snmpget -v2c -c <COMUNIDAD> <IP_EQUIPO> 1.3.6.1.2.1.1.5.0
+bin/lagunitas probar-snmp <IP_EQUIPO>
 ```
 
 ### 4.6 Completar el inventario de producción
@@ -203,6 +207,9 @@ elemento completar:
 | `ip` | IP de gestión real del equipo (reemplazar las marcadas `COMPLETAR`). |
 | `estado` | `operativo` si el tramo está en servicio; `en_proceso` / `sin_configurar` si no (se crea deshabilitado y se ve en gris en el mapa). |
 | `perfiles` | `[icmp]` para todos; agregar `airos_snmp` en equipos airMAX y `mikrotik_snmp` en el Mikrotik. |
+| `funcion` | `ap`, `sm`, `ptp` o `router`. |
+| `modelo` | Modelo exacto (se guarda en el inventario de Zabbix). |
+| `dispositivos` | Los demás equipos con IP del sitio (AP que retransmite, router del hogar), cada uno con su host, IP, función, modelo y perfiles. |
 | `padre` | Equipo del que depende (define dependencias de alertas y el camino en el mapa). |
 | `equipo` | Hardware instalado (se guarda en el inventario de Zabbix). |
 
@@ -222,9 +229,9 @@ Pasos que ejecuta (se pueden correr por separado con `--solo <paso>`):
 
 | Paso | Qué crea/actualiza |
 |---|---|
-| `templates` | Templates propios, valuemaps, triggers y dashboards de detalle |
+| `templates` | Templates propios (ICMP, airMAX por SNMP, Mikrotik por SNMP, UniFi por API), valuemaps, triggers, descubrimientos y dashboards de detalle |
 | `hosts` | Grupos por rol, hosts, interfaces, tags, inventario y macros (secretas) |
-| `dependencias` | Dependencias padre → hijo de los triggers de caída |
+| `dependencias` | Dependencias padre → hijo de los triggers de caída; las alertas "sin datos SNMP/API" dependen de la caída del propio equipo |
 | `servidor` | Auto-monitoreo del Zabbix server vía el contenedor `zabbix-agent` |
 | `mapa` | Mapa *Las Lagunitas - Topología* con leyenda y enlaces por estado |
 | `servicios` | Árbol de servicios y SLA mensual (objetivo 99,5 %) |
@@ -293,7 +300,8 @@ en 10051/TCP.
 - [ ] Contraseña de `Admin` cambiada; provisionador con API token.
 - [ ] `.env` con permisos 600; secretos fuera del repositorio.
 - [ ] HTTPS operativo (Caddy) y HTTP redirigido.
-- [ ] Inventario de producción con IPs, padres y perfiles verificados.
+- [ ] Inventario de producción con IPs, padres, perfiles, modelos y dispositivos verificados.
+- [ ] Cada equipo SNMP probado con `bin/lagunitas probar-snmp` antes de aprovisionar.
 - [ ] Todos los equipos operativos "En línea"; sin items no soportados inesperados.
 - [ ] Prueba de caída y recuperación realizada y documentada.
 - [ ] Notificaciones probadas (Telegram o email).
@@ -322,9 +330,12 @@ en 10051/TCP.
 ```
 bin/lagunitas [-i INVENTARIO] aprovisionar [--solo PASO ...] [--migrar-v1]
 bin/lagunitas validar                   # valida el inventario sin tocar Zabbix
+bin/lagunitas probar-snmp <ip> [--comunidad X]   # diagnóstico SNMP antes de integrar
+bin/lagunitas unifi-ids <ip> [puerto]   # IDs de site y AP de un controlador UniFi
 bin/lagunitas verificar
 bin/lagunitas exportar                  # templates y mapa en zabbix/export/*.yaml
 bin/lagunitas lab levantar|apagar|estado
 bin/lagunitas lab caida <equipo>        # simula la caída (docker stop)
 bin/lagunitas lab recuperar <equipo>    # docker start
+bin/lagunitas lab escenario <equipo> <escenario>   # fallas simuladas de radio / energía
 ```

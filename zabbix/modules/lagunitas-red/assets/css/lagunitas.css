@@ -148,6 +148,14 @@ html[color-scheme="dark"] .lg-red, html[color-scheme="dark"] .lg-modal-overlay {
 .lg-badge { display: inline-block; margin-right: 4px; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 600; white-space: nowrap; }
 .lg-badge-bad { background: rgba(217, 66, 62, .14); color: var(--lg-bad); }
 .lg-badge-warn { background: rgba(214, 154, 0, .16); color: var(--lg-warn); }
+.lg-badge-ok { background: rgba(47, 154, 87, .14); color: var(--lg-ok); }
+.lg-metric { display: flex; flex-direction: column; gap: 1px; }
+.lg-metric b { font-variant-numeric: tabular-nums; }
+.lg-metric small { color: var(--lg-muted); font-size: 11px; }
+.lg-t-ok { color: var(--lg-ok); }
+.lg-t-warn { color: var(--lg-warn); }
+.lg-t-bad { color: var(--lg-bad); }
+.lg-t-na { color: var(--lg-muted); }
 
 /* ------------------------------------------------------------- modal */
 .lg-modal-overlay {
@@ -206,6 +214,7 @@ html[color-scheme="dark"] .lg-red, html[color-scheme="dark"] .lg-modal-overlay {
 .lg-btn-ghost { border-color: var(--lg-border); background: transparent; color: var(--lg-muted) !important; }
 .lg-table-sm td, .lg-table-sm th { padding: 6px 10px; }
 .lg-table-sm { border: 1px solid var(--lg-border); border-radius: 6px; }
+.lg-nota { margin: 4px 0 0; font-size: 11px; line-height: 1.5; }
 .lg-ok-msg { padding: 10px 12px; border-radius: 6px; background: rgba(47, 154, 87, .12); color: var(--lg-ok); font-weight: 600; }
 
 .lg-sev { display: inline-block; padding: 2px 8px; border-radius: 3px; color: #1f1f1f; font-size: 11px; font-weight: 600; }

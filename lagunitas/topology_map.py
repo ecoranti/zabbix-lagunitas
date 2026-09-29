@@ -63,7 +63,11 @@ def ensure_map(api: ZabbixAPI, inv: dict, hostids: dict[str, str], caidas: dict[
         })
 
     links = []
-    pares = [(e["padre"], e["host"]) for e in inv["elementos"] if e.get("padre")]
+    # El mapa muestra sitios: si el padre es un dispositivo secundario, el enlace
+    # se dibuja desde su sitio.
+    sitio = {e["host"]: e["elemento"] for e in inv["todos"]}
+    pares = [(sitio[e["padre"]], e["host"]) for e in inv["elementos"]
+             if e.get("padre") and sitio[e["padre"]] != e["host"]]
     pares += [tuple(p) for p in inv.get("enlaces_extra") or []]
     for padre, hijo in pares:
         estado = ESTADOS[inv["por_host"][hijo]["estado"]]

@@ -69,6 +69,36 @@ def ensure_trigger(api: ZabbixAPI, hostid: str, spec: dict) -> str:
     return api.call("trigger.create", spec)["triggerids"][0]
 
 
+def ensure_lld(api: ZabbixAPI, hostid: str, spec: dict) -> str:
+    found = api.call("discoveryrule.get", {"hostids": [hostid], "filter": {"key_": spec["key_"]},
+                                           "output": ["itemid"]})
+    if found:
+        rid = found[0]["itemid"]
+        api.call("discoveryrule.update", {"itemid": rid, **spec})
+        return rid
+    return api.call("discoveryrule.create", {"hostid": hostid, **spec})["itemids"][0]
+
+
+def ensure_item_prototype(api: ZabbixAPI, hostid: str, ruleid: str, spec: dict) -> str:
+    found = api.call("itemprototype.get", {"discoveryids": [ruleid], "filter": {"key_": spec["key_"]},
+                                           "output": ["itemid"]})
+    if found:
+        iid = found[0]["itemid"]
+        api.call("itemprototype.update", {"itemid": iid, **spec})
+        return iid
+    return api.call("itemprototype.create", {"hostid": hostid, "ruleid": ruleid, **spec})["itemids"][0]
+
+
+def ensure_trigger_prototype(api: ZabbixAPI, hostid: str, spec: dict) -> str:
+    found = api.call("triggerprototype.get", {"hostids": [hostid], "filter": {"description": [spec["description"]]},
+                                              "output": ["triggerid"]})
+    if found:
+        tid = found[0]["triggerid"]
+        api.call("triggerprototype.update", {"triggerid": tid, **spec})
+        return tid
+    return api.call("triggerprototype.create", spec)["triggerids"][0]
+
+
 def ensure_template_dashboard(api: ZabbixAPI, templateid: str, name: str, pages: list[dict]) -> str:
     found = api.call("templatedashboard.get", {"templateids": [templateid], "filter": {"name": [name]},
                                                "output": ["dashboardid"]})
@@ -361,5 +391,7 @@ def install_unifi(api: ZabbixAPI, groupid: str) -> dict:
 
 
 def install_all(api: ZabbixAPI) -> dict:
+    from . import templates_snmp
     gid = ensure_template_group(api, TEMPLATE_GRUPO)
-    return {TPL_ICMP: install_icmp(api, gid), TPL_UNIFI: install_unifi(api, gid)}
+    return {TPL_ICMP: install_icmp(api, gid), TPL_UNIFI: install_unifi(api, gid),
+            **templates_snmp.install_all(api, gid)}

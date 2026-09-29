@@ -8,15 +8,7 @@ use Modules\LagunitasReportes\Includes\ReporteService;
 class ReporteCsv extends ReporteVista {
 
 	protected function doAction(): void {
-		$f = ReporteService::normalizar([
-			'periodo' => $this->getInput('periodo', '7d'),
-			'desde' => $this->getInput('desde', ''),
-			'hasta' => $this->getInput('hasta', ''),
-			'rol' => $this->getInput('rol', ''),
-			'slo' => $this->getInput('slo', '99.5'),
-			'vista' => $this->getInput('vista', 'tecnica')
-		]);
-
+		$f = $this->filtros();
 		$response = new CControllerResponseData([
 			'filtros' => $f,
 			'reporte' => ReporteService::construir($f)

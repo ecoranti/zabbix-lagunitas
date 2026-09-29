@@ -132,17 +132,20 @@ class Html {
 		}
 		$out = '<section class="lg-sec"><div class="lg-sec-head"><span class="lg-sec-ico">'.self::e($icono).'</span><h4>'
 			.self::e($titulo).'</h4><span class="lg-pill">'.count($ids).'</span></div>'
-			.'<div class="lg-table-wrap"><table class="lg-table lg-table-red"><colgroup><col style="width:15%">'
-			.'<col style="width:25%"><col style="width:15%"><col style="width:13%"><col style="width:12%">'
-			.'<col style="width:10%"><col style="width:10%"></colgroup><thead><tr><th>Estado</th><th>Equipo</th>';
+			.'<div class="lg-table-wrap"><table class="lg-table lg-table-red"><colgroup><col style="width:13%">'
+			.'<col style="width:21%"><col style="width:13%"><col style="width:11%"><col style="width:10%">'
+			.'<col style="width:13%"><col style="width:10%"><col style="width:9%"></colgroup>'
+			.'<thead><tr><th>Estado</th><th>Equipo</th>';
 		$out .= $es_ap
-			? '<th>CPU</th><th>Memoria</th><th>Clientes</th><th>Uptime</th>'
-			: '<th>Disponibilidad 24 h</th><th>Latencia</th><th>Pérdida</th><th>Depende de</th>';
+			? '<th>CPU</th><th>Memoria</th><th>Clientes</th><th>Uptime</th><th>Controlador</th><th></th>'
+			: '<th>Disponibilidad 24 h</th><th>Latencia</th><th>Pérdida</th><th>Enlace / energía</th>'
+				.'<th>Depende de</th>';
 		$out .= '<th>Problemas</th></tr></thead><tbody>';
 
 		foreach ($ids as $hid) {
 			$e = $equipos[$hid];
-			$busqueda = mb_strtolower($e['nombre'].' '.$e['host'].' '.$e['ip'].' '.$e['rol'].' '.$e['equipo']);
+			$busqueda = mb_strtolower($e['nombre'].' '.$e['host'].' '.$e['ip'].' '.$e['rol'].' '.$e['equipo'].' '
+				.$e['modelo'].' '.$e['funcion']);
 			$extra = null;
 			if ($e['estado'] === 'afectado' && $e['causa']) {
 				$extra = 'por '.$equipos[$e['causa']]['nombre'];
@@ -158,9 +161,9 @@ class Html {
 				.'" data-estado="'.self::e($e['estado']).'" data-rol="'.self::e($e['rol']).'" data-q="'.self::e($busqueda)
 				.'">';
 			$out .= '<td>'.self::estado($e['estado'], $extra).'</td>';
+			$detalle = $e['modelo'] !== '' ? $e['modelo'] : ($e['equipo'] !== 'A relevar' ? $e['equipo'] : '');
 			$out .= '<td><div class="lg-host"><b>'.self::e($e['nombre']).'</b><small>'.self::e($e['ip'])
-				.($e['equipo'] !== '' && $e['equipo'] !== 'A relevar' ? ' · '.self::e($e['equipo']) : '')
-				.'</small></div></td>';
+				.($detalle !== '' ? ' · '.self::e($detalle) : '').'</small></div></td>';
 
 			if ($es_ap) {
 				$it = $e['items'];
@@ -172,6 +175,9 @@ class Html {
 				$out .= '<td>'.self::barra($mem, 100, self::nivelPct($mem), self::num($mem, 1, '%')).'</td>';
 				$out .= '<td class="lg-big">'.self::num($cli, 0).'</td>';
 				$out .= '<td>'.($up !== null ? self::e(self::duracion((int) $up)) : '—').'</td>';
+				$ctrl = self::valorItem($it, 'net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}]');
+				$out .= '<td>'.($ctrl === null ? '—' : ($ctrl ? '<span class="lg-badge lg-badge-ok">Accesible</span>'
+					: '<span class="lg-badge lg-badge-bad">No accesible</span>')).'</td><td></td>';
 			}
 			else {
 				$out .= '<td>'.self::barra($e['disp24'], 100, self::nivelDisp($e['disp24']),
@@ -180,6 +186,7 @@ class Html {
 					self::nivelLatencia($e['latencia_ms']), self::num($e['latencia_ms'], 1, 'ms')).'</td>';
 				$out .= '<td>'.self::barra($e['perdida'] !== null ? max($e['perdida'], 0.0) : null, 100,
 					self::nivelPerdida($e['perdida']), self::num($e['perdida'], 0, '%')).'</td>';
+				$out .= '<td>'.self::enlace($e).'</td>';
 				$padre = $e['padre'] !== null && isset($equipos[$e['padre']]) ? $equipos[$e['padre']]['nombre'] : '—';
 				$out .= '<td class="lg-muted">'.self::e($padre).'</td>';
 			}
@@ -187,6 +194,56 @@ class Html {
 		}
 
 		return $out.'</tbody></table></div></section>';
+	}
+
+	/** Métrica clave según el tipo de equipo: señal/CCQ (airMAX) o voltaje/DHCP (Mikrotik). */
+	public static function enlace(array $e): string {
+		$it = $e['items'];
+		if ($e['tipo'] === 'airmax') {
+			$senal = self::valorItem($it, 'airmax.wl.senal');
+			$ccq = self::valorItem($it, 'airmax.wl.ccq');
+			if ($senal === null) {
+				return '<span class="lg-muted">—</span>';
+			}
+
+			return '<div class="lg-metric"><b class="lg-t-'.self::nivelSenal($senal).'">'.self::num($senal, 0, 'dBm')
+				.'</b><small>CCQ '.self::num($ccq, 0, '%').'</small></div>';
+		}
+		if ($e['tipo'] === 'mikrotik') {
+			$v = self::valorItem($it, 'mikrotik.voltaje');
+			$dhcp = self::valorItem($it, 'mikrotik.dhcp.clientes');
+
+			return '<div class="lg-metric"><b class="lg-t-'.self::nivelVoltaje($v).'">'.self::num($v, 1, 'V')
+				.'</b><small>'.self::num($dhcp, 0).' clientes DHCP</small></div>';
+		}
+
+		return '<span class="lg-muted">—</span>';
+	}
+
+	public static function nivelSenal(?float $dbm): string {
+		return $dbm === null ? 'na' : ($dbm < -80 ? 'bad' : ($dbm < -72 ? 'warn' : 'ok'));
+	}
+
+	public static function nivelVoltaje(?float $v): string {
+		return $v === null ? 'na' : (($v < 11.6 || $v > 14.8) ? 'bad' : ($v < 12.0 ? 'warn' : 'ok'));
+	}
+
+	public static function nivelMin(?float $v, float $warn, float $bad): string {
+		return $v === null ? 'na' : ($v < $bad ? 'bad' : ($v < $warn ? 'warn' : 'ok'));
+	}
+
+	/** Bits por segundo en formato legible. */
+	public static function bps(?float $v): string {
+		if ($v === null) {
+			return '—';
+		}
+		foreach ([[1e9, 'Gbps'], [1e6, 'Mbps'], [1e3, 'Kbps']] as [$div, $u]) {
+			if (abs($v) >= $div) {
+				return number_format($v / $div, $v / $div >= 100 ? 0 : 1, ',', '.').' '.$u;
+			}
+		}
+
+		return number_format($v, 0, ',', '.').' bps';
 	}
 
 	public static function valorItem(array $items, string $key): ?float {

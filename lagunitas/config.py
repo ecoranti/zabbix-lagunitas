@@ -7,7 +7,7 @@ from pathlib import Path
 
 import yaml
 
-from .model import ESTADOS, PERFILES, ROLES
+from .model import ESTADOS, FUNCIONES, PERFILES, ROLES
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -57,13 +57,37 @@ class InventoryError(ValueError):
 
 
 def load_inventory(path: Path) -> dict:
-    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    """Carga y valida el inventario.
+
+    Devuelve además:
+      "dispositivos": equipos secundarios de cada sitio (clave "dispositivos" de un
+                      elemento), con rol del sitio, "elemento" = host del sitio y padre por
+                      defecto = equipo principal del sitio.
+      "todos":        elementos + dispositivos (todo lo que es un host en Zabbix).
+      "por_host":     índice por nombre técnico de todos los equipos.
+    """
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        raise InventoryError(f"{path.name}: YAML inválido ({exc}). Si un texto contiene ':' "
+                             "o '#', ponerlo entre comillas.") from exc
     elementos = data.get("elementos") or []
     errores: list[str] = []
     hosts: dict[str, dict] = {}
     ips: dict[str, str] = {}
 
+    dispositivos = []
     for e in elementos:
+        e["elemento"] = e.get("host")
+        for d in e.get("dispositivos") or []:
+            d.setdefault("rol", e.get("rol"))
+            d.setdefault("estado", e.get("estado"))
+            d.setdefault("padre", e.get("host"))
+            d["elemento"] = e.get("host")
+            d["es_dispositivo"] = True
+            dispositivos.append(d)
+
+    for e in elementos + dispositivos:
         h = e.get("host")
         if not h or " " in h:
             errores.append(f"host inválido: {h!r}")
@@ -75,7 +99,12 @@ def load_inventory(path: Path) -> dict:
         e.setdefault("padre", None)
         e.setdefault("perfiles", ["icmp"])
         e.setdefault("equipo", "")
+        e.setdefault("modelo", "")
+        e.setdefault("funcion", "otro")
         e.setdefault("macros", {})
+        e.setdefault("es_dispositivo", False)
+        if e["funcion"] not in FUNCIONES:
+            errores.append(f"{h}: funcion desconocida {e['funcion']!r} (válidas: {', '.join(sorted(FUNCIONES))})")
         if e.get("rol") not in ROLES:
             errores.append(f"{h}: rol desconocido {e.get('rol')!r} (válidos: {', '.join(ROLES)})")
         if e.get("estado") not in ESTADOS:
@@ -89,7 +118,7 @@ def load_inventory(path: Path) -> dict:
         elif ip in ips:
             errores.append(f"{h}: ip {ip} repetida (ya usada por {ips[ip]})")
         ips[ip] = h
-        if not (isinstance(e.get("mapa"), list) and len(e["mapa"]) == 2):
+        if not e["es_dispositivo"] and not (isinstance(e.get("mapa"), list) and len(e["mapa"]) == 2):
             errores.append(f"{h}: 'mapa' debe ser [x, y]")
 
     for h, e in hosts.items():
@@ -113,5 +142,7 @@ def load_inventory(path: Path) -> dict:
         raise InventoryError("Inventario inválido:\n  - " + "\n  - ".join(errores))
 
     data["elementos"] = elementos
+    data["dispositivos"] = dispositivos
+    data["todos"] = elementos + dispositivos
     data["por_host"] = hosts
     return data

@@ -10,6 +10,9 @@ zabbix_export:
     - name: Hub_(48)
       imagetype: '1'
       encodedImage: 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
+    - name: Router_(64)
+      imagetype: '1'
+      encodedImage: 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
     - name: Satellite_antenna_(64)
       imagetype: '1'
       encodedImage: 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
@@ -60,7 +63,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '99'
+          selementid: '127'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -85,7 +88,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '100'
+          selementid: '128'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -110,7 +113,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '101'
+          selementid: '129'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -135,7 +138,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '102'
+          selementid: '130'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -160,7 +163,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '91'
+          selementid: '119'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -185,7 +188,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '92'
+          selementid: '120'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -210,7 +213,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '90'
+          selementid: '118'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -235,7 +238,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '94'
+          selementid: '122'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -260,7 +263,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '104'
+          selementid: '132'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -285,7 +288,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '93'
+          selementid: '121'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -310,7 +313,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '112'
+          selementid: '140'
           icon_off:
             name: Hub_(48)
           icon_on: {  }
@@ -335,7 +338,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '103'
+          selementid: '131'
           icon_off:
             name: House_(64)
           icon_on: {  }
@@ -360,7 +363,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '86'
+          selementid: '114'
           icon_off:
             name: Satellite_antenna_(64)
           icon_on: {  }
@@ -385,7 +388,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '87'
+          selementid: '115'
           icon_off:
             name: Satellite_antenna_(64)
           icon_on: {  }
@@ -410,7 +413,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '95'
+          selementid: '123'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -435,9 +438,34 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '106'
+          selementid: '134'
           icon_off:
             name: House_(48)
+          icon_on: {  }
+          icon_disabled: {  }
+          icon_maintenance: {  }
+          urls:
+            - name: 'Detalle del equipo'
+              url: 'zabbix.php?action=host.dashboard.view&hostid={HOST.ID}'
+            - name: 'Problemas del equipo'
+              url: 'zabbix.php?action=problem.view&hostids%5B%5D={HOST.ID}&filter_set=1'
+          evaltype: '0'
+        - elementtype: '0'
+          elements:
+            - host: Gateway_Mikrotik
+          label: '{HOST.NAME}'
+          label_location: '0'
+          x: '45'
+          'y': '520'
+          elementsubtype: '0'
+          areatype: '0'
+          width: '200'
+          height: '200'
+          viewtype: '0'
+          use_iconmap: '1'
+          selementid: '113'
+          icon_off:
+            name: Router_(64)
           icon_on: {  }
           icon_disabled: {  }
           icon_maintenance: {  }
@@ -460,7 +488,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '88'
+          selementid: '116'
           icon_off:
             name: Satellite_antenna_(64)
           icon_on: {  }
@@ -485,7 +513,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '89'
+          selementid: '117'
           icon_off:
             name: Satellite_antenna_(64)
           icon_on: {  }
@@ -510,7 +538,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '96'
+          selementid: '124'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -535,7 +563,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '107'
+          selementid: '135'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -560,7 +588,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '98'
+          selementid: '126'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -585,7 +613,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '97'
+          selementid: '125'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -610,7 +638,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '105'
+          selementid: '133'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -635,7 +663,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '108'
+          selementid: '136'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -660,7 +688,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '109'
+          selementid: '137'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -685,7 +713,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '110'
+          selementid: '138'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -710,7 +738,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '111'
+          selementid: '139'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -851,8 +879,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '90'
-          selementid2: '99'
+          selementid1: '118'
+          selementid2: '127'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -863,8 +891,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '91'
-          selementid2: '100'
+          selementid1: '119'
+          selementid2: '128'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -875,8 +903,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '92'
-          selementid2: '101'
+          selementid1: '120'
+          selementid2: '129'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -887,14 +915,14 @@ zabbix_export:
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '94'
-          selementid2: '102'
+          selementid1: '122'
+          selementid2: '130'
           linktriggers: {  }
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '86'
-          selementid2: '91'
+          selementid1: '114'
+          selementid2: '119'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -905,8 +933,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '87'
-          selementid2: '92'
+          selementid1: '115'
+          selementid2: '120'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -917,8 +945,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '86'
-          selementid2: '90'
+          selementid1: '114'
+          selementid2: '118'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -929,14 +957,14 @@ zabbix_export:
         - drawtype: '4'
           color: F9A825
           label: ''
-          selementid1: '93'
-          selementid2: '94'
+          selementid1: '121'
+          selementid2: '122'
           linktriggers: {  }
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '103'
-          selementid2: '104'
+          selementid1: '131'
+          selementid2: '132'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -947,14 +975,14 @@ zabbix_export:
         - drawtype: '4'
           color: F9A825
           label: ''
-          selementid1: '87'
-          selementid2: '93'
+          selementid1: '115'
+          selementid2: '121'
           linktriggers: {  }
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '95'
-          selementid2: '103'
+          selementid1: '123'
+          selementid2: '131'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -965,8 +993,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '86'
-          selementid2: '87'
+          selementid1: '114'
+          selementid2: '115'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -977,8 +1005,20 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '86'
-          selementid2: '88'
+          selementid1: '113'
+          selementid2: '114'
+          linktriggers:
+            - drawtype: '2'
+              color: E53935
+              trigger:
+                description: '{HOST.NAME}: sin respuesta (ICMP)'
+                expression: 'max(/Union_de_los_Rios/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+                recovery_expression: ''
+        - drawtype: '0'
+          color: 2E7D32
+          label: ''
+          selementid1: '114'
+          selementid2: '116'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -989,8 +1029,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '89'
-          selementid2: '95'
+          selementid1: '117'
+          selementid2: '123'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -1001,14 +1041,14 @@ zabbix_export:
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '96'
-          selementid2: '106'
+          selementid1: '124'
+          selementid2: '134'
           linktriggers: {  }
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '88'
-          selementid2: '89'
+          selementid1: '116'
+          selementid2: '117'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -1019,20 +1059,20 @@ zabbix_export:
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '89'
-          selementid2: '96'
+          selementid1: '117'
+          selementid2: '124'
           linktriggers: {  }
         - drawtype: '4'
           color: F9A825
           label: ''
-          selementid1: '89'
-          selementid2: '98'
+          selementid1: '117'
+          selementid2: '126'
           linktriggers: {  }
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '89'
-          selementid2: '105'
+          selementid1: '117'
+          selementid2: '133'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -1043,36 +1083,36 @@ zabbix_export:
         - drawtype: '4'
           color: F9A825
           label: ''
-          selementid1: '89'
-          selementid2: '110'
+          selementid1: '117'
+          selementid2: '138'
           linktriggers: {  }
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '96'
-          selementid2: '107'
+          selementid1: '124'
+          selementid2: '135'
           linktriggers: {  }
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '96'
-          selementid2: '97'
+          selementid1: '124'
+          selementid2: '125'
           linktriggers: {  }
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '98'
-          selementid2: '108'
+          selementid1: '126'
+          selementid2: '136'
           linktriggers: {  }
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '98'
-          selementid2: '109'
+          selementid1: '126'
+          selementid2: '137'
           linktriggers: {  }
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '97'
-          selementid2: '111'
+          selementid1: '125'
+          selementid2: '139'
           linktriggers: {  }

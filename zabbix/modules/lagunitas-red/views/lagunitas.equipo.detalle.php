@@ -31,15 +31,22 @@ $url = [
 	'dashboard' => 'zabbix.php?action=host.dashboard.view&hostid='.$hid,
 	'datos' => 'zabbix.php?action=latest.view&hostids%5B%5D='.$hid.'&filter_set=1',
 	'problemas' => 'zabbix.php?action=problem.view&hostids%5B%5D='.$hid.'&filter_set=1',
-	'config' => 'zabbix.php?action=host.edit&hostid='.$hid
+	'config' => 'zabbix.php?action=host.edit&hostid='.$hid,
+	'tecnico' => 'zabbix.php?action=lagunitas.reporte.equipo&periodo=7d&hostid='.$hid
 ];
 
-$grafico = static function(?array $item, string $titulo) use ($h): string {
-	if ($item === null) {
+$grafico = static function($items, string $titulo) use ($h): string {
+	$items = array_values(array_filter(is_array($items) && array_key_exists('itemid', $items) ? [$items]
+		: (array) $items));
+	if (!$items) {
 		return '';
 	}
-	$src = 'chart.php?itemids%5B%5D='.$item['itemid'].'&type=0&profileIdx=web.item.graph.filter&profileIdx2='
-		.$item['itemid'].'&width=860&height=170&legend=0';
+	$ids = '';
+	foreach ($items as $item) {
+		$ids .= 'itemids%5B%5D='.$item['itemid'].'&';
+	}
+	$src = 'chart.php?'.$ids.'type=0&profileIdx=web.item.graph.filter&profileIdx2='
+		.$items[0]['itemid'].'&width=860&height=170&legend='.(count($items) > 1 ? 1 : 0);
 
 	return '<figure class="lg-chart"><figcaption>'.$h($titulo).'</figcaption><img loading="lazy" alt="'
 		.$h($titulo).'" data-lg-src="'.$h($src).'" src="'.$h($src.'&from=now-24h&to=now').'"></figure>';
@@ -57,6 +64,17 @@ echo '<div class="lg-m-head"><div><h3>'.$h($e['nombre']).'</h3><p>'.$h(implode('
 // --------------------------------------------------------------------- tabs
 $tabs = ['resumen' => 'Resumen', 'problemas' => 'Problemas ('.count($e['problemas']).')',
 	'rendimiento' => 'Rendimiento', 'dependencias' => 'Dependencias ('.count($hijos).')'];
+$desc = $data['descubiertos'];
+if ($e['tipo'] === 'airmax') {
+	$tabs = array_slice($tabs, 0, 1, true) + ['radio' => 'Radio',
+		'estaciones' => 'Estaciones ('.count($desc['estaciones']).')'] + array_slice($tabs, 1, null, true);
+}
+if ($e['tipo'] === 'mikrotik') {
+	$tabs = array_slice($tabs, 0, 1, true) + ['router' => 'Router y energía'] + array_slice($tabs, 1, null, true);
+}
+if ($desc['interfaces']) {
+	$tabs['interfaces'] = 'Interfaces ('.count($desc['interfaces']).')';
+}
 if ($e['es_ap']) {
 	$tabs['unifi'] = 'UniFi';
 }
@@ -87,6 +105,17 @@ else {
 	echo $kpi('Pérdida', Html::num($e['perdida'], 0, '%'), Html::nivelPerdida($e['perdida']));
 	echo $kpi('Disponibilidad 24 h', Html::num($e['disp24'], 2, '%'), Html::nivelDisp($e['disp24']));
 	echo $kpi('Disponibilidad 7 días', Html::num($e['disp7d'], 2, '%'), Html::nivelDisp($e['disp7d']));
+	if ($e['tipo'] === 'airmax') {
+		$senal = Html::valorItem($it, 'airmax.wl.senal');
+		echo $kpi('Señal', Html::num($senal, 0, 'dBm'), Html::nivelSenal($senal));
+		$ccq = Html::valorItem($it, 'airmax.wl.ccq');
+		echo $kpi('CCQ', Html::num($ccq, 0, '%'), Html::nivelMin($ccq, 85, 70));
+	}
+	elseif ($e['tipo'] === 'mikrotik') {
+		$v = Html::valorItem($it, 'mikrotik.voltaje');
+		echo $kpi('Voltaje', Html::num($v, 1, 'V'), Html::nivelVoltaje($v));
+		echo $kpi('Clientes DHCP', Html::num(Html::valorItem($it, 'mikrotik.dhcp.clientes'), 0));
+	}
 }
 echo $kpi('Problemas activos', (string) count($e['problemas']), $e['problemas'] ? 'bad' : 'ok');
 echo $kpi('Equipos que dependen', (string) count($hijos), count($hijos) ? 'info' : '');
@@ -97,12 +126,24 @@ $filas = [
 	'Nombre técnico' => $e['host'],
 	'IP de gestión' => $e['ip'] ?: '—',
 	'Rol' => $e['rol'],
+	'Función' => ['ap' => 'Punto de acceso (AP)', 'sm' => 'Estación (SM)', 'ptp' => 'Enlace punto a punto',
+		'router' => 'Router', 'switch' => 'Switch'][$e['funcion']] ?? '—',
+	'Modelo' => $e['modelo'] ?: (Html::textoItem($it, 'airmax.sistema.modelo') !== '—'
+		? Html::textoItem($it, 'airmax.sistema.modelo') : Html::textoItem($it, 'mikrotik.sistema.modelo')),
 	'Equipo instalado' => $e['equipo'] ?: '—',
 	'Depende de' => $padre,
 	'Estado del tramo' => $e['tramo'] ?: '—',
 	'Grupos' => implode(', ', $e['grupos']),
 	'Mantenimiento' => $e['mantenimiento'] ? 'Sí' : 'No'
 ];
+if ($e['elemento'] !== $e['host'] && isset($equipos[$e['elemento']])) {
+	$filas = ['Sitio' => $equipos[$e['elemento']]['nombre']] + $filas;
+}
+foreach (['airmax.sistema.firmware' => 'Firmware', 'mikrotik.sistema.routeros' => 'RouterOS'] as $k => $t) {
+	if (Html::textoItem($it, $k) !== '—') {
+		$filas[$t] = Html::textoItem($it, $k);
+	}
+}
 if ($e['estado'] === 'afectado' && $e['causa']) {
 	$filas['Causa'] = 'Sin servicio por caída de '.$equipos[$e['causa']]['nombre'];
 }
@@ -111,6 +152,7 @@ foreach ($filas as $k => $v) {
 	echo '<div><dt>'.$h($k).'</dt><dd>'.$h($v).'</dd></div>';
 }
 echo '</dl><div class="lg-actions">'
+	.'<a class="lg-btn" href="'.$h($url['tecnico']).'">Detalle técnico (7 días)</a>'
 	.'<a class="lg-btn" href="'.$h($url['dashboard']).'">Dashboard del equipo</a>'
 	.'<a class="lg-btn" href="'.$h($url['datos']).'">Últimos datos</a>'
 	.'<a class="lg-btn" href="'.$h($url['problemas']).'">Problemas en Zabbix</a>'
@@ -166,11 +208,149 @@ if ($e['es_ap']) {
 	echo $grafico($it['ap.radio.5ghz.retries'] ?? null, 'Reintentos TX 5 GHz');
 }
 else {
+	if ($e['tipo'] === 'airmax') {
+		echo $grafico([$it['airmax.wl.senal'] ?? null, $it['airmax.wl.ruido'] ?? null], 'Señal y piso de ruido (dBm)');
+		echo $grafico([$it['airmax.wl.ccq'] ?? null, $it['airmax.airmax.calidad'] ?? null,
+			$it['airmax.airmax.capacidad'] ?? null], 'CCQ, calidad y capacidad airMAX (%)');
+		echo $grafico([$it['airmax.wl.tx'] ?? null, $it['airmax.wl.rx'] ?? null], 'Tasas de modulación TX / RX');
+	}
+	if ($e['tipo'] === 'mikrotik') {
+		echo $grafico($it['mikrotik.voltaje'] ?? null, 'Voltaje de alimentación (V)');
+		echo $grafico($it['mikrotik.dhcp.clientes'] ?? null, 'Clientes DHCP activos');
+		echo $grafico([$it['mikrotik.cpu'] ?? null, $it['mikrotik.memoria.uso'] ?? null], 'CPU y memoria (%)');
+	}
 	echo $grafico($it['icmppingsec'] ?? null, 'Latencia (ICMP)');
 	echo $grafico($it['icmppingloss'] ?? null, 'Pérdida de paquetes (ICMP)');
 	echo $grafico($it['icmpping'] ?? null, 'Disponibilidad (1 = activo, 0 = caído)');
 }
 echo '</div>';
+
+// -------------------------------------------------------------------- radio
+if ($e['tipo'] === 'airmax') {
+	$v = static fn(string $k) => Html::valorItem($it, $k);
+	echo '<div class="lg-pane" data-lg-pane="radio"><div class="lg-kpis">';
+	echo $kpi('Señal', Html::num($v('airmax.wl.senal'), 0, 'dBm'), Html::nivelSenal($v('airmax.wl.senal')));
+	echo $kpi('Piso de ruido', Html::num($v('airmax.wl.ruido'), 0, 'dBm'),
+		$v('airmax.wl.ruido') === null ? '' : ($v('airmax.wl.ruido') > -85 ? 'warn' : 'ok'));
+	echo $kpi('SNR', Html::num($v('airmax.wl.snr'), 0, 'dB'), Html::nivelMin($v('airmax.wl.snr'), 25, 15));
+	echo $kpi('CCQ', Html::num($v('airmax.wl.ccq'), 0, '%'), Html::nivelMin($v('airmax.wl.ccq'), 85, 70));
+	echo $kpi('Calidad airMAX', Html::num($v('airmax.airmax.calidad'), 0, '%'),
+		Html::nivelMin($v('airmax.airmax.calidad'), 75, 60));
+	echo $kpi('Capacidad airMAX', Html::num($v('airmax.airmax.capacidad'), 0, '%'),
+		Html::nivelMin($v('airmax.airmax.capacidad'), 60, 40));
+	echo '</div><dl class="lg-info">';
+	$modo = [1 => 'Estación (SM)', 2 => 'Punto de acceso (AP)', 3 => 'AP repetidor', 4 => 'AP WDS'];
+	foreach ([
+		'Modo' => $modo[(int) $v('airmax.radio.modo')] ?? '—',
+		'SSID' => Html::textoItem($it, 'airmax.wl.ssid'),
+		'Frecuencia' => Html::num($v('airmax.radio.frecuencia'), 0, 'MHz'),
+		'Ancho de canal' => Html::num($v('airmax.wl.canal'), 0, 'MHz'),
+		'Potencia de transmisión' => Html::num($v('airmax.radio.potencia'), 0, 'dBm'),
+		'Distancia configurada' => Html::num($v('airmax.radio.distancia'), 0, 'm'),
+		'Antena' => Html::textoItem($it, 'airmax.radio.antena'),
+		'DFS' => $v('airmax.radio.dfs') === null ? '—' : ($v('airmax.radio.dfs') ? 'Habilitado' : 'Deshabilitado'),
+		'Tasa TX / RX' => Html::bps($v('airmax.wl.tx')).' / '.Html::bps($v('airmax.wl.rx')),
+		'Estaciones asociadas' => Html::num($v('airmax.wl.estaciones'), 0),
+		'CPU / memoria' => Html::num($v('airmax.cpu'), 0, '%').' / '.Html::num($v('airmax.memoria.uso'), 0, '%'),
+		'Temperatura' => Html::num($v('airmax.temperatura'), 0, '°C'),
+		'Firmware airOS' => Html::textoItem($it, 'airmax.sistema.firmware'),
+		'Uptime' => $v('airmax.sistema.uptime') !== null ? Html::duracion((int) $v('airmax.sistema.uptime')) : '—'
+	] as $k => $x) {
+		echo '<div><dt>'.$h($k).'</dt><dd>'.$h($x).'</dd></div>';
+	}
+	echo '</dl><p class="lg-muted lg-nota">Referencia: señal buena entre -50 y -65 dBm (aceptable hasta -75); '
+		.'SNR &gt; 25 dB; CCQ &gt; 85 %; ruido normal entre -90 y -100 dBm. Las tasas TX/RX son de modulación, '
+		.'no tráfico real.</p></div>';
+
+	// -------------------------------------------------------------- estaciones
+	echo '<div class="lg-pane" data-lg-pane="estaciones">';
+	if ($desc['estaciones']) {
+		echo '<table class="lg-table lg-table-sm"><thead><tr><th>Estación</th><th>Señal</th><th>Ruido</th>'
+			.'<th>CCQ</th><th>Calidad</th><th>Capacidad</th><th>TX / RX</th><th>Distancia</th><th>Latencia</th>'
+			.'<th>Conectada</th></tr></thead><tbody>';
+		foreach ($desc['estaciones'] as $st) {
+			echo '<tr><td><b>'.$h($st['nombre'] ?? '—').'</b></td>'
+				.'<td class="lg-t-'.Html::nivelSenal($st['senal'] ?? null).'"><b>'.$h(Html::num($st['senal'] ?? null, 0, 'dBm')).'</b></td>'
+				.'<td>'.$h(Html::num($st['ruido'] ?? null, 0, 'dBm')).'</td>'
+				.'<td class="lg-t-'.Html::nivelMin($st['ccq'] ?? null, 85, 70).'">'.$h(Html::num($st['ccq'] ?? null, 0, '%')).'</td>'
+				.'<td>'.$h(Html::num($st['calidad'] ?? null, 0, '%')).'</td>'
+				.'<td>'.$h(Html::num($st['capacidad'] ?? null, 0, '%')).'</td>'
+				.'<td>'.$h(Html::bps($st['tx'] ?? null).' / '.Html::bps($st['rx'] ?? null)).'</td>'
+				.'<td>'.$h(Html::num($st['distancia'] ?? null, 0, 'm')).'</td>'
+				.'<td>'.$h(Html::num($st['latencia'] ?? null, 0, 'ms')).'</td>'
+				.'<td>'.(isset($st['conexion']) ? $h(Html::duracion((int) $st['conexion'])) : '—').'</td></tr>';
+		}
+		echo '</tbody></table>';
+		$primera = reset($desc['estaciones']);
+		if (!empty($primera['itemids']['senal'])) {
+			$ids = array_map(static fn($st) => ['itemid' => $st['itemids']['senal'] ?? null],
+				array_filter($desc['estaciones'], static fn($st) => !empty($st['itemids']['senal'])));
+			echo $grafico(array_values($ids), 'Señal por estación (dBm)');
+		}
+	}
+	else {
+		echo '<div class="lg-muted">Todavía no se descubrieron estaciones (el descubrimiento corre cada 10 min).</div>';
+	}
+	echo '</div>';
+}
+
+// ------------------------------------------------------------------- router
+if ($e['tipo'] === 'mikrotik') {
+	$v = static fn(string $k) => Html::valorItem($it, $k);
+	echo '<div class="lg-pane" data-lg-pane="router"><div class="lg-kpis">';
+	echo $kpi('Voltaje', Html::num($v('mikrotik.voltaje'), 1, 'V'), Html::nivelVoltaje($v('mikrotik.voltaje')));
+	echo $kpi('CPU', Html::num($v('mikrotik.cpu'), 0, '%'), Html::nivelPct($v('mikrotik.cpu')));
+	echo $kpi('Memoria', Html::num($v('mikrotik.memoria.uso'), 0, '%'), Html::nivelPct($v('mikrotik.memoria.uso')));
+	echo $kpi('Temperatura', Html::num($v('mikrotik.temperatura'), 0, '°C'),
+		$v('mikrotik.temperatura') === null ? '' : ($v('mikrotik.temperatura') > 65 ? 'bad' : 'ok'));
+	echo $kpi('Clientes DHCP', Html::num($v('mikrotik.dhcp.clientes'), 0));
+	foreach ($desc['wan'] as $w) {
+		echo $kpi('Internet ('.$w['nombre'].')', $w['estado'] === null ? '—' : ((int) $w['estado'] === 1 ? 'Conectado' : 'Caído'),
+			$w['estado'] === null ? '' : ((int) $w['estado'] === 1 ? 'ok' : 'bad'));
+	}
+	echo '</div><dl class="lg-info">';
+	foreach ([
+		'Modelo' => Html::textoItem($it, 'mikrotik.sistema.modelo'),
+		'RouterOS' => Html::textoItem($it, 'mikrotik.sistema.routeros'),
+		'Firmware (RouterBOOT)' => Html::textoItem($it, 'mikrotik.sistema.firmware'),
+		'Número de serie' => Html::textoItem($it, 'mikrotik.sistema.serie'),
+		'Temperatura de CPU' => Html::num($v('mikrotik.temperatura.cpu'), 0, '°C'),
+		'Uptime' => $v('mikrotik.sistema.uptime') !== null ? Html::duracion((int) $v('mikrotik.sistema.uptime')) : '—'
+	] as $k => $x) {
+		echo '<div><dt>'.$h($k).'</dt><dd>'.$h($x).'</dd></div>';
+	}
+	echo '</dl><p class="lg-muted lg-nota">Batería VRLA de 12 V: 12,7 V ≈ 100 %, 12,2 V ≈ 50 %, '
+		.'por debajo de 11,8 V descarga profunda. Por encima de 14,8 V revisar el regulador de carga.</p></div>';
+}
+
+// --------------------------------------------------------------- interfaces
+if ($desc['interfaces']) {
+	$oper = [1 => 'up', 2 => 'down', 3 => 'testing', 4 => 'desconocido', 5 => 'dormant', 6 => 'no presente',
+		7 => 'capa inferior caída'];
+	echo '<div class="lg-pane" data-lg-pane="interfaces"><table class="lg-table lg-table-sm"><thead><tr>'
+		.'<th>Interfaz</th><th>Estado</th><th>Entrante</th><th>Saliente</th><th>Errores entrada/salida</th>'
+		.'<th>Velocidad</th></tr></thead><tbody>';
+	foreach ($desc['interfaces'] as $if) {
+		$est = $if['estado'] ?? null;
+		echo '<tr><td><b>'.$h($if['nombre']).'</b></td><td>'
+			.($est === null ? '—' : '<span class="lg-badge lg-badge-'.((int) $est === 1 ? 'ok' : 'bad').'">'
+				.$h($oper[(int) $est] ?? $est).'</span>')
+			.'</td><td>'.$h(Html::bps($if['in'] ?? null)).'</td><td>'.$h(Html::bps($if['out'] ?? null)).'</td><td>'
+			.$h(Html::num($if['errin'] ?? null, 1).' / '.Html::num($if['errout'] ?? null, 1)).'</td><td>'
+			.$h(Html::bps($if['velocidad'] ?? null)).'</td></tr>';
+	}
+	echo '</tbody></table>';
+	$trafico = [];
+	foreach ($desc['interfaces'] as $if) {
+		foreach (['in', 'out'] as $k) {
+			if (!empty($if['itemids'][$k]) && ($if['in'] ?? 0) + ($if['out'] ?? 0) > 0) {
+				$trafico[] = ['itemid' => $if['itemids'][$k]];
+			}
+		}
+	}
+	echo $grafico(array_slice($trafico, 0, 8), 'Tráfico por interfaz (bps)');
+	echo '</div>';
+}
 
 // ------------------------------------------------------------- dependencias
 echo '<div class="lg-pane" data-lg-pane="dependencias">';

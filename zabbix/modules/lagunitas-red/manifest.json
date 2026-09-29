@@ -4,7 +4,7 @@
 	"type": "widget",
 	"name": "Red Las Lagunitas",
 	"namespace": "LagunitasRed",
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"author": "Elías Coranti — PPS UNRC / Red Comunitaria y Científica Las Lagunitas",
 	"description": "Estado de la red WISP por rol (torres, nodos, hogares): tarjetas de resumen, filtros, calidad de enlace y detalle por equipo con dependencias.",
 	"url": "https://github.com/ecoranti/zabbix-lagunitas",

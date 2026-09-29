@@ -102,7 +102,7 @@ def _macros(e: dict, log) -> list[dict] | None:
 def ensure_hosts(api: ZabbixAPI, inv: dict, groups: dict[str, str], log=print) -> dict[str, str]:
     sitio = inv.get("sitio", "Las Lagunitas")
     hostids: dict[str, str] = {}
-    for e in inv["elementos"]:
+    for e in inv["todos"]:
         rol = ROLES[e["rol"]]
         estado = ESTADOS[e["estado"]]
         padre = e.get("padre")
@@ -115,14 +115,18 @@ def ensure_hosts(api: ZabbixAPI, inv: dict, groups: dict[str, str], log=print) -
             "templates": _templateids(api, e["perfiles"]),
             "tags": [{"tag": "sitio", "value": sitio}, {"tag": "rol", "value": rol["etiqueta"]},
                      {"tag": "estado", "value": estado["texto"]},
-                     {"tag": "entorno", "value": inv.get("entorno", "")}],
+                     {"tag": "entorno", "value": inv.get("entorno", "")},
+                     {"tag": "funcion", "value": e["funcion"]},
+                     {"tag": "elemento", "value": e["elemento"]}],
             "description": (f"{rol['etiqueta']} de la Red Las Lagunitas. Estado del tramo: "
                             f"{estado['texto']}. Depende de: {padre_nombre}. Gestionado por el "
                             "provisionador (config/inventory.*.yaml): los cambios manuales se pisan."),
             "inventory_mode": 0,
-            "inventory": {"type": rol["etiqueta"], "hardware": e.get("equipo", "")[:255],
+            "inventory": {"type": rol["etiqueta"], "type_full": e["funcion"],
+                          "hardware": e.get("equipo", "")[:255], "model": e.get("modelo", "")[:64],
                           "location": sitio, "site_city": "Alpa Corral, Córdoba",
-                          "notes": f"Depende de: {padre_nombre}"},
+                          "notes": f"Sitio: {inv['por_host'][e['elemento']]['nombre']}. "
+                                   f"Depende de: {padre_nombre}"},
         }
         macros = _macros(e, log)
         if macros is not None:
@@ -140,13 +144,14 @@ def ensure_hosts(api: ZabbixAPI, inv: dict, groups: dict[str, str], log=print) -
             quitar = [{"templateid": t} for t in actuales - deseados]
             if quitar:
                 params["templates_clear"] = quitar
-            api.call("host.update", {"hostid": hid, **params})
+            # La interfaz debe existir antes de vincular templates que la requieren (SNMP).
             iface = _interfaz(e)
             main = next((i for i in h["interfaces"] if i["main"] == "1" and int(i["type"]) == iface["type"]), None)
             if main and main["ip"] != iface["ip"]:
                 api.call("hostinterface.update", {"interfaceid": main["interfaceid"], "ip": iface["ip"]})
             elif not main:
                 api.call("hostinterface.create", {"hostid": hid, **iface})
+            api.call("host.update", {"hostid": hid, **params})
             accion = "actualizado"
         else:
             hid = api.call("host.create", {**params, "interfaces": [_interfaz(e)]})["hostids"][0]
@@ -159,7 +164,7 @@ def ensure_hosts(api: ZabbixAPI, inv: dict, groups: dict[str, str], log=print) -
 def caida_triggerids(api: ZabbixAPI, inv: dict, hostids: dict[str, str]) -> dict[str, str]:
     """Trigger de 'equipo caído' de cada host (heredado del template de disponibilidad)."""
     out = {}
-    for e in inv["elementos"]:
+    for e in inv["todos"]:
         tpl = template_de_disponibilidad(e)
         if not tpl:
             continue
@@ -177,7 +182,7 @@ def ensure_dependencies(api: ZabbixAPI, inv: dict, triggers: dict[str, str], log
     todos los nodos y hogares que cuelgan de ella (evita tormentas de alarmas).
     """
     n = 0
-    for e in inv["elementos"]:
+    for e in inv["todos"]:
         hijo, padre = triggers.get(e["host"]), triggers.get(e.get("padre") or "")
         if not hijo:
             continue
@@ -185,6 +190,36 @@ def ensure_dependencies(api: ZabbixAPI, inv: dict, triggers: dict[str, str], log
         api.call("trigger.update", {"triggerid": hijo, "dependencies": deps})
         n += bool(deps)
     log(f"  {n} dependencias padre -> hijo configuradas")
+    n += _dependencias_snmp(api, inv, triggers, log)
+    return n
+
+
+# Triggers que se disparan cuando el equipo deja de responder: dependen de la caída
+# (ICMP) del propio equipo para no duplicar la alerta.
+TRIGGERS_CON_CAIDA = ["{HOST.NAME}: sin datos SNMP", "{HOST.NAME}: sin datos de la API de UniFi",
+                      "{HOST.NAME}: controlador UniFi no accesible"]
+
+
+def _dependencias_snmp(api: ZabbixAPI, inv: dict, triggers: dict[str, str], log) -> int:
+    hosts = {h["host"]: h["hostid"] for h in api.call("host.get", {
+        "filter": {"host": [e["host"] for e in inv["todos"]]}, "output": ["host"]})}
+    n = 0
+    for e in inv["todos"]:
+        caida = triggers.get(e["host"])
+        if not caida or e["host"] not in hosts:
+            continue
+        for t in api.call("trigger.get", {"hostids": [hosts[e["host"]]], "output": ["triggerid", "description"],
+                                          "filter": {"description": TRIGGERS_CON_CAIDA},
+                                          "selectDependencies": ["triggerid"]}):
+            if t["triggerid"] == caida:
+                continue
+            actuales = {d["triggerid"] for d in t["dependencies"]}
+            if caida not in actuales:
+                api.call("trigger.update", {"triggerid": t["triggerid"], "dependencies":
+                                            [{"triggerid": x} for x in actuales | {caida}]})
+                n += 1
+    if n:
+        log(f"  {n} alertas de SNMP/API dependientes de la caída del propio equipo")
     return n
 
 

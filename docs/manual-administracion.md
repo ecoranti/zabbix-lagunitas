@@ -1,10 +1,11 @@
 # Manual de administración — Monitoreo de la Red Las Lagunitas
 
-**Versión 2.0** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
+**Versión 2.1** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
 
 Referencia operativa del día a día: cómo leer el estado de la red, atender alarmas, dar de alta
 o activar equipos, generar reportes, respaldar y resolver los problemas más frecuentes. La
-instalación está en la [Guía de implementación](guia-implementacion.md).
+instalación está en la [Guía de implementación](guia-implementacion.md) y la incorporación de
+equipos en la [Guía de integración de equipos](guia-integracion-equipos.md).
 
 ---
 
@@ -13,7 +14,9 @@ instalación está en la [Guía de implementación](guia-implementacion.md).
 | Concepto | Significado |
 |---|---|
 | **Inventario** | `config/inventory.*.yaml`: lista de equipos con rol, IP, padre y estado. Es la fuente de verdad: los cambios se hacen ahí y se aplican con `bin/lagunitas aprovisionar`. Los cambios manuales en Zabbix sobre objetos gestionados se pisan en el siguiente aprovisionamiento. |
-| **Rol** | Torre (backbone), Nodo intermedio, Hogar, Institución, Access point (laboratorio). |
+| **Rol** | Gateway (salida a Internet), Torre (backbone), Nodo intermedio, Hogar, Institución, Access point. |
+| **Sitio y dispositivos** | Un sitio del mapa (torre, nodo, hogar) puede tener varios equipos con IP: el principal y sus *dispositivos* (por ejemplo, la radio que recibe, el AP que retransmite y el router del hogar). Cada uno es un host con sus propias métricas. |
+| **Perfiles** | Cómo se monitorea cada equipo: `icmp` (disponibilidad), `airos_snmp` (radios airMAX), `mikrotik_snmp` (routers Mikrotik), `unifi_api` (AP UniFi). |
 | **Estado del tramo** | `operativo` (monitoreado), `en_proceso` o `sin_configurar` (el equipo existe en Zabbix pero deshabilitado; en el mapa se ve en gris). |
 | **Padre** | Equipo del que depende la conectividad. Define las dependencias de alarmas y la disponibilidad *de servicio*. |
 | **Disponibilidad propia** | Porcentaje del tiempo en que el propio equipo respondió. |
@@ -23,8 +26,8 @@ instalación está en la [Guía de implementación](guia-implementacion.md).
 
 | Tipo | Nombre |
 |---|---|
-| Grupos de hosts | `Las Lagunitas` y subgrupos `Torres`, `Nodos`, `Hogares e instituciones`, `Equipos de laboratorio` |
-| Templates | `Lagunitas - Disponibilidad ICMP`, `Lagunitas - AP UniFi por API` (grupo `Templates/Las Lagunitas`) |
+| Grupos de hosts | `Las Lagunitas` y subgrupos `Gateway`, `Torres`, `Nodos`, `Hogares e instituciones`, `Equipos de laboratorio` |
+| Templates | `Lagunitas - Disponibilidad ICMP`, `Lagunitas - Ubiquiti airMAX por SNMP`, `Lagunitas - Mikrotik por SNMP`, `Lagunitas - AP UniFi por API` (grupo `Templates/Las Lagunitas`) |
 | Mapa | `Las Lagunitas - Topología` |
 | Dashboard | `Las Lagunitas - Centro de monitoreo` |
 | Servicios / SLA | `Red Las Lagunitas` (y sub-servicios) · SLA `Las Lagunitas - Disponibilidad mensual` |
@@ -57,11 +60,20 @@ con **Start slideshow** rotan automáticamente, útil para una pantalla fija.
 - **Tarjetas superiores**: Total · En línea · Advertencias · Caídos · Sin servicio · Sin datos ·
   No monitoreados. Un clic en una tarjeta filtra la tabla.
 - **Buscador y filtros rápidos**: por nombre, IP, rol o hardware; chips por estado y por rol.
-- **Tablas por rol** con disponibilidad de 24 h, latencia, pérdida, equipo del que depende y
+- **Tablas por rol** con disponibilidad de 24 h, latencia, pérdida, **enlace / energía** (señal y
+  CCQ en radios airMAX; voltaje y clientes DHCP en el Mikrotik), equipo del que depende y
   problemas activos. Las filas problemáticas se ordenan primero.
 - **Clic en un equipo** abre su detalle:
-  - *Resumen*: indicadores, datos del equipo y accesos directos (dashboard del equipo, últimos
-    datos, problemas, configuración).
+  - *Resumen*: indicadores, datos del equipo (función, modelo, firmware, sitio) y accesos
+    directos (detalle técnico de 7 días, dashboard del equipo, últimos datos, problemas,
+    configuración).
+  - *Radio* (airMAX): señal, ruido, SNR, CCQ, calidad y capacidad airMAX, modo, SSID, frecuencia,
+    ancho de canal, potencia, distancia, antena, DFS, tasas TX/RX, CPU/memoria, temperatura.
+  - *Estaciones* (airMAX): cada equipo conectado a la radio con su señal, ruido, CCQ, calidad,
+    capacidad, tasas, distancia, latencia y tiempo conectado.
+  - *Router y energía* (Mikrotik): voltaje, CPU, memoria, temperatura, clientes DHCP, estado de
+    Internet (PPPoE), modelo, RouterOS, firmware, número de serie.
+  - *Interfaces*: estado, tráfico entrante/saliente, errores y velocidad de cada interfaz.
   - *Problemas*: activos y los incidentes de los últimos 30 días con su duración.
   - *Rendimiento*: gráficos de latencia, pérdida y disponibilidad (1 h / 24 h / 7 d / 30 d).
   - *Dependencias*: camino hasta el backbone y **qué equipos quedan sin servicio si este cae**.
@@ -163,25 +175,71 @@ Telegram: ver la Guía de implementación §4.9.
 
 ---
 
+### 4.6 Cómo leer las métricas de radio y energía
+
+| Métrica | Bien | Revisar | Mal | Acción típica |
+|---|---|---|---|---|
+| Señal (airMAX) | -50 a -65 dBm | -65 a -75 dBm | < -75 dBm | Alineación, obstrucciones (árboles), potencia del otro extremo |
+| Piso de ruido | -90 a -100 dBm | -85 a -90 dBm | > -85 dBm | Interferencia: cambiar frecuencia o reducir ancho de canal (airView) |
+| SNR | > 30 dB | 20–30 dB | < 15–20 dB | Mejorar señal o reducir ruido |
+| CCQ | > 90 % | 75–90 % | < 75 % | Interferencia o señal marginal |
+| Calidad / capacidad airMAX | > 80 % / > 60 % | | < 60 % / < 40 % | Enlace inestable o degradado |
+| Voltaje (Mikrotik, batería 12 V) | 12,4–13,8 V | 12,0–12,4 V | < 11,8 V o > 14,8 V | Panel sucio o sombreado, días nublados, batería o regulador |
+| Clientes DHCP | habitual del sitio | caída brusca | 0 | Falla de la red de distribución o del DHCP |
+| Temperatura | < 55 °C | 55–65 °C | > 65 °C | Ventilación del gabinete, exposición solar |
+
+Detalle completo y alertas asociadas en la [Guía de integración de equipos](guia-integracion-equipos.md).
+
 ## 5. Reportes
 
 ### 5.1 Reports → Disponibilidad de la red
 
-1. Elegir **Período** (hoy, 24 h, 7 días, 30 días, mes actual, mes anterior o fechas), **Rol**,
-   **Objetivo (%)** y **Vista** (*Técnica* o *Gerencial*), y pulsar **Generar**.
-2. El encabezado (nombre de la organización y título) se edita haciendo clic sobre el texto; se
-   recuerda en ese navegador.
-3. Contenido: tarjetas de resumen, **conclusiones automáticas** (disponibilidad media, equipos
-   que no cumplen, caída más larga, caída de mayor impacto), y una tabla por rol. Un clic en el
-   nombre de un equipo despliega sus incidentes, indicando si fue una caída propia o de un equipo
-   aguas arriba.
-4. **Exportar CSV** (separador `;`, abre directo en Excel/LibreOffice) o **Imprimir / PDF**
-   (A4 apaisado; en el diálogo de impresión elegir "Guardar como PDF").
+1. Filtros: **Tipo de reporte** (técnico o gerencial), **Período** (hoy, 24 h, 7 días, 30 días, mes
+   actual, mes anterior o personalizado con fechas), **Grupo**, **Equipo**, **Tipo de equipo**
+   (radios airMAX, Mikrotik, solo ICMP, AP UniFi), **Mantenimientos** (excluir o incluir los
+   eventos suprimidos) y **SLA objetivo**. Pulsar **Generar reporte**.
+2. **Personalizar encabezado**: organización y título del reporte. Se recuerdan en ese navegador
+   y se aplican al reporte, al detalle técnico y a la impresión.
+3. Tarjetas: equipos, evaluados, disponibilidad media, cumplen / no cumplen SLA, sin indicador,
+   caídas, horas-equipo de caída, horas sin servicio, MTTR medio, salud normal y degradados.
+4. **Conclusiones automáticas**: disponibilidad media, equipos que no cumplen, caída más larga,
+   caída de mayor impacto (cuántos equipos dejó sin servicio), equipos con salud degradada.
+5. Tabla: equipo, IP, grupo, **indicador detectado** (ICMP / SNMP / API), disponibilidad propia y
+   del servicio, caída, incidentes, MTTR, mayor caída, **salud actual** (Normal o Degradado con la
+   cantidad de problemas no críticos activos), **estado actual** (Disponible, Con caída activa, Sin
+   servicio, En mantenimiento), SLA y **Ver detalle**. Debajo de cada equipo con caídas se
+   despliega el detalle de incidentes indicando si fue propia o de un equipo aguas arriba.
+6. **Exportar CSV** (separador `;`, abre directo en Excel/LibreOffice) o **Imprimir / Guardar PDF**
+   (A4 apaisado; en el diálogo elegir "Guardar como PDF").
 
-La vista *gerencial* muestra solo disponibilidad del servicio, tiempo sin servicio, caídas y
-cumplimiento: pensada para rendir cuentas a la comunidad o a financiadores.
+La vista *gerencial* oculta los datos técnicos (indicador, disponibilidad propia, MTTR, mayor
+caída): pensada para rendir cuentas a la comunidad o a financiadores.
 
-### 5.2 Services → SLA report
+### 5.2 Detalle técnico de un equipo
+
+Botón **Ver detalle** del reporte (o *Detalle técnico (7 días)* desde el modal del widget):
+
+- **Tarjetas**: disponibilidad propia (y por qué indicador), disponibilidad del servicio, SLA,
+  mantenimiento, caída propia y MTTR, problemas del período, problemas activos, tiempo afectado
+  único (sin duplicar alertas simultáneas), horas-evento acumuladas, salud operativa y equipos
+  dependientes.
+- **Conclusiones y recomendaciones** según el tipo de equipo: señal pobre (revisar alineación y
+  obstrucciones), interferencia (cambiar frecuencia), batería en descarga (revisar panel y
+  regulador), picos de CPU/memoria, pérdida de paquetes, problemas con *flapping*, horas sin
+  servicio por caídas aguas arriba.
+- **Comportamiento de recursos y enlace**: una tarjeta por métrica disponible (latencia, pérdida,
+  señal, SNR, CCQ, ruido, capacidad airMAX, voltaje, CPU, memoria, temperatura, clientes) con
+  valor actual, promedio y extremo del período, estado *Ahora* y *Pico*, gráfico de tendencia con
+  las líneas de umbral y **horas aproximadas fuera de umbral** (advertencia / crítico).
+- **Estado de interfaces**: tarjetas (total, UP, DOWN, con errores, con cambios, tráfico total),
+  buscador y filtros, y por interfaz: estado, tráfico, errores máximos, cambios de estado,
+  velocidad y diagnóstico del período (*Estable*, *Con errores*, *Inestable*, *Sin enlace*).
+- **Estaciones asociadas** (radios): señal actual y mínima del período por estación.
+- **Problemas agrupados** con buscador y filtros (severidad, categoría, estado): veces,
+  horas-evento, primero, último, reconocido y marca **FLAPPING** (3 o más repeticiones); al final,
+  los eventos individuales.
+
+### 5.3 Services → SLA report
 
 Reporte nativo de Zabbix del SLA mensual por servicio (equipo operativo). Útil para ver la
 evolución mes a mes.
@@ -214,27 +272,53 @@ dependencias, mapa y servicios).
 **Dar de baja un equipo**: pasarlo a `sin_configurar` (queda deshabilitado, conserva el
 historial) o quitarlo del inventario y borrar el host en *Data collection → Hosts*.
 
-**Monitorear un equipo por SNMP** (producción): agregar el perfil `airos_snmp` o
-`mikrotik_snmp`, definir `SNMP_COMMUNITY` en `.env` y re-aprovisionar.
+**Monitorear un equipo por SNMP**: habilitar SNMP en el equipo, comprobarlo con
+`bin/lagunitas probar-snmp <ip>`, agregar el perfil `airos_snmp` o `mikrotik_snmp`, definir
+`SNMP_COMMUNITY` en `.env` y re-aprovisionar. Paso a paso por tipo de equipo en la
+[Guía de integración de equipos](guia-integracion-equipos.md).
+
+**Agregar los equipos secundarios de un sitio** (AP que retransmite, router del hogar): bloque
+`dispositivos:` dentro del sitio (ver la guía de integración, §4.3 y §6).
+
+**Ajustar un umbral para un solo equipo** (por ejemplo, un enlace largo con señal naturalmente
+más baja): clave `macros:` en su bloque del inventario, por ejemplo
+`"{$AIRMAX.SENAL.WARN}": "-78"`, y re-aprovisionar.
 
 El provisionador valida el inventario antes de tocar Zabbix: IPs repetidas, padres inexistentes,
 ciclos, roles o estados inválidos.
 
 ---
 
-## 7. Laboratorio: simulación de caídas
+## 7. Laboratorio: simulación de caídas y fallas
 
 ```bash
-bin/lagunitas lab estado                     # contenedor de cada equipo
-bin/lagunitas lab caida Nodo_Kika            # un hogar queda "Sin servicio"; alerta por el nodo
+bin/lagunitas lab estado                     # contenedor y perfil simulado de cada equipo
+bin/lagunitas lab caida Nodo_Kika            # cae el nodo y su hogar queda "Sin servicio": 1 alerta
 bin/lagunitas lab recuperar Nodo_Kika
 bin/lagunitas lab caida Union_de_los_Rios    # caída troncal: 1 alerta, el resto "Sin servicio"
 bin/lagunitas lab recuperar Union_de_los_Rios
+bin/lagunitas lab caida Kika --solo          # solo ese equipo, sin sus dependientes
 ```
 
-Los contenedores se crean con reinicio automático y sin `--rm`, por lo que *caída* y
-*recuperar* son un `docker stop` / `docker start`. `./start.sh` y `./start.sh down` levantan o
-apagan todo el laboratorio conservando los datos.
+`caida` detiene también a los equipos aguas abajo, porque en la red real pierden el camino; así se
+ve el efecto de las dependencias. Los contenedores se crean con reinicio automático y sin `--rm`,
+por lo que *caída* y *recuperar* son un `docker stop` / `docker start`.
+
+Los equipos con perfil SNMP corren un **agente SNMP simulado** (radio AP, radio estación o router
+Mikrotik) con los OIDs reales del fabricante. Para ver cómo reacciona el sistema ante fallas
+típicas de una WISP:
+
+```bash
+bin/lagunitas lab escenario Walter senal-debil          # señal débil, SNR bajo
+bin/lagunitas lab escenario Mesada interferencia        # ruido alto, CCQ bajo
+bin/lagunitas lab escenario Gateway_Mikrotik bateria-baja
+bin/lagunitas lab escenario Gateway_Mikrotik sin-internet
+bin/lagunitas lab escenario Walter normal               # vuelve a valores normales
+```
+
+La lista completa de escenarios y las alertas que produce cada uno está en la
+[Guía de integración de equipos](guia-integracion-equipos.md) (§11). `./start.sh` y
+`./start.sh down` levantan o apagan todo el laboratorio conservando los datos.
 
 ---
 
@@ -263,8 +347,15 @@ contenedor con `bin/lagunitas lab estado`.
 el enlace/VPN hacia la red. En el laboratorio, `colima status`.
 
 **El AP UniFi no reporta.** Si aparece *controlador UniFi no accesible*, el problema es la
-aplicación UniFi (encendida, puerto correcto); si aparece *sin datos de la API*, revisar la API
-key y los IDs de site/dispositivo (macros del host).
+aplicación UniFi (encendida, IP y puerto correctos). En el laboratorio el controlador (UniFi OS
+Server) corre en la Mac del laboratorio (192.168.1.81) y el AP está en la 192.168.1.113; el
+puerto (hoy 11443) puede cambiar al reiniciarse UniFi OS Server: comprobarlo con
+`lsof -nP -iTCP -sTCP:LISTEN | grep gvproxy` y verificar con
+`bin/lagunitas unifi-ids 192.168.1.81 <puerto>`. Si aparece *sin datos de la API*, revisar la API
+key y los IDs de site/dispositivo.
+
+**Un equipo SNMP no reporta datos de radio o energía.** `bin/lagunitas probar-snmp <ip>` muestra
+qué responde el equipo. Causas y soluciones en la guía de integración (§13).
 
 **En el laboratorio el AP "responde ping" aunque esté apagado.** Es la limitación de Colima
 descripta en la guía: responde ICMP por cualquier IP externa. Por eso el AP del laboratorio se
@@ -296,7 +387,11 @@ vacío + `bin/lagunitas aprovisionar` (recrea toda la configuración, sin el his
 bin/lagunitas aprovisionar                    # aplicar inventario y configuración
 bin/lagunitas aprovisionar --solo mapa        # un paso puntual
 bin/lagunitas verificar                       # salud
-bin/lagunitas lab caida|recuperar <equipo>    # simulación
+bin/lagunitas validar                         # valida el inventario (sin Zabbix)
+bin/lagunitas probar-snmp <ip>                # prueba SNMP antes de integrar un equipo
+bin/lagunitas unifi-ids <ip> <puerto>         # IDs de site/AP de un controlador UniFi
+bin/lagunitas lab caida|recuperar <equipo>    # simulación de caídas
+bin/lagunitas lab escenario <equipo> <escenario>   # simulación de fallas de radio/energía
 scripts/backup.sh                             # respaldo
 docker compose logs --tail 50 zabbix-server   # logs
 ```

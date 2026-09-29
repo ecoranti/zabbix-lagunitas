@@ -18,7 +18,20 @@ class RedService {
 		'lagunitas.disponibilidad[7d]', 'ap.disponible', 'ap.cpu.util', 'ap.mem.util',
 		'ap.clients.count', 'ap.uptime', 'ap.firmware', 'ap.modelo', 'ap.estado',
 		'ap.uplink.rx', 'ap.uplink.tx', 'ap.radio.24ghz.retries', 'ap.radio.5ghz.retries',
-		'ap.radio.6ghz.retries', 'net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}]'
+		'ap.radio.6ghz.retries', 'net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}]',
+		// Radios Ubiquiti airMAX (SNMP)
+		'airmax.wl.senal', 'airmax.wl.ruido', 'airmax.wl.snr', 'airmax.wl.ccq', 'airmax.wl.rssi',
+		'airmax.airmax.calidad', 'airmax.airmax.capacidad', 'airmax.wl.tx', 'airmax.wl.rx',
+		'airmax.wl.estaciones', 'airmax.wl.ssid', 'airmax.wl.canal', 'airmax.radio.modo',
+		'airmax.radio.frecuencia', 'airmax.radio.potencia', 'airmax.radio.distancia', 'airmax.radio.antena',
+		'airmax.radio.dfs', 'airmax.sistema.modelo', 'airmax.sistema.firmware', 'airmax.sistema.uptime',
+		'airmax.sistema.nombre', 'airmax.cpu', 'airmax.memoria.uso', 'airmax.temperatura',
+		// Routers Mikrotik (SNMP)
+		'mikrotik.voltaje', 'mikrotik.dhcp.clientes', 'mikrotik.cpu', 'mikrotik.memoria.uso',
+		'mikrotik.temperatura', 'mikrotik.temperatura.cpu', 'mikrotik.sistema.modelo',
+		'mikrotik.sistema.routeros', 'mikrotik.sistema.firmware', 'mikrotik.sistema.serie',
+		'mikrotik.sistema.uptime', 'mikrotik.sistema.nombre',
+		'zabbix[host,snmp,available]'
 	];
 
 	/** Trigger de "equipo caído" de cada template de disponibilidad. */
@@ -29,6 +42,7 @@ class RedService {
 
 	/** Orden y títulos de las secciones (por tag "rol"). */
 	public const SECCIONES = [
+		'Gateway' => ['titulo' => 'Gateway (salida a Internet)', 'icono' => 'GW'],
 		'Torre' => ['titulo' => 'Torres (backbone)', 'icono' => 'T'],
 		'Nodo intermedio' => ['titulo' => 'Nodos intermedios', 'icono' => 'N'],
 		'Hogar' => ['titulo' => 'Hogares e instituciones', 'icono' => 'H'],
@@ -77,7 +91,7 @@ class RedService {
 			'output' => ['hostid', 'host', 'name', 'status', 'maintenance_status', 'description'],
 			'selectInterfaces' => ['ip', 'dns', 'useip', 'main', 'type'],
 			'selectTags' => ['tag', 'value'],
-			'selectInventory' => ['type', 'hardware', 'location', 'notes'],
+			'selectInventory' => ['type', 'type_full', 'hardware', 'model', 'location', 'notes'],
 			'selectHostGroups' => ['name'],
 			'preservekeys' => true
 		];
@@ -189,6 +203,8 @@ class RedService {
 			$rol = $tags['rol'] ?? ($h['inventory']['type'] ?? '') ?: 'Otro';
 			$it = $items[$hid] ?? [];
 			$es_ap = array_key_exists('ap.disponible', $it) && !array_key_exists('icmpping', $it);
+			$tipo = array_key_exists('airmax.wl.senal', $it) ? 'airmax'
+				: (array_key_exists('mikrotik.voltaje', $it) ? 'mikrotik' : ($es_ap ? 'unifi' : 'icmp'));
 			$disp = $it['icmpping'] ?? $it['ap.disponible'] ?? null;
 
 			$iface = null;
@@ -210,8 +226,12 @@ class RedService {
 				'ip' => $ip,
 				'rol' => $rol,
 				'es_ap' => $es_ap,
+				'tipo' => $tipo,
+				'funcion' => $tags['funcion'] ?? '',
+				'elemento' => $tags['elemento'] ?? $h['host'],
 				'tramo' => $tags['estado'] ?? '',
 				'equipo' => $h['inventory']['hardware'] ?? '',
+				'modelo' => $h['inventory']['model'] ?? '',
 				'grupos' => array_column($h['hostgroups'], 'name'),
 				'descripcion' => $h['description'],
 				'monitoreado' => $h['status'] == HOST_STATUS_MONITORED,
@@ -336,6 +356,48 @@ class RedService {
 		}
 
 		return array_keys($out);
+	}
+
+	/**
+	 * Items dinámicos (descubiertos) de un equipo: interfaces, estaciones asociadas y WAN.
+	 *
+	 * @return array{interfaces: array, estaciones: array, wan: array}
+	 */
+	public static function descubiertos(string $hostid): array {
+		$out = ['interfaces' => [], 'estaciones' => [], 'wan' => []];
+		$items = API::Item()->get([
+			'output' => ['itemid', 'key_', 'name', 'lastvalue', 'lastclock', 'units', 'state'],
+			'hostids' => [$hostid],
+			'search' => ['key_' => ['airmax.if.', 'mikrotik.if.', 'airmax.sta.', 'mikrotik.wan.']],
+			'searchByAny' => true,
+			'startSearch' => true,
+			'filter' => ['flags' => ZBX_FLAG_DISCOVERY_CREATED]
+		]);
+		foreach ($items as $i) {
+			if (!preg_match('/^(airmax|mikrotik)\.(if|sta|wan)\.([a-z]+)\[(.*)\]$/', $i['key_'], $m)) {
+				continue;
+			}
+			[, , $grupo, $metrica, $indice] = $m;
+			$valor = ($i['lastclock'] != 0 && is_numeric($i['lastvalue'])) ? (float) $i['lastvalue'] : null;
+			if ($grupo === 'if') {
+				$out['interfaces'][$indice]['nombre'] = $indice;
+				$out['interfaces'][$indice][$metrica] = $valor;
+				$out['interfaces'][$indice]['itemids'][$metrica] = $i['itemid'];
+			}
+			elseif ($grupo === 'sta') {
+				if (preg_match('/^Estación (.*): /u', $i['name'], $n)) {
+					$out['estaciones'][$indice]['nombre'] = $n[1];
+				}
+				$out['estaciones'][$indice][$metrica] = $valor;
+				$out['estaciones'][$indice]['itemids'][$metrica] = $i['itemid'];
+			}
+			else {
+				$out['wan'][$indice] = ['nombre' => $indice, 'estado' => $valor, 'itemid' => $i['itemid']];
+			}
+		}
+		ksort($out['interfaces'], SORT_NATURAL);
+
+		return $out;
 	}
 
 	/** Camino desde el equipo hasta la raíz (sin incluir al equipo). */

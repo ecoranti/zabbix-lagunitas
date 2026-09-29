@@ -68,7 +68,8 @@ class EquipoDetalle extends CController {
 		$response = new CControllerResponseData([
 			'hostid' => $hostid,
 			'red' => $red,
-			'eventos' => $eventos
+			'eventos' => $eventos,
+			'descubiertos' => RedService::descubiertos($hostid)
 		]);
 		$this->setResponse($response);
 	}
