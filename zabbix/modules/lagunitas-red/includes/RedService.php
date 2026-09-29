@@ -47,7 +47,7 @@ class RedService {
 		'Nodo intermedio' => ['titulo' => 'Nodos intermedios', 'icono' => 'N'],
 		'Hogar' => ['titulo' => 'Hogares e instituciones', 'icono' => 'H'],
 		'Institución' => ['titulo' => 'Hogares e instituciones', 'icono' => 'H'],
-		'Access point' => ['titulo' => 'Equipos de laboratorio', 'icono' => 'AP']
+		'Access point' => ['titulo' => 'Access points', 'icono' => 'AP']
 	];
 
 	/** Segundos sin valores nuevos para considerar un equipo "sin datos". */

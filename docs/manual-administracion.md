@@ -1,6 +1,6 @@
 # Manual de administración — Monitoreo de la Red Las Lagunitas
 
-**Versión 2.1** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
+**Versión 2.2** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
 
 Referencia operativa del día a día: cómo leer el estado de la red, atender alarmas, dar de alta
 o activar equipos, generar reportes, respaldar y resolver los problemas más frecuentes. La
@@ -26,7 +26,7 @@ equipos en la [Guía de integración de equipos](guia-integracion-equipos.md).
 
 | Tipo | Nombre |
 |---|---|
-| Grupos de hosts | `Las Lagunitas` y subgrupos `Gateway`, `Torres`, `Nodos`, `Hogares e instituciones`, `Equipos de laboratorio` |
+| Grupos de hosts | `Las Lagunitas` y subgrupos `Gateway`, `Torres`, `Nodos`, `Hogares e instituciones`, `Access points` |
 | Templates | `Lagunitas - Disponibilidad ICMP`, `Lagunitas - Ubiquiti airMAX por SNMP`, `Lagunitas - Mikrotik por SNMP`, `Lagunitas - AP UniFi por API` (grupo `Templates/Las Lagunitas`) |
 | Mapa | `Las Lagunitas - Topología` |
 | Dashboard | `Las Lagunitas - Centro de monitoreo` |
@@ -38,10 +38,7 @@ equipos en la [Guía de integración de equipos](guia-integracion-equipos.md).
 
 ## 2. Acceso
 
-| Entorno | URL |
-|---|---|
-| Laboratorio | `http://localhost:8090` (desde otra PC de la LAN: `http://<IP-de-la-Mac>:8090`) |
-| Producción | `https://<ZBX_DOMAIN>` |
+Frontend: `https://<ZBX_DOMAIN>` (nombre definido en la instalación).
 
 Usuarios: `Admin` (super administrador; contraseña cambiada en la instalación) y los operadores
 que se creen en el grupo **Operadores Las Lagunitas** (permiso de lectura sobre la red y
@@ -259,7 +256,6 @@ Todas las operaciones se hacen editando el inventario y re-aprovisionando.
 
 ```bash
 bin/lagunitas aprovisionar
-bin/lagunitas lab levantar   # solo en el laboratorio: crea su contenedor
 ```
 
 **Agregar un equipo nuevo**: agregar un bloque al inventario con `host` (sin espacios, único),
@@ -289,36 +285,22 @@ ciclos, roles o estados inválidos.
 
 ---
 
-## 7. Laboratorio: simulación de caídas y fallas
+## 7. Pruebas de alarma controladas
 
-```bash
-bin/lagunitas lab estado                     # contenedor y perfil simulado de cada equipo
-bin/lagunitas lab caida Nodo_Kika            # cae el nodo y su hogar queda "Sin servicio": 1 alerta
-bin/lagunitas lab recuperar Nodo_Kika
-bin/lagunitas lab caida Union_de_los_Rios    # caída troncal: 1 alerta, el resto "Sin servicio"
-bin/lagunitas lab recuperar Union_de_los_Rios
-bin/lagunitas lab caida Kika --solo          # solo ese equipo, sin sus dependientes
-```
+Conviene probar periódicamente (por ejemplo, después de cada cambio en la red o una vez por mes)
+que la cadena de alertas funciona:
 
-`caida` detiene también a los equipos aguas abajo, porque en la red real pierden el camino; así se
-ve el efecto de las dependencias. Los contenedores se crean con reinicio automático y sin `--rm`,
-por lo que *caída* y *recuperar* son un `docker stop` / `docker start`.
+1. Acordar una ventana de prueba con la comunidad y elegir un **equipo de borde** (un router de
+   hogar o una radio de cliente), para no dejar sin servicio a otros.
+2. Desconectarlo (o bloquear temporalmente el ping desde el servidor en el firewall del Mikrotik).
+3. A los ~90 segundos debe aparecer **una sola** alerta "sin respuesta (ICMP)", el equipo en rojo
+   en el mapa y "Caído" en el widget; si tiene dependientes, esos quedan "Sin servicio" sin alertas
+   propias. Debe llegar la notificación (Telegram/email).
+4. Reconectarlo: el problema se cierra solo y llega el aviso de recuperación.
+5. Registrar la prueba (fecha, equipo, tiempos de detección y de notificación).
 
-Los equipos con perfil SNMP corren un **agente SNMP simulado** (radio AP, radio estación o router
-Mikrotik) con los OIDs reales del fabricante. Para ver cómo reacciona el sistema ante fallas
-típicas de una WISP:
-
-```bash
-bin/lagunitas lab escenario Walter senal-debil          # señal débil, SNR bajo
-bin/lagunitas lab escenario Mesada interferencia        # ruido alto, CCQ bajo
-bin/lagunitas lab escenario Gateway_Mikrotik bateria-baja
-bin/lagunitas lab escenario Gateway_Mikrotik sin-internet
-bin/lagunitas lab escenario Walter normal               # vuelve a valores normales
-```
-
-La lista completa de escenarios y las alertas que produce cada uno está en la
-[Guía de integración de equipos](guia-integracion-equipos.md) (§11). `./start.sh` y
-`./start.sh down` levantan o apagan todo el laboratorio conservando los datos.
+Para trabajos planificados en una torre, crear antes un **mantenimiento** (§4.3) para no disparar
+alertas.
 
 ---
 
@@ -326,11 +308,11 @@ La lista completa de escenarios y las alertas que produce cada uno está en la
 
 | Tarea | Cómo |
 |---|---|
-| Backup | `scripts/backup.sh` (base comprimida + export YAML de templates y mapa). Producción: cron diario (Guía §4.10). |
-| Restauración | `scripts/restore.sh backups/zabbix_AAAAMMDD_HHMM.sql.gz` (pide confirmación). |
+| Backup | `COMPOSE_DIR=/opt/zabbix-lagunitas/deploy/produccion scripts/backup.sh /var/backups/zabbix` (base comprimida + export YAML de templates y mapa). Programado por cron diario (Guía de implementación §3.10). |
+| Restauración | `COMPOSE_DIR=/opt/zabbix-lagunitas/deploy/produccion scripts/restore.sh /var/backups/zabbix/zabbix_AAAAMMDD_HHMM.sql.gz` (pide confirmación). |
 | Chequeo de salud | `bin/lagunitas verificar` |
 | Exportar templates | `bin/lagunitas exportar` → `zabbix/export/*.yaml` (importables en otro Zabbix). |
-| Actualizar Zabbix | Hacer backup; cambiar el tag `ubuntu-7.0.x` en el compose (misma versión mayor 7.0 LTS); `docker compose pull && docker compose up -d`; `bin/lagunitas verificar`. Para pasar a otra versión mayor leer primero las notas de actualización de Zabbix. |
+| Actualizar Zabbix | Hacer backup; cambiar el tag `ubuntu-7.0.x` en `deploy/produccion/docker-compose.yml` (misma versión mayor 7.0 LTS); en ese directorio `docker compose pull && docker compose up -d`; luego `bin/lagunitas verificar`. Para pasar a otra versión mayor leer primero las notas de actualización de Zabbix. |
 | Rotar la API key de UniFi | Crear la nueva en UniFi, actualizar `UNIFI_API_KEY` en `.env` y `bin/lagunitas aprovisionar --solo hosts`. |
 | Historial | Los items guardan 90 días de historia y 1 año de tendencias. Limpieza automática: *Administration → Housekeeping*. |
 
@@ -339,38 +321,33 @@ La lista completa de escenarios y las alertas que produce cada uno está en la
 ## 9. Resolución de problemas
 
 **Un equipo aparece "Sin datos".** *Monitoring → Latest data* filtrando por el equipo: si el item
-muestra un ícono de error, pasar el mouse para ver el motivo. En el laboratorio, confirmar el
-contenedor con `bin/lagunitas lab estado`.
+muestra un ícono de error, pasar el mouse para ver el motivo. Comprobar que el equipo responda
+ping desde el servidor y, si es SNMP, `bin/lagunitas probar-snmp <ip>`.
 
-**Todos los equipos "Sin datos" o caídos a la vez.** Revisar que el Zabbix server esté arriba
-(`docker compose ps`), su log (`docker compose logs --tail 50 zabbix-server`) y, en producción,
-el enlace/VPN hacia la red. En el laboratorio, `colima status`.
+**Todos los equipos "Sin datos" o caídos a la vez.** En `/opt/zabbix-lagunitas/deploy/produccion`
+revisar que el Zabbix server esté arriba (`docker compose ps`) y su log
+(`docker compose logs --tail 50 zabbix-server`); luego el enlace/VPN entre el servidor y la red.
+Si el gateway Mikrotik también figura caído, el problema es la conexión hacia la red comunitaria.
 
-**El AP UniFi no reporta.** Si aparece *controlador UniFi no accesible*, el problema es la
-aplicación UniFi (encendida, IP y puerto correctos). En el laboratorio el controlador (UniFi OS
-Server) corre en la Mac del laboratorio (192.168.1.81) y el AP está en la 192.168.1.113; el
-puerto (hoy 11443) puede cambiar al reiniciarse UniFi OS Server: comprobarlo con
-`lsof -nP -iTCP -sTCP:LISTEN | grep gvproxy` y verificar con
-`bin/lagunitas unifi-ids 192.168.1.81 <puerto>`. Si aparece *sin datos de la API*, revisar la API
-key y los IDs de site/dispositivo.
+**Un AP UniFi no reporta.** Si aparece *controlador UniFi no accesible*, el problema es la
+aplicación UniFi (encendida, IP y puerto correctos: el puerto de un UniFi OS Server puede cambiar
+al reiniciarse). Verificar con `bin/lagunitas unifi-ids <ip-controlador> <puerto>` y corregir
+`{$UNIFI.HOST}` / `{$UNIFI.PORT}` en el inventario. Si aparece *sin datos de la API*, revisar la
+API key y los IDs de site/dispositivo.
 
 **Un equipo SNMP no reporta datos de radio o energía.** `bin/lagunitas probar-snmp <ip>` muestra
-qué responde el equipo. Causas y soluciones en la guía de integración (§13).
-
-**En el laboratorio el AP "responde ping" aunque esté apagado.** Es la limitación de Colima
-descripta en la guía: responde ICMP por cualquier IP externa. Por eso el AP del laboratorio se
-monitorea solo por API.
+qué responde el equipo. Causas y soluciones en la guía de integración (§12).
 
 **El widget "Red Las Lagunitas" no aparece o el reporte no está en el menú.**
 `bin/lagunitas aprovisionar --solo modulos` (registra y habilita los módulos); verificar en
-*Administration → General → Modules*. En el compose, las carpetas `zabbix/modules/*` deben estar
-montadas en el contenedor web.
+*Administration → General → Modules*. En `deploy/produccion/docker-compose.yml`, las carpetas
+`zabbix/modules/*` deben estar montadas en el contenedor web.
 
 **Un widget muestra "No permissions to referred object or it does not exist".** El equipo
-seleccionado no tiene ese item (por ejemplo, el AP no tiene ítems ICMP). Es esperable.
+seleccionado no tiene ese ítem (por ejemplo, un AP UniFi sin ítems de radio airMAX). Es esperable.
 
-**`docker: failed to connect to the docker API ... colima`** (laboratorio). Colima detenida:
-`colima start` o `./start.sh`.
+**Docker no arranca tras un reinicio del servidor.** `sudo systemctl enable --now docker`; los
+contenedores tienen `restart: unless-stopped` y vuelven solos.
 
 **Cambios hechos a mano en Zabbix desaparecieron.** El provisionador sobrescribe los objetos que
 gestiona. Hacer el cambio en el inventario o en el código del proyecto.
@@ -383,15 +360,14 @@ vacío + `bin/lagunitas aprovisionar` (recrea toda la configuración, sin el his
 ## 10. Referencia rápida
 
 ```bash
-./start.sh | ./start.sh down                  # laboratorio completo
+cd /opt/zabbix-lagunitas
 bin/lagunitas aprovisionar                    # aplicar inventario y configuración
 bin/lagunitas aprovisionar --solo mapa        # un paso puntual
 bin/lagunitas verificar                       # salud
 bin/lagunitas validar                         # valida el inventario (sin Zabbix)
 bin/lagunitas probar-snmp <ip>                # prueba SNMP antes de integrar un equipo
 bin/lagunitas unifi-ids <ip> <puerto>         # IDs de site/AP de un controlador UniFi
-bin/lagunitas lab caida|recuperar <equipo>    # simulación de caídas
-bin/lagunitas lab escenario <equipo> <escenario>   # simulación de fallas de radio/energía
-scripts/backup.sh                             # respaldo
-docker compose logs --tail 50 zabbix-server   # logs
+COMPOSE_DIR=deploy/produccion scripts/backup.sh /var/backups/zabbix   # respaldo
+(cd deploy/produccion && docker compose ps)   # estado del stack
+(cd deploy/produccion && docker compose logs --tail 50 zabbix-server)   # logs
 ```

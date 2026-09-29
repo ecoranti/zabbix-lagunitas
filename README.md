@@ -27,7 +27,11 @@ despliegue productivo, y cualquier cambio en la red se aplica con un solo comand
 | `deploy/produccion/` | Stack productivo con HTTPS (Caddy), volúmenes con nombre y logs rotados. |
 | `scripts/` | Backup/restauración de la base y arranque automático (launchd). |
 
-## Inicio rápido (laboratorio)
+## Inicio rápido
+
+Producción: seguir la [Guía de implementación](docs/guia-implementacion.md).
+
+Laboratorio (desarrollo y pruebas, ver [docs/laboratorio.md](docs/laboratorio.md)):
 
 ```bash
 cp .env.example .env        # completar claves y UNIFI_API_KEY
@@ -52,7 +56,8 @@ bin/lagunitas lab escenario Walter normal
 - [Guía de implementación](docs/guia-implementacion.md): instalación en laboratorio y en producción paso a paso.
 - [Guía de integración de equipos](docs/guia-integracion-equipos.md): cómo incorporar cada tipo de equipo (airMAX, Mikrotik, airCube, UniFi), qué datos y alertas aporta, y cómo validarlo.
 - [Manual de administración](docs/manual-administracion.md): operación diaria, alarmas, altas/bajas de equipos, backups y resolución de problemas.
-- Versiones Word de ambas: `docs/*.docx`. Se regeneran desde el Markdown con
+- [Laboratorio de pruebas](docs/laboratorio.md): entorno Docker con la red simulada y agentes SNMP simulados (solo desarrollo; no forma parte de producción).
+- Versiones Word de las guías: `docs/*.docx`. Se regeneran desde el Markdown con
   `.venv/bin/pip install -r requirements-docs.txt` y `scripts/md2docx.py <origen.md> <destino.docx>`.
 - `docs/referencia/`: informe de la PPS, diagramas y documentos de la versión anterior.
 

@@ -1,6 +1,6 @@
 # Guía de integración de equipos — Red Las Lagunitas
 
-**Versión 2.1** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
+**Versión 2.2** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
 
 Esta guía explica, equipo por equipo, cómo incorporar al monitoreo cada dispositivo de la red
 real: qué configurar en el equipo, cómo comprobar desde el servidor que responde, cómo cargarlo
@@ -22,9 +22,6 @@ Para **cada equipo** se sigue el mismo circuito:
    `bin/lagunitas -i config/inventory.produccion.yaml validar`.
 5. **Aprovisionar**: `bin/lagunitas aprovisionar`.
 6. **Verificar** en Zabbix (§10) y registrar la integración (fecha, responsable, observaciones).
-
-> Recomendación: validar primero en el **laboratorio** con el agente SNMP simulado (§11), para
-> conocer de antemano qué datos y qué alertas va a producir cada tipo de equipo.
 
 ---
 
@@ -224,7 +221,7 @@ Referencia de batería VRLA 12 V (en reposo): 12,7 V ≈ 100 %, 12,4 V ≈ 75 %,
 El airCube no ofrece SNMP ni una API documentada: se monitorea solo por **ICMP**.
 
 1. Asignarle una IP de gestión fija (reserva DHCP en el Mikrotik por su MAC).
-2. Verificar ping desde el servidor: `docker compose exec zabbix-server fping -c3 <IP>`.
+2. Verificar ping desde el servidor: `cd /opt/zabbix-lagunitas/deploy/produccion && docker compose exec zabbix-server fping -c3 <IP>`.
 3. Cargarlo como **dispositivo** del hogar, con el equipo de radio del hogar como padre:
 
 ```yaml
@@ -246,8 +243,9 @@ Si el router del hogar está caído pero la radio responde, el problema es del l
 
 1. En **UniFi Network**: *Settings → Control Plane → Integrations → Create API Key*. Guardarla en
    `.env` como `UNIFI_API_KEY` (se carga en Zabbix como macro secreta).
-2. Averiguar IP y puerto del controlador. En **UniFi OS Server** sobre macOS el puerto HTTPS puede
-   no ser 443 y **cambiar al reiniciar** (lo expone `gvproxy`):
+2. Averiguar IP y puerto del controlador. En un **UniFi OS Server** instalado sobre una PC o Mac
+   el puerto HTTPS puede no ser 443 y **cambiar al reiniciarse** (lo expone `gvproxy`); en ese
+   equipo se puede consultar con:
 
    ```bash
    lsof -nP -iTCP -sTCP:LISTEN | grep -iE "gvproxy|unifi"
@@ -259,28 +257,31 @@ Si el router del hogar está caído pero la radio responde, el problema es del l
    bin/lagunitas unifi-ids <IP_CONTROLADOR> <PUERTO>
    ```
 
-   Ejemplo real del laboratorio (controlador en la Mac, AP en la 192.168.1.113):
+   Salida de ejemplo:
 
    ```
-   Site: Default   {$UNIFI.SITE.ID} = 88f7af54-98f8-306a-a1c7-c9349722b1f6
-     - U7-Pro-Wall  modelo=U7-Pro-Wall  ip=192.168.1.113  estado=ONLINE  {$UNIFI.DEVICE.ID} = afd2ff68-...
+   Site: Default   {$UNIFI.SITE.ID} = 1a2b3c4d-....
+     - AP-Escuela   modelo=U6-Lite  ip=192.168.88.60  estado=ONLINE  {$UNIFI.DEVICE.ID} = 9f8e7d6c-...
    ```
 
 4. Cargar en el inventario con esas macros:
 
 ```yaml
-  - host: AP-U7-Pro-Wall
-    nombre: AP U7 Pro Wall
+  - host: Escuela_AP_WiFi
+    nombre: Escuela · AP Wi-Fi
     rol: ap
-    ip: 192.168.1.113
-    perfiles: [icmp, unifi_api]      # en el LAB sobre Colima: solo [unifi_api] (ver guía de implementación)
+    ip: 192.168.88.60
+    padre: Escuela_Rural
+    estado: operativo
+    perfiles: [icmp, unifi_api]
     funcion: ap
-    modelo: Ubiquiti UniFi U7 Pro Wall
+    modelo: Ubiquiti UniFi U6 Lite
+    mapa: [800, 330]
     macros:
-      "{$UNIFI.HOST}": 192.168.1.81
-      "{$UNIFI.PORT}": "11443"
-      "{$UNIFI.SITE.ID}": 88f7af54-98f8-306a-a1c7-c9349722b1f6
-      "{$UNIFI.DEVICE.ID}": afd2ff68-17b3-3b64-8473-8eebfbe60d12
+      "{$UNIFI.HOST}": <IP del controlador UniFi>
+      "{$UNIFI.PORT}": "443"
+      "{$UNIFI.SITE.ID}": <site id>
+      "{$UNIFI.DEVICE.ID}": <device id>
 ```
 
 Alertas: controlador no accesible, sin datos de la API, AP fuera de línea según UniFi (High), CPU
@@ -327,31 +328,7 @@ Zabbix no puede leer la batería directamente. Alternativas, en orden de costo:
 
 ---
 
-## 11. Validar antes en el laboratorio
-
-El laboratorio simula agentes SNMP con los OIDs reales de Ubiquiti y Mikrotik
-(`lab/snmpsim/`). Cada equipo del inventario con `airos_snmp` o `mikrotik_snmp` corre un agente
-simulado (radio AP, radio estación o router) y responde como el equipo real.
-
-Escenarios de falla para ver cómo reacciona el sistema:
-
-| Comando | Aplica a | Alertas que produce |
-|---|---|---|
-| `bin/lagunitas lab escenario <equipo> senal-debil` | radios | Señal débil, SNR bajo, señal débil de la estación |
-| `... senal-critica` | radios | Señal crítica, CCQ y calidad bajos |
-| `... interferencia` | radios | Ruido alto, CCQ bajo, calidad/capacidad airMAX bajas |
-| `... sin-estaciones` | radio AP | Radio AP sin estaciones asociadas |
-| `... bateria-baja` / `bateria-critica` | Mikrotik | Voltaje bajo / crítico |
-| `... sin-internet` | Mikrotik | Sin enlace a Internet (Disaster) + interfaz sin enlace |
-| `... sin-clientes` | Mikrotik | Sin clientes DHCP (a los 30 min) |
-| `... normal` | todos | Restaura los valores normales |
-| `bin/lagunitas lab caida <equipo>` | todos | Caída del equipo; sus dependientes quedan "Sin servicio" |
-
-`bin/lagunitas probar-snmp <ip>` funciona igual contra los agentes simulados (IPs 10.50.0.x).
-
----
-
-## 12. Referencia de OIDs utilizados
+## 11. Referencia de OIDs utilizados
 
 | Dato | OID | MIB |
 |---|---|---|
@@ -369,7 +346,7 @@ Escenarios de falla para ver cómo reacciona el sistema:
 
 ---
 
-## 13. Problemas frecuentes al integrar
+## 12. Problemas frecuentes al integrar
 
 | Síntoma | Causa probable | Solución |
 |---|---|---|

@@ -38,9 +38,9 @@ ROLES = {
     "institucion": {"grupo": "Las Lagunitas/Hogares e instituciones", "etiqueta": "Institución",
                     "iconos": ["House_(64)", "House_(48)"],
                     "servicio": "Hogares e instituciones"},
-    "ap": {"grupo": "Las Lagunitas/Equipos de laboratorio", "etiqueta": "Access point",
+    "ap": {"grupo": "Las Lagunitas/Access points", "etiqueta": "Access point",
            "iconos": ["Hub_(48)", "Hub_(64)"],
-           "servicio": "Equipos de laboratorio"},
+           "servicio": "Access points"},
 }
 
 ESTADOS = {
