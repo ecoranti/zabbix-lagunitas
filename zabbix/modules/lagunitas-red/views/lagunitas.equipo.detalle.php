@@ -78,12 +78,12 @@ if ($desc['interfaces']) {
 if ($e['es_ap']) {
 	$tabs['unifi'] = 'UniFi';
 }
-echo '<nav class="lg-tabs" role="tablist">';
+echo '<div class="lg-tabs" role="tablist">';
 foreach ($tabs as $k => $v) {
 	echo '<button type="button" role="tab" data-lg-tab="'.$k.'"'.($k === 'resumen' ? ' class="is-active"' : '').'>'
 		.$h($v).'</button>';
 }
-echo '</nav><div class="lg-m-body">';
+echo '</div><div class="lg-m-body">';
 
 // ------------------------------------------------------------------ resumen
 echo '<div class="lg-pane is-active" data-lg-pane="resumen"><div class="lg-kpis">';

@@ -235,3 +235,16 @@ html[color-scheme="dark"] .lr-page { --lr-violeta: #a58cf0; --lr-aff: #f59a4e; -
 form.lr-filtros { display: block; }
 .lr-filtros > * + * { margin-top: 10px; }
 .lr-filtros-grid { align-items: start; }
+
+/* Tabla principal compacta: 14 columnas en el ancho disponible. */
+.lr-page { max-width: none; }
+.lr-sec .lr-table th { padding: 7px 8px; }
+.lr-sec .lr-table > tbody > tr > td { padding: 7px 8px; font-size: 11.5px; }
+.lr-col-equipo { min-width: 190px; max-width: 260px; }
+.lr-col-equipo b { display: block; line-height: 1.3; }
+.lr-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px; }
+.lr-nw, .lr-mono { white-space: nowrap; }
+.lr-num { text-align: center; }
+.lr-pill-val { padding: 2px 8px; }
+.lr-tag { padding: 2px 7px; }
+.lr-btn-sm { white-space: nowrap; }

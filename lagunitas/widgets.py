@@ -139,8 +139,8 @@ def honeycomb(name, pos, groupids, items, reference, thresholds, label_mapped=Tr
     fields += [f("reference", reference),
                f("primary_label_type", 0, INT), f("primary_label", "{HOST.NAME}"),
                # Tamaño fijo (% de la celda) para que todos los nombres se vean iguales.
-               f("primary_label_size_type", 1, INT), f("primary_label_size", 14, INT),
-               f("secondary_label_size_type", 1, INT), f("secondary_label_size", 22, INT),
+               f("primary_label_size_type", 1, INT), f("primary_label_size", 20, INT),
+               f("secondary_label_size_type", 1, INT), f("secondary_label_size", 30, INT),
                f("secondary_label_bold", 1, INT),
                f("secondary_label_type", 1, INT),  # 1 = valor del item
                f("secondary_label_decimal_places", 0, INT),

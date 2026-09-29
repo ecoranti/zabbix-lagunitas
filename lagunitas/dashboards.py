@@ -1,8 +1,8 @@
 """Dashboard principal "Centro de monitoreo" (NOC) de la red.
 
 Páginas:
-  0. Equipos           widget propio: tarjetas, filtros y tablas por rol con detalle por equipo.
   1. Estado de la red   honeycomb de equipos, alertas activas y mapa de topología.
+  2. Equipos            widget propio: tarjetas, filtros y tablas por rol con detalle por equipo.
   2. Detalle por equipo navegador de equipos: al seleccionar uno, el resto de los
                         widgets de la página muestra sus datos (comunicación entre
                         widgets de Zabbix 7.0).
@@ -39,11 +39,6 @@ def build_pages(api: ZabbixAPI, inv: dict, hostids: dict[str, str], groups: dict
     g = [groups[SITIO_GRUPO]]
     pages = []
 
-    # ------------------------------------------------------------- 0. Equipos
-    pages.append({"name": "Equipos", "widgets": [
-        W.lagunitas_red("Red Las Lagunitas — Equipos", (0, 0, 72, 30), g),
-    ]})
-
     # ------------------------------------------------------- 1. Estado de la red
     pages.append({"name": "Estado de la red", "widgets": [
         W.honeycomb("Equipos monitoreados", (0, 0, 26, 8), g,
@@ -53,6 +48,11 @@ def build_pages(api: ZabbixAPI, inv: dict, hostids: dict[str, str], groups: dict
         W.mapa("Topología", sysmapid, (26, 0, 46, 15), reference="MAPAT"),
         W.problems("Alertas activas", (0, 15, 72, 7), g,
                    show_lines=15, reference="ALERT"),
+    ]})
+
+    # ------------------------------------------------------------- 1b. Equipos (widget propio)
+    pages.append({"name": "Equipos", "widgets": [
+        W.lagunitas_red("Red Las Lagunitas — Equipos", (0, 0, 72, 30), g),
     ]})
 
     # ----------------------------------------------------- 2. Detalle por equipo

@@ -245,3 +245,11 @@ html[color-scheme="dark"] .lg-red, html[color-scheme="dark"] .lg-modal-overlay {
 	.lg-cards { grid-template-columns: repeat(4, minmax(80px, 1fr)); }
 	.lg-info { grid-template-columns: 1fr; }
 }
+
+/* Modal: cabecera y pestañas fijas; solo el cuerpo hace scroll. Sin esto, la fila de
+   pestañas (overflow-x) se encogía en altura y quedaba cortada con contenido largo. */
+.lg-m-head, .lg-tabs { flex: 0 0 auto; }
+.lg-m-body { flex: 1 1 auto; min-height: 0; }
+.lg-tabs { overflow-y: hidden; }
+.lg-tabs button { line-height: 1.3; }
+.lg-m-head h3 { text-transform: none; letter-spacing: 0; }

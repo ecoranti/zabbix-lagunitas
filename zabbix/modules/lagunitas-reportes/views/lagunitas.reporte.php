@@ -135,8 +135,8 @@ ob_start();
 		<table class="lr-table">
 			<thead><tr>
 				<th>Equipo</th><th>IP</th><th>Grupo</th>
-				<?php if ($tecnica): ?><th>Indicador detectado</th><th>Disponibilidad propia</th><?php endif; ?>
-				<th>Disponibilidad del servicio</th><th>Caída</th><th>Incidentes</th>
+				<?php if ($tecnica): ?><th>Indicador</th><th>Disp. propia</th><?php endif; ?>
+				<th>Disp. servicio</th><th>Caída</th><th>Incid.</th>
 				<?php if ($tecnica): ?><th>MTTR</th><th>Mayor caída</th><?php endif; ?>
 				<th>Salud actual</th><th>Estado actual</th><th>SLA</th><th class="lr-no-print">Detalle</th>
 			</tr></thead>
@@ -145,27 +145,27 @@ ob_start();
 				[$ecls, $etxt] = $estados[$x['estado']];
 			?>
 				<tr class="<?= $x['caido_ahora'] ? 'lr-caido' : '' ?>">
-					<td><b><?= $e($x['nombre']) ?></b><small class="lr-sub"><?= $e($tipos[$x['tipo']] ?? '') ?><?= $x['padre'] !== '' ? ' · depende de '.$e($x['padre']) : '' ?></small></td>
+					<td class="lr-col-equipo"><b><?= $e($x['nombre']) ?></b><small class="lr-sub lr-ellipsis" title="<?= $e(($tipos[$x['tipo']] ?? '').($x['padre'] !== '' ? ' · depende de '.$x['padre'] : '')) ?>"><?= $e($tipos[$x['tipo']] ?? '') ?><?= $x['padre'] !== '' ? ' · ↑ '.$e($x['padre']) : '' ?></small></td>
 					<td class="lr-mono"><?= $e($x['ip']) ?></td>
 					<td><?= $e($x['grupo']) ?></td>
 					<?php if ($tecnica): ?>
-						<td><?php foreach ($x['indicadores'] as $ind): ?><span class="lr-ind lr-ind-<?= $e(strtolower($ind)) ?>"><?= $e($ind) ?></span><?php endforeach; ?>
-							<small class="lr-sub"><?= $x['con_indicador'] ? 'Usa '.(in_array('ICMP', $x['indicadores']) ? 'ICMP' : 'API') : 'Sin indicador' ?></small></td>
+						<td class="lr-nw"><?php foreach ($x['indicadores'] as $ind): ?><span class="lr-ind lr-ind-<?= $e(strtolower($ind)) ?>"><?= $e($ind) ?></span><?php endforeach; ?>
+							<?= $x['con_indicador'] ? '' : '<small class="lr-sub">Sin indicador</small>' ?></td>
 						<td><?= $pill($x['disp_propia']) ?></td>
 					<?php endif; ?>
 					<td><?= $pill($x['disp_servicio']) ?></td>
-					<td><?= $e($dur($x['caida_servicio'])) ?></td>
-					<td><?= (int) $x['incidentes'] ?></td>
+					<td class="lr-nw"><?= $e($dur($x['caida_servicio'])) ?></td>
+					<td class="lr-num"><?= (int) $x['incidentes'] ?></td>
 					<?php if ($tecnica): ?>
-						<td><?= $e($dur($x['mttr'])) ?></td>
-						<td><?= $x['mayor'] ? $e($dur($x['mayor'])) : '0 min' ?></td>
+						<td class="lr-nw"><?= $e($dur($x['mttr'])) ?></td>
+						<td class="lr-nw"><?= $x['mayor'] ? $e($dur($x['mayor'])) : '0 min' ?></td>
 					<?php endif; ?>
 					<td><?= $x['salud'] ? '<span class="lr-tag lr-tag-warn">Degradado ('.(int) $x['salud'].')</span>'
 						: '<span class="lr-tag lr-tag-ok">Normal</span>' ?></td>
 					<td><span class="lr-tag lr-tag-<?= $ecls ?>"><?= $e($etxt) ?></span>
 						<?= $x['causa'] ? '<small class="lr-sub">por '.$e($x['causa']).'</small>' : '' ?></td>
 					<td><?= $x['con_indicador'] ? '<span class="lr-tag lr-tag-'.($x['cumple'] ? 'ok">Cumple' : 'bad">No cumple').'</span>' : '—' ?></td>
-					<td class="lr-no-print"><a class="lr-btn lr-btn-sm lr-btn-primary"
+					<td class="lr-no-print lr-nw"><a class="lr-btn lr-btn-sm lr-btn-primary"
 						href="zabbix.php?<?= $e(ReporteService::query($f, ['action' => 'lagunitas.reporte.equipo', 'hostid' => $x['hostid']])) ?>">Ver detalle</a></td>
 				</tr>
 				<?php if ($x['detalle']): ?>
