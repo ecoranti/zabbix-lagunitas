@@ -1,0 +1,13 @@
+# Datos de runtime / secretos
+mysql_data/
+.env
+*.env.local
+backups/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.DS_Store
+~$*.docx
+# Copia corrupta del manual (zip dañado), reemplazada por la versión con tilde
+Manual de administracion - Red Las Lagunitas (Zabbix).docx

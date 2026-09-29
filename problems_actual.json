@@ -1,0 +1,707 @@
+[
+  {
+    "eventid": "2829",
+    "source": "0",
+    "object": "0",
+    "objectid": "13475",
+    "clock": "1790092120",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "95088084",
+    "name": "Zabbix server: Utilization of icmp pinger processes over 75%",
+    "severity": "3",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10084",
+        "host": "Zabbix server",
+        "name": "Zabbix server"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2828",
+    "source": "0",
+    "object": "0",
+    "objectid": "25259",
+    "clock": "1790091811",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "873747317",
+    "name": "Nodo caido: Walter",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10713",
+        "host": "Walter",
+        "name": "Walter"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2827",
+    "source": "0",
+    "object": "0",
+    "objectid": "25263",
+    "clock": "1790091727",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "505131509",
+    "name": "Nodo caido: DonJulio",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10717",
+        "host": "DonJulio",
+        "name": "DonJulio"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2826",
+    "source": "0",
+    "object": "0",
+    "objectid": "25262",
+    "clock": "1790091724",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "495228641",
+    "name": "Nodo caido: Martin",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10716",
+        "host": "Martin",
+        "name": "Martin"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2825",
+    "source": "0",
+    "object": "0",
+    "objectid": "25261",
+    "clock": "1790091724",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "495228641",
+    "name": "Nodo caido: EulaliaDomingo",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10715",
+        "host": "EulaliaDomingo",
+        "name": "EulaliaDomingo"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2824",
+    "source": "0",
+    "object": "0",
+    "objectid": "25260",
+    "clock": "1790091724",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "495228641",
+    "name": "Nodo caido: Gladys",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10714",
+        "host": "Gladys",
+        "name": "Gladys"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2823",
+    "source": "0",
+    "object": "0",
+    "objectid": "25258",
+    "clock": "1790091721",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "481363377",
+    "name": "Nodo caido: FabianLucianaLasGuindas",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10712",
+        "host": "FabianLucianaLasGuindas",
+        "name": "FabianLucianaLasGuindas"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2822",
+    "source": "0",
+    "object": "0",
+    "objectid": "25257",
+    "clock": "1790091721",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "481363377",
+    "name": "Nodo caido: JuanCarlos",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10711",
+        "host": "JuanCarlos",
+        "name": "JuanCarlos"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2821",
+    "source": "0",
+    "object": "0",
+    "objectid": "25255",
+    "clock": "1790091718",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "470665946",
+    "name": "Nodo caido: Franco",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10709",
+        "host": "Franco",
+        "name": "Franco"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2820",
+    "source": "0",
+    "object": "0",
+    "objectid": "25251",
+    "clock": "1790091715",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "461932371",
+    "name": "Nodo caido: Nodo_MartinDonJulio",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10705",
+        "host": "Nodo_MartinDonJulio",
+        "name": "Nodo MartinDonJulio"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2819",
+    "source": "0",
+    "object": "0",
+    "objectid": "25250",
+    "clock": "1790091712",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "450609336",
+    "name": "Nodo caido: Cerro_Blanco",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10704",
+        "host": "Cerro_Blanco",
+        "name": "Cerro Blanco"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2818",
+    "source": "0",
+    "object": "0",
+    "objectid": "25249",
+    "clock": "1790091712",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "450609336",
+    "name": "Nodo caido: Nodo_JuanCarlos",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10703",
+        "host": "Nodo_JuanCarlos",
+        "name": "Nodo JuanCarlos"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2817",
+    "source": "0",
+    "object": "0",
+    "objectid": "25247",
+    "clock": "1790091709",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "435646398",
+    "name": "Nodo caido: Nodo_Franco",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10701",
+        "host": "Nodo_Franco",
+        "name": "Nodo Franco"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2815",
+    "source": "0",
+    "object": "0",
+    "objectid": "25235",
+    "clock": "1790001580",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "108650301",
+    "name": "Nodo caido: Escuela",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2814",
+    "source": "0",
+    "object": "0",
+    "objectid": "25234",
+    "clock": "1790001580",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "108650301",
+    "name": "Nodo caido: Casa-2",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2810",
+    "source": "0",
+    "object": "0",
+    "objectid": "13475",
+    "clock": "1790001580",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "45938593",
+    "name": "Zabbix server: Utilization of icmp pinger processes over 75%",
+    "severity": "3",
+    "r_eventid": "2816",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10084",
+        "host": "Zabbix server",
+        "name": "Zabbix server"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2813",
+    "source": "0",
+    "object": "0",
+    "objectid": "25233",
+    "clock": "1790001577",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "96610467",
+    "name": "Nodo caido: Casa-1",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2812",
+    "source": "0",
+    "object": "0",
+    "objectid": "25232",
+    "clock": "1790001577",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "96610467",
+    "name": "Nodo caido: Nodo-B",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2811",
+    "source": "0",
+    "object": "0",
+    "objectid": "25231",
+    "clock": "1790001577",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "96610467",
+    "name": "Nodo caido: Nodo-A",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10687",
+        "host": "Nodo Cerro Blanco",
+        "name": "Nodo Cerro Blanco"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2809",
+    "source": "0",
+    "object": "0",
+    "objectid": "25230",
+    "clock": "1790001574",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "89028465",
+    "name": "Nodo caido: Torre-4",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10686",
+        "host": "Torre Rodeo del padre",
+        "name": "Torre Rodeo del padre"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2808",
+    "source": "0",
+    "object": "0",
+    "objectid": "25229",
+    "clock": "1790001574",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "89028465",
+    "name": "Nodo caido: Torre-3",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10685",
+        "host": "Torre Union de los rios",
+        "name": "Torre Union de los rios"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2807",
+    "source": "0",
+    "object": "0",
+    "objectid": "25228",
+    "clock": "1790001574",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "89028465",
+    "name": "Nodo caido: Torre-2",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10684",
+        "host": "Torre Ex Aserradero",
+        "name": "Torre Ex Aserradero"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2806",
+    "source": "0",
+    "object": "0",
+    "objectid": "25227",
+    "clock": "1790001571",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "20798172",
+    "name": "Nodo caido: Torre-1",
+    "severity": "4",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10683",
+        "host": "Torre El Carrizal",
+        "name": "Torre El Carrizal"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "2804",
+    "source": "0",
+    "object": "0",
+    "objectid": "25229",
+    "clock": "1789965783",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "265693241",
+    "name": "Nodo caido: Torre-3",
+    "severity": "4",
+    "r_eventid": "2805",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10685",
+        "host": "Torre Union de los rios",
+        "name": "Torre Union de los rios"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "520",
+    "source": "0",
+    "object": "0",
+    "objectid": "25227",
+    "clock": "1789844461",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "942432265",
+    "name": "Nodo caido: Torre-1",
+    "severity": "4",
+    "r_eventid": "521",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10683",
+        "host": "Torre El Carrizal",
+        "name": "Torre El Carrizal"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "24",
+    "source": "0",
+    "object": "0",
+    "objectid": "23288",
+    "clock": "1789770678",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "907884478",
+    "name": "Zabbix server: Utilization of discovery manager processes over 75%",
+    "severity": "3",
+    "r_eventid": "37",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10084",
+        "host": "Zabbix server",
+        "name": "Zabbix server"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  },
+  {
+    "eventid": "23",
+    "source": "0",
+    "object": "0",
+    "objectid": "22391",
+    "clock": "1789690466",
+    "value": "1",
+    "acknowledged": "0",
+    "ns": "815574834",
+    "name": "Linux: Zabbix agent is not available (for 3m)",
+    "severity": "3",
+    "r_eventid": "0",
+    "c_eventid": "0",
+    "correlationid": "0",
+    "userid": "0",
+    "suppressed": "0",
+    "cause_eventid": "0",
+    "hosts": [
+      {
+        "hostid": "10084",
+        "host": "Zabbix server",
+        "name": "Zabbix server"
+      }
+    ],
+    "opdata": "",
+    "urls": []
+  }
+]
