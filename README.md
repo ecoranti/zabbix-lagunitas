@@ -60,7 +60,6 @@ bin/lagunitas lab escenario Walter normal
 - [Guía del laboratorio](docs/laboratorio.md): puesta en marcha y uso del laboratorio en la Mac (arranque, pruebas de alertas, AP real con sonda ICMP, problemas frecuentes). Solo desarrollo; no forma parte de producción.
 - Versiones Word de las guías: `docs/*.docx`. Se regeneran desde el Markdown con
   `.venv/bin/pip install -r requirements-docs.txt` y `scripts/md2docx.py <origen.md> <destino.docx>`.
-- `docs/referencia/`: informe de la PPS, diagramas y documentos de la versión anterior.
 
 ## Estructura
 
@@ -82,6 +81,14 @@ A **Willian Tola** ([LinkedIn](https://www.linkedin.com/in/willian-tola-68661b80
 [Reportes-Zabbix](https://github.com/lab24com/Reportes-Zabbix) (lab24com), cuyo trabajo sirvió de
 referencia e inspiración para mejorar la primera versión de este sistema, en particular el módulo de
 reportes. El módulo de este repositorio es una implementación propia para Zabbix 7.0.
+
+## Licencia
+
+Copyright © 2026 Elias Coranti — Red Comunitaria y Científica Las Lagunitas.
+
+Este proyecto es software libre: se distribuye bajo la [GNU General Public License v3.0](LICENSE).
+Se puede usar, estudiar, modificar y redistribuir, siempre que las versiones modificadas se
+publiquen bajo la misma licencia y con su código fuente.
 
 ## Seguridad
 
