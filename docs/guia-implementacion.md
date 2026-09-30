@@ -43,7 +43,7 @@ Componentes del servidor de monitoreo:
 **Métodos de recolección**
 
 - **ICMP** (template *Lagunitas - Disponibilidad ICMP*): el Zabbix server hace ping a cada
-  equipo cada 30 s. Funciona con cualquier equipo con IP, incluidos los routers airCube de los
+  equipo cada 10 s (macro global `{$LAGUNITAS.INTERVALO}`, igual que SNMP y la API de UniFi). Funciona con cualquier equipo con IP, incluidos los routers airCube de los
   hogares, que no tienen SNMP ni API documentada.
 - **SNMP v2c** (templates *Lagunitas - Ubiquiti airMAX por SNMP* y *Lagunitas - Mikrotik por
   SNMP*): radios airMAX (PowerBeam, LiteBeam, NanoStation, NanoLoco) y el router Mikrotik. Aportan

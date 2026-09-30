@@ -12,7 +12,7 @@ Monitoring -> Hosts -> Dashboards (o desde el mapa / navegador de equipos).
 from __future__ import annotations
 
 from . import widgets as W
-from .model import SEVERIDAD, TEMPLATE_GRUPO, TPL_ICMP, TPL_UNIFI, TRIGGER_CAIDA
+from .model import INTERVALO, INTERVALO_VALOR, SEVERIDAD, TEMPLATE_GRUPO, TPL_ICMP, TPL_UNIFI, TRIGGER_CAIDA
 from .zbx import ZabbixAPI
 
 # ----------------------------------------------------------------- utilidades
@@ -147,7 +147,7 @@ def install_icmp(api: ZabbixAPI, groupid: str) -> dict:
             {"macro": "{$ICMP.LATENCIA.WARN}", "value": "0.15",
              "description": "Latencia promedio (s) en 5 min que dispara advertencia (150 ms)"},
             {"macro": "{$ICMP.CAIDA.PERIODO}", "value": "90s",
-             "description": "Tiempo sin respuesta al ping (chequeo cada 30 s) para declarar el equipo caído"},
+             "description": "Tiempo sin respuesta al ping para declarar el equipo caído"},
         ],
         tags=_tags(clase="red", objetivo="disponibilidad"),
     )
@@ -155,21 +155,21 @@ def install_icmp(api: ZabbixAPI, groupid: str) -> dict:
     tag_disp = _tags(componente="disponibilidad")
     ping = ensure_item(api, tid, {
         "name": "Disponibilidad (ICMP)", "key_": "icmpping", "type": 3, "value_type": 3,
-        "delay": "30s", "history": "90d", "trends": "365d", "valuemapid": vm, "tags": tag_disp,
+        "delay": INTERVALO, "history": "90d", "trends": "365d", "valuemapid": vm, "tags": tag_disp,
         "description": "1 si el equipo responde al ping, 0 si no responde."})
     loss = ensure_item(api, tid, {
         "name": "Pérdida de paquetes (ICMP)", "key_": "icmppingloss", "type": 3, "value_type": 0,
-        "units": "%", "delay": "1m", "history": "90d", "trends": "365d", "tags": tag_disp})
+        "units": "%", "delay": INTERVALO, "history": "90d", "trends": "365d", "tags": tag_disp})
     rtt = ensure_item(api, tid, {
         "name": "Latencia (ICMP)", "key_": "icmppingsec", "type": 3, "value_type": 0,
-        "units": "s", "delay": "1m", "history": "90d", "trends": "365d", "tags": tag_disp})
+        "units": "s", "delay": INTERVALO, "history": "90d", "trends": "365d", "tags": tag_disp})
     sla24 = ensure_item(api, tid, {
         "name": "Disponibilidad últimas 24 h", "key_": "lagunitas.disponibilidad[24h]", "type": 15,
-        "value_type": 0, "units": "%", "delay": "5m", "history": "90d", "trends": "365d",
+        "value_type": 0, "units": "%", "delay": "1m", "history": "90d", "trends": "365d",
         "params": "avg(//icmpping,24h)*100", "tags": tag_disp})
     sla7d = ensure_item(api, tid, {
         "name": "Disponibilidad últimos 7 días", "key_": "lagunitas.disponibilidad[7d]", "type": 15,
-        "value_type": 0, "units": "%", "delay": "15m", "history": "90d", "trends": "365d",
+        "value_type": 0, "units": "%", "delay": "1m", "history": "90d", "trends": "365d",
         "params": "avg(//icmpping,7d)*100", "tags": tag_disp})
 
     t = TPL_ICMP
@@ -179,7 +179,7 @@ def install_icmp(api: ZabbixAPI, groupid: str) -> dict:
         "priority": SEVERIDAD["high"], "manual_close": 0,
         "tags": _tags(alcance="disponibilidad", equipo="{HOST.HOST}"),
         "comments": "El equipo no respondió al ping durante {$ICMP.CAIDA.PERIODO} "
-                    "(chequeo cada 30 s). Revisar alimentación (panel solar/batería), el enlace hacia su "
+                    "(chequeo cada {$LAGUNITAS.INTERVALO}). Revisar alimentación (panel solar/batería), el enlace hacia su "
                     "equipo padre y el propio equipo. Si el padre también está caído, esta "
                     "alerta queda suprimida por dependencia."})
     ensure_trigger(api, tid, {
@@ -255,16 +255,16 @@ def install_unifi(api: ZabbixAPI, groupid: str) -> dict:
 
     ctrl = ensure_item(api, tid, {
         "name": "Controlador UniFi: HTTPS accesible", "type": 3, "value_type": 3,
-        "key_": "net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}]", "delay": "1m",
+        "key_": "net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}]", "delay": INTERVALO,
         "history": "90d", "trends": "365d", "valuemapid": vm_srv, "tags": _tags(componente="api")})
     stats = ensure_item(api, tid, {**http_common, "name": "AP: estadísticas (JSON crudo)",
-                                   "key_": "ap.stats.raw", "delay": "1m",
+                                   "key_": "ap.stats.raw", "delay": INTERVALO,
                                    "url": f"{base}/devices/{{$UNIFI.DEVICE.ID}}/statistics/latest"})
     device = ensure_item(api, tid, {**http_common, "name": "AP: dispositivo (JSON crudo)",
-                                    "key_": "ap.device.raw", "delay": "2m",
+                                    "key_": "ap.device.raw", "delay": INTERVALO,
                                     "url": f"{base}/devices/{{$UNIFI.DEVICE.ID}}"})
     clients = ensure_item(api, tid, {**http_common, "name": "AP: clientes del sitio (JSON crudo)",
-                                     "key_": "ap.clients.raw", "delay": "1m",
+                                     "key_": "ap.clients.raw", "delay": INTERVALO,
                                      "url": f"{base}/clients?limit=200"})
 
     tg = {"rend": _tags(componente="rendimiento"), "radio": _tags(componente="radio"),
@@ -305,7 +305,7 @@ def install_unifi(api: ZabbixAPI, groupid: str) -> dict:
     t = TPL_UNIFI
     ctrl_trig = ensure_trigger(api, tid, {
         "description": "{HOST.NAME}: controlador UniFi no accesible",
-        "expression": f"max(/{t}/net.tcp.service[https,{{$UNIFI.HOST}},{{$UNIFI.PORT}}],#3)=0",
+        "expression": f"max(/{t}/net.tcp.service[https,{{$UNIFI.HOST}},{{$UNIFI.PORT}}],3m)=0",
         "priority": SEVERIDAD["average"], "tags": _tags(alcance="api", equipo="{HOST.HOST}"),
         "comments": "No se puede abrir conexión HTTPS con el controlador UniFi: sin él no hay "
                     "métricas del AP. Verificar que UniFi OS Server esté encendido y el puerto."})
@@ -390,8 +390,21 @@ def install_unifi(api: ZabbixAPI, groupid: str) -> dict:
     return {"templateid": tid, "items": ids}
 
 
+def ensure_intervalo(api: ZabbixAPI) -> None:
+    """Macro global con el intervalo de todas las mediciones: cambiarla ajusta la red entera."""
+    actual = api.call("usermacro.get", {"globalmacro": True, "filter": {"macro": INTERVALO}})
+    spec = {"value": INTERVALO_VALOR,
+            "description": "Intervalo de actualización de todas las mediciones (ICMP, SNMP, API UniFi)"}
+    if actual:
+        if actual[0]["value"] != INTERVALO_VALOR:
+            print(f"  {INTERVALO} = {actual[0]['value']} (valor ajustado a mano, se conserva)")
+        return
+    api.call("usermacro.createglobal", {"macro": INTERVALO, **spec})
+
+
 def install_all(api: ZabbixAPI) -> dict:
     from . import templates_snmp
+    ensure_intervalo(api)
     gid = ensure_template_group(api, TEMPLATE_GRUPO)
     return {TPL_ICMP: install_icmp(api, gid), TPL_UNIFI: install_unifi(api, gid),
             **templates_snmp.install_all(api, gid)}

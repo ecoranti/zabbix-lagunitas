@@ -6,6 +6,8 @@ Cada campo se expresa como {"type", "name", "value"} con los tipos de la API:
 """
 from __future__ import annotations
 
+from .model import REFRESCO_WIDGETS
+
 INT, STR, GROUP, HOST, ITEM, MAP, SERVICE, SLA = 0, 1, 2, 3, 4, 8, 9, 10
 
 
@@ -23,8 +25,9 @@ def _thresholds(thresholds) -> list[dict]:
 def widget(wtype: str, name: str, pos: tuple[int, int, int, int], fields: list[dict],
            view_mode: int = 0) -> dict:
     x, y, w, h = pos
+    # rf_rate: refresco del widget en segundos (valores válidos: 10, 30, 60, 120, 600, 900).
     return {"type": wtype, "name": name, "x": x, "y": y, "width": w, "height": h,
-            "view_mode": view_mode, "fields": fields}
+            "view_mode": view_mode, "fields": fields + [f("rf_rate", REFRESCO_WIDGETS, INT)]}
 
 
 def _override(ref: str | None) -> list[dict]:
@@ -60,18 +63,20 @@ def svggraph(name, pos, datasets, override=None, lefty_min=None, units=None, leg
     fields: list[dict] = []
     for i, ds in enumerate(datasets):
         p = f"ds.{i}"
+        color = ds.get("color", "1E88E5")
         if "itemids" in ds:
+            # Lista de ítems: en 7.0 el color es por ítem (ds.N.color.M). Un color
+            # único en ds.N.color se lee como arreglo y queda "#1" (trazo invisible).
             fields.append(f(f"{p}.dataset_type", 0, INT))
             for j, iid in enumerate(ds["itemids"]):
-                fields.append(f(f"{p}.itemids.{j}", iid, ITEM))
+                fields += [f(f"{p}.itemids.{j}", iid, ITEM), f(f"{p}.color.{j}", color)]
         else:
-            fields.append(f(f"{p}.dataset_type", 1, INT))
+            fields += [f(f"{p}.dataset_type", 1, INT), f(f"{p}.color", color)]
             for j, h in enumerate(ds.get("hosts", [])):
                 fields.append(f(f"{p}.hosts.{j}", h))
             for j, it in enumerate(ds["items"]):
                 fields.append(f(f"{p}.items.{j}", it))
-        fields += [f(f"{p}.color", ds.get("color", "1E88E5")),
-                   f(f"{p}.fill", ds.get("fill", 2), INT),
+        fields += [f(f"{p}.fill", ds.get("fill", 2), INT),
                    f(f"{p}.width", ds.get("width", 2), INT),
                    f(f"{p}.transparency", ds.get("transparency", 5), INT)]
         if ds.get("label"):

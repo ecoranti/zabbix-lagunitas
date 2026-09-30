@@ -55,6 +55,8 @@ def cmd_aprovisionar(args) -> None:
     if "servidor" in pasos:
         print("[servidor]")
         hosts.ensure_zabbix_server_host(api)
+        from .model import REFRESCO_WIDGETS
+        hosts.ensure_refresco_usuarios(api, REFRESCO_WIDGETS)
     sysmapid = slaid = raiz = None
     if "mapa" in pasos:
         print("[mapa]")

@@ -236,3 +236,13 @@ def ensure_zabbix_server_host(api: ZabbixAPI, log=print) -> None:
                                           "dns": "zabbix-agent", "ip": "", "port": "10050"})
     api.call("host.update", {"hostid": h["hostid"], "status": 0})
     log("  'Zabbix server' habilitado (agente: zabbix-agent:10050)")
+
+
+def ensure_refresco_usuarios(api: ZabbixAPI, segundos: int, log=print) -> None:
+    """Refresco del frontend (User settings -> Refresh) de todos los usuarios."""
+    valor = f"{segundos}s"
+    cambiar = [u["userid"] for u in api.call("user.get", {"output": ["userid", "refresh"]})
+               if u["refresh"] != valor]
+    for userid in cambiar:
+        api.call("user.update", {"userid": userid, "refresh": valor})
+    log(f"  refresco del frontend: {valor} ({len(cambiar)} usuario(s) actualizados)")

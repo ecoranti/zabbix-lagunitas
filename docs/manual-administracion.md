@@ -126,7 +126,7 @@ generado por el template.
 
 | Trigger | Condición | Severidad |
 |---|---|---|
-| `controlador UniFi no accesible` | Puerto HTTPS del controlador cerrado 3 chequeos | Average |
+| `controlador UniFi no accesible` | Puerto HTTPS del controlador cerrado durante 3 min | Average |
 | `sin datos de la API de UniFi` | Sin estadísticas por `{$AP.SIN.DATOS}` (5 min) | Average |
 | `AP fuera de línea según UniFi` | El controlador informa un estado distinto de ONLINE | High |
 | `uso de CPU / memoria alto` | Mínimo de 5 min > 85 % | Warning |
@@ -162,6 +162,24 @@ Los umbrales son **macros**. Para cambiarlos en un solo equipo (por ejemplo un e
 más latencia): *Data collection → Hosts → <equipo> → Macros → Inherited and host macros* y
 sobrescribir `{$ICMP.LATENCIA.WARN}`. Para cambiarlos en toda la red, editar el valor por
 defecto en `lagunitas/templates.py` y ejecutar `bin/lagunitas aprovisionar --solo templates`.
+
+### Frecuencia de actualización
+
+| Qué | Frecuencia | Dónde se cambia |
+|---|---|---|
+| Mediciones de todos los equipos (ICMP, SNMP, API UniFi, interfaces y estaciones) | 10 s | Macro global `{$LAGUNITAS.INTERVALO}` |
+| Disponibilidad 24 h / 7 días (ítems calculados) | 1 min | `lagunitas/templates.py` |
+| Datos estáticos (modelo, firmware, SSID, antena, número de serie, velocidad de interfaz) | 1 h | `lagunitas/templates_snmp.py` |
+| Descubrimiento de interfaces y estaciones | 10 min / 1 h | `lagunitas/templates_snmp.py` |
+| Widgets de los dashboards | 10 s | `REFRESCO_WIDGETS` en `lagunitas/model.py` |
+| Pantallas del frontend (*Problems*, *Latest data*, etc.) | 10 s | *User settings → Refresh* de cada usuario |
+
+Los triggers se evalúan con cada dato nuevo, así que también reaccionan cada 10 s. Sus ventanas
+(por ejemplo, "promedio de 5 min") son de tiempo y no cambian con el intervalo.
+
+Para cambiar el intervalo en toda la red **sin reaprovisionar**: *Administration → Macros* →
+`{$LAGUNITAS.INTERVALO}`. El aprovisionamiento respeta un valor ajustado a mano. Si los enlaces de
+radio se saturan o el servidor queda corto de recursos, subirlo a `30s` o `1m`.
 
 ### Notificaciones
 

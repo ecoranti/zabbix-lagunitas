@@ -4,6 +4,14 @@ SITIO_GRUPO = "Las Lagunitas"
 TEMPLATE_GRUPO = "Templates/Las Lagunitas"
 
 TPL_ICMP = "Lagunitas - Disponibilidad ICMP"
+
+# Intervalo de todas las mediciones (macro global, ajustable sin reaprovisionar).
+# Los datos estáticos (modelo, firmware, SSID...) y los descubrimientos LLD conservan
+# intervalos largos: no cambian y consultarlos cada 10 s solo agrega tráfico por radio.
+INTERVALO = "{$LAGUNITAS.INTERVALO}"
+INTERVALO_VALOR = "10s"
+# Refresco de los widgets de los dashboards (segundos).
+REFRESCO_WIDGETS = 10
 TPL_UNIFI = "Lagunitas - AP UniFi por API"
 TPL_AIRMAX = "Lagunitas - Ubiquiti airMAX por SNMP"
 TPL_MIKROTIK = "Lagunitas - Mikrotik por SNMP"
