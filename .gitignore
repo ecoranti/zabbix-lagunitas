@@ -20,3 +20,6 @@ docs/~$*.docx
 docs/informe/capturas/
 # Copias de trabajo del informe fuera de docs/informe/
 docs/Informe PPS*.docx
+
+# Documentos de la versión anterior (solo locales, no se publican)
+docs/referencia/
