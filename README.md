@@ -53,6 +53,7 @@ bin/lagunitas lab escenario Walter normal
 
 ## Documentación
 
+- [Informe de la PPS](docs/informe/README.md): versión web del informe del trabajo final (se genera desde el Word con `scripts/informe2md.py`).
 - [Guía de implementación](docs/guia-implementacion.md): instalación en laboratorio y en producción paso a paso.
 - [Guía de integración de equipos](docs/guia-integracion-equipos.md): cómo incorporar cada tipo de equipo (airMAX, Mikrotik, airCube, UniFi), qué datos y alertas aporta, y cómo validarlo.
 - [Manual de administración](docs/manual-administracion.md): operación diaria, alarmas, altas/bajas de equipos, backups y resolución de problemas.
