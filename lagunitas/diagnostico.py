@@ -183,3 +183,30 @@ def probar_telegram(log=print) -> None:
               "✅ Prueba de notificaciones — Monitoreo Red Las Lagunitas.\n"
               "Si ves este mensaje, Zabbix puede avisarte por Telegram."})
     log(f"  Mensaje de prueba enviado al chat {chat}")
+    seguridad_telegram(chat, log)
+
+
+def seguridad_telegram(chat: str, log=print) -> None:
+    """Chequea que el bot sea de solo envío (ver Guía de implementación, Seguridad del bot)."""
+    me = _telegram("getMe")
+    webhook = _telegram("getWebhookInfo").get("url", "")
+    comandos = _telegram("getMyCommands")
+    miembro = _telegram("getChatMember", {"chat_id": chat, "user_id": me["id"]})
+    tipo = _telegram("getChat", {"chat_id": chat})["type"]
+    checks = [
+        (not webhook, "sin webhook: nada recibe ni procesa mensajes entrantes",
+         f"hay un webhook configurado ({webhook}): eliminarlo si no es propio"),
+        (not me.get("can_join_groups"), "nadie puede agregar el bot a otros grupos",
+         "cualquiera puede agregar el bot a sus grupos: BotFather -> /setjoingroups -> Disable"),
+        (not me.get("can_read_all_group_messages"), "modo privacidad activo (no lee el grupo)",
+         "el bot lee todos los mensajes del grupo: BotFather -> /setprivacy -> Enable"),
+        (not comandos and not me.get("supports_inline_queries"), "sin comandos ni modo inline",
+         "el bot publica comandos o modo inline: quitarlos (/deletecommands, /setinline)"),
+        (miembro["status"] == "member", "en el grupo es miembro sin permisos de administrador",
+         f"en el grupo es '{miembro['status']}': quitarle los permisos de administrador"),
+        (tipo in ("group", "supergroup"), f"destino: {tipo}",
+         "el destino es un chat privado: para operadores conviene un grupo"),
+    ]
+    log("  Seguridad del bot:")
+    for ok, bien, mal in checks:
+        log(f"    {'OK ' if ok else 'REVISAR'} {bien if ok else mal}")

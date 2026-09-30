@@ -52,11 +52,11 @@ def ensure_action(api: ZabbixAPI, hostgroupid: str, usrgrpid: str, severidad_min
 # así que HTML/Markdown no aportan negritas y Markdown falla con guiones bajos en los nombres).
 PLANTILLAS_TELEGRAM = [
     {"eventsource": 0, "recovery": 0, "subject": "🔴 {EVENT.SEVERITY}: {EVENT.NAME}",
-     "message": "Equipo: {HOST.NAME} ({HOST.IP})\nInicio: {EVENT.DATE} {EVENT.TIME}\n"
-                "Dato: {EVENT.OPDATA}\nRed Las Lagunitas · evento {EVENT.ID}"},
+     "message": "{EVENT.OPDATA}\nEquipo: {HOST.NAME} ({HOST.IP})\nInicio: {EVENT.DATE} {EVENT.TIME}\n"
+                "Red Las Lagunitas"},
     {"eventsource": 0, "recovery": 1, "subject": "✅ Resuelto: {EVENT.NAME}",
      "message": "Equipo: {HOST.NAME}\nDuración: {EVENT.DURATION}\n"
-                "Resuelto: {EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME}"},
+                "Resuelto: {EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME}\nRed Las Lagunitas"},
     {"eventsource": 0, "recovery": 2, "subject": "💬 Actualización: {EVENT.NAME}",
      "message": "{USER.FULLNAME} {EVENT.UPDATE.ACTION} ({EVENT.UPDATE.DATE} {EVENT.UPDATE.TIME})\n"
                 "{EVENT.UPDATE.MESSAGE}\nEstado actual: {EVENT.STATUS}"},

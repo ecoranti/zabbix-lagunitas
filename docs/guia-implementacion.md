@@ -249,6 +249,44 @@ Lista hosts faltantes, ítems no soportados y problemas abiertos. En el frontend
    Average, High y Disaster. En Telegram, cada "Resuelto" aparece como respuesta al mensaje del
    problema.
 
+### Seguridad del bot de Telegram
+
+**Modelo:** el bot es de **solo envío**. Zabbix llama por HTTPS saliente a `api.telegram.org` con el
+token para publicar las alertas; no hay webhook, ni puerto abierto en el servidor, ni ningún
+programa que lea o ejecute lo que se le escriba al bot. Telegram no permite impedir que alguien le
+escriba al bot, pero esos mensajes no tienen ningún efecto: no llegan a Zabbix ni al servidor
+(Telegram los descarta a las 24 h). Por eso no es posible atacar Zabbix "a través del bot".
+
+Lo que sí hay que proteger son dos cosas:
+
+- **El token.** Quien lo tenga puede publicar mensajes como si fuera el bot (por ejemplo, alertas
+  falsas en el grupo) y leer los mensajes que le hayan enviado. Vive solo en `.env` (permisos 600,
+  fuera de git) y en el media type de Zabbix (visible únicamente para Super admin). No pegarlo en
+  chats, capturas ni commits.
+- **La cuenta de Telegram dueña del bot**, que es la que lo administra desde @BotFather.
+
+Configuración recomendada (una sola vez, después de agregar el bot al grupo):
+
+| Dónde | Qué hacer | Para qué |
+|---|---|---|
+| @BotFather → `/setjoingroups` → Disable | Nadie puede agregar el bot a otros grupos | Que no se use el bot fuera del grupo de operadores |
+| @BotFather → `/setprivacy` → Enable (es el valor por defecto) | El bot no lee los mensajes del grupo | Que un token filtrado no exponga las conversaciones |
+| @BotFather | No configurar comandos, modo inline ni webhook | Que no haya nada que procese mensajes entrantes |
+| Grupo → Permisos | "Agregar miembros": solo administradores; el bot como miembro común (no administrador) | Controlar quién recibe las alertas |
+| Grupo → Enlaces de invitación | Revocar los enlaces compartidos y usar invitaciones puntuales | Que no entren desconocidos |
+| Telegram → Ajustes → Privacidad y seguridad | Activar la **verificación en dos pasos** en la cuenta dueña del bot | Que no se pueda tomar control del bot robando la cuenta |
+
+Para comprobarlo en cualquier momento (envía un mensaje de prueba y revisa la configuración):
+
+```bash
+bin/lagunitas probar-telegram
+```
+
+Cada chequeo debe decir `OK`. Si el token se expuso (se pegó en un chat, apareció en una captura,
+alguien reporta mensajes extraños del bot): en @BotFather `/revoke` → elegir el bot → copiar el
+token nuevo en `TELEGRAM_BOT_TOKEN` de `.env` → `bin/lagunitas aprovisionar --solo alertas` →
+`bin/lagunitas probar-telegram`. El token anterior deja de funcionar en el acto.
+
 La acción *Las Lagunitas - Notificar caídas* avisa problemas de severidad **Average o mayor**,
 envía un recordatorio a los 30 minutos si siguen abiertos y avisa la recuperación.
 

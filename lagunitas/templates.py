@@ -185,7 +185,7 @@ def install_icmp(api: ZabbixAPI, groupid: str, sonda: bool = False) -> dict:
     caida = ensure_trigger(api, tid, {
         "description": TRIGGER_CAIDA[nombre],
         "expression": f"max(/{t}/icmpping,{{$ICMP.CAIDA.PERIODO}})=0",
-        "priority": SEVERIDAD["high"], "manual_close": 0,
+        "priority": SEVERIDAD["high"], "manual_close": 0, "opdata": "Caído",
         "tags": _tags(alcance="disponibilidad", equipo="{HOST.HOST}"),
         "comments": "El equipo no respondió al ping durante {$ICMP.CAIDA.PERIODO} "
                     "(chequeo cada {$LAGUNITAS.INTERVALO}). Revisar alimentación (panel solar/batería), el enlace hacia su "

@@ -45,7 +45,7 @@ Frontend: <http://localhost:8090> → *Dashboards → Las Lagunitas - Centro de 
 Simular una caída y su recuperación:
 
 ```bash
-bin/lagunitas lab caida Nodo_Kika       # ~90 s después: alerta + mapa en rojo
+bin/lagunitas lab caida Nodo_Kika       # ~2 min después: una alerta + mapa en rojo
 bin/lagunitas lab recuperar Nodo_Kika
 bin/lagunitas lab escenario Walter senal-debil   # falla de radio simulada por SNMP
 bin/lagunitas lab escenario Walter normal
