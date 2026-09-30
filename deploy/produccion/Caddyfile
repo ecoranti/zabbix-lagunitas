@@ -1,0 +1,14 @@
+# Proxy HTTPS delante del frontend de Zabbix.
+# CADDY_TLS=internal  -> certificado autofirmado por la CA interna de Caddy (LAN/VPN)
+# CADDY_TLS=<email>   -> certificado de Let's Encrypt para un dominio público
+{$ZBX_DOMAIN} {
+	tls {$CADDY_TLS}
+	encode gzip
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "same-origin"
+		-Server
+	}
+	reverse_proxy zabbix-web:8080
+}

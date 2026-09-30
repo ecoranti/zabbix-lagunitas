@@ -1,0 +1,408 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 861b1d1f6bfb4ede924e44a88146dcff
+      name: 'Templates/Las Lagunitas'
+  templates:
+    - uuid: 1c7357391e4b43059316ed04fffcac5f
+      template: 'Lagunitas - Disponibilidad ICMP'
+      name: 'Lagunitas - Disponibilidad ICMP'
+      description: 'Disponibilidad, pérdida de paquetes y latencia por ICMP (fping del Zabbix server). No requiere agente en el equipo: sirve para torres, nodos y routers AirCube de hogares.'
+      groups:
+        - name: 'Templates/Las Lagunitas'
+      items:
+        - uuid: f29489c30e724709b0a1fab15e234b5e
+          name: 'Disponibilidad (ICMP)'
+          type: SIMPLE
+          key: icmpping
+          delay: 30s
+          history: 90d
+          description: '1 si el equipo responde al ping, 0 si no responde.'
+          valuemap:
+            name: 'Lagunitas - Estado'
+          tags:
+            - tag: componente
+              value: disponibilidad
+          triggers:
+            - uuid: 735a342d9ee247cb9a37cb2de3fd2303
+              expression: 'max(/Lagunitas - Disponibilidad ICMP/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+              name: '{HOST.NAME}: sin respuesta (ICMP)'
+              priority: HIGH
+              description: 'El equipo no respondió al ping durante {$ICMP.CAIDA.PERIODO} (chequeo cada 30 s). Revisar alimentación (panel solar/batería), el enlace hacia su equipo padre y el propio equipo. Si el padre también está caído, esta alerta queda suprimida por dependencia.'
+              tags:
+                - tag: alcance
+                  value: disponibilidad
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 93f8de2b252d45efa1d46ba4072e32a7
+          name: 'Pérdida de paquetes (ICMP)'
+          type: SIMPLE
+          key: icmppingloss
+          history: 90d
+          value_type: FLOAT
+          units: '%'
+          tags:
+            - tag: componente
+              value: disponibilidad
+          triggers:
+            - uuid: 944ba08cd4ea4f5d989f899442fded40
+              expression: 'min(/Lagunitas - Disponibilidad ICMP/icmppingloss,5m)>{$ICMP.PERDIDA.WARN} and min(/Lagunitas - Disponibilidad ICMP/icmppingloss,5m)<100'
+              name: '{HOST.NAME}: pérdida de paquetes alta'
+              opdata: 'Pérdida: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'Pérdida sostenida por encima de {$ICMP.PERDIDA.WARN}% durante 5 minutos: posible interferencia, desalineación de antena o saturación del enlace.'
+              dependencies:
+                - name: '{HOST.NAME}: sin respuesta (ICMP)'
+                  expression: 'max(/Lagunitas - Disponibilidad ICMP/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+              tags:
+                - tag: alcance
+                  value: calidad
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: dbe932a805674258816e8b2ad5de2874
+          name: 'Latencia (ICMP)'
+          type: SIMPLE
+          key: icmppingsec
+          history: 90d
+          value_type: FLOAT
+          units: s
+          tags:
+            - tag: componente
+              value: disponibilidad
+          triggers:
+            - uuid: 93919286163b4662ad79b77d75c87889
+              expression: 'avg(/Lagunitas - Disponibilidad ICMP/icmppingsec,5m)>{$ICMP.LATENCIA.WARN}'
+              name: '{HOST.NAME}: latencia alta'
+              opdata: 'Latencia: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'Latencia promedio de 5 minutos por encima de {$ICMP.LATENCIA.WARN} s.'
+              dependencies:
+                - name: '{HOST.NAME}: sin respuesta (ICMP)'
+                  expression: 'max(/Lagunitas - Disponibilidad ICMP/icmpping,{$ICMP.CAIDA.PERIODO})=0'
+              tags:
+                - tag: alcance
+                  value: calidad
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 55227dd42ab449c3a22036ca2f166901
+          name: 'Disponibilidad últimos 7 días'
+          type: CALCULATED
+          key: 'lagunitas.disponibilidad[7d]'
+          delay: 15m
+          history: 90d
+          value_type: FLOAT
+          units: '%'
+          params: 'avg(//icmpping,7d)*100'
+          tags:
+            - tag: componente
+              value: disponibilidad
+        - uuid: 4a1379f46f684dccb0ad7443b49327b1
+          name: 'Disponibilidad últimas 24 h'
+          type: CALCULATED
+          key: 'lagunitas.disponibilidad[24h]'
+          delay: 5m
+          history: 90d
+          value_type: FLOAT
+          units: '%'
+          params: 'avg(//icmpping,24h)*100'
+          tags:
+            - tag: componente
+              value: disponibilidad
+      tags:
+        - tag: clase
+          value: red
+        - tag: objetivo
+          value: disponibilidad
+      macros:
+        - macro: '{$ICMP.CAIDA.PERIODO}'
+          value: 90s
+          description: 'Tiempo sin respuesta al ping (chequeo cada 30 s) para declarar el equipo caído'
+        - macro: '{$ICMP.LATENCIA.WARN}'
+          value: '0.15'
+          description: 'Latencia promedio (s) en 5 min que dispara advertencia (150 ms)'
+        - macro: '{$ICMP.PERDIDA.WARN}'
+          value: '20'
+          description: 'Pérdida de paquetes (%) sostenida 5 min que dispara advertencia'
+      dashboards:
+        - uuid: 5ec9dc4172b14c4aa7ef3190b7699bec
+          name: 'Detalle del equipo'
+          pages:
+            - name: Estado
+              widgets:
+                - type: item
+                  name: 'Estado actual'
+                  width: '18'
+                  height: '4'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Disponibilidad ICMP'
+                        key: icmpping
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '1'
+                    - type: INTEGER
+                      name: value_size
+                      value: '40'
+                - type: svggraph
+                  name: 'Latencia (ICMP)'
+                  'y': '4'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: 1E88E5
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '0'
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.0.itemids.0
+                      value:
+                        host: 'Lagunitas - Disponibilidad ICMP'
+                        key: icmppingsec
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: lefty_min
+                      value: '0'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: svggraph
+                  name: 'Disponibilidad (1 = activo, 0 = caído)'
+                  'y': '10'
+                  width: '72'
+                  height: '5'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: 43A047
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '0'
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '4'
+                    - type: ITEM
+                      name: ds.0.itemids.0
+                      value:
+                        host: 'Lagunitas - Disponibilidad ICMP'
+                        key: icmpping
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.type
+                      value: '2'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: lefty_min
+                      value: '0'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: item
+                  name: 'Disponibilidad 24 h'
+                  x: '18'
+                  width: '18'
+                  height: '4'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '2'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Disponibilidad ICMP'
+                        key: 'lagunitas.disponibilidad[24h]'
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '95'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '99'
+                - type: item
+                  name: 'Disponibilidad 7 días'
+                  x: '36'
+                  width: '18'
+                  height: '4'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '2'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Disponibilidad ICMP'
+                        key: 'lagunitas.disponibilidad[7d]'
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '95'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '99'
+                - type: svggraph
+                  name: 'Pérdida de paquetes (ICMP)'
+                  x: '36'
+                  'y': '4'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: E53935
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '0'
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.0.itemids.0
+                      value:
+                        host: 'Lagunitas - Disponibilidad ICMP'
+                        key: icmppingloss
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.type
+                      value: '2'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: lefty_min
+                      value: '0'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: item
+                  name: 'Latencia actual'
+                  x: '54'
+                  width: '18'
+                  height: '4'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '1'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Disponibilidad ICMP'
+                        key: icmppingsec
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '0.1'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '0.15'
+      valuemaps:
+        - uuid: dd79cc22b7f0429abe5d9716bf87d361
+          name: 'Lagunitas - Estado'
+          mappings:
+            - value: '0'
+              newvalue: Caído
+            - value: '1'
+              newvalue: Activo

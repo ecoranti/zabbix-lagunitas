@@ -1,0 +1,362 @@
+# =============================================================================
+#  Inventario de la Red Las Lagunitas — entorno PRODUCCIÓN (red real)
+# =============================================================================
+#  Misma estructura y topología que el LAB. ANTES DE APROVISIONAR, recorrer la
+#  "Guía de integración de equipos" (docs/guia-integracion-equipos.md) y completar:
+#
+#   1. ip        IP de gestión REAL de cada equipo (reemplazar las marcadas COMPLETAR;
+#                192.168.88.x es solo el rango por defecto del Mikrotik).
+#   2. perfiles  [icmp] para todo equipo; + airos_snmp en radios Ubiquiti airMAX con
+#                SNMP habilitado; + mikrotik_snmp en el router Mikrotik.
+#                Si un equipo todavía no tiene SNMP, dejar solo [icmp].
+#   3. modelo    Modelo exacto (airOS -> System -> Device Model).
+#   4. funcion   ap / sm / ptp / router (según su configuración real).
+#   5. estado    operativo solo para los tramos en servicio.
+#   6. padre     confirmar la topología: de qué equipo depende cada uno.
+#   7. dispositivos  agregar todos los equipos con IP de cada sitio (AP + SM + router).
+#
+#  Validar sin tocar Zabbix:   bin/lagunitas -i config/inventory.produccion.yaml validar
+# =============================================================================
+
+sitio: Las Lagunitas
+entorno: produccion
+descripcion: Red WISP comunitaria real, monitoreada desde el servidor del nodo UNRC.
+
+elementos:
+  # --------------------------------------------------------------- Gateway
+  # Router de borde: DHCP, NAT, firewall y PPPoE con la Cooperativa de Alpa Corral
+  # (informe: "Mikrotik Torre Walter", RB750). Posición exacta a confirmar en campo.
+  - host: Gateway_Mikrotik
+    nombre: Gateway Mikrotik
+    rol: gateway
+    ip: 192.168.88.10   # COMPLETAR: IP de gestión real
+    padre: null
+    estado: operativo
+    perfiles: [icmp, mikrotik_snmp]
+    funcion: router
+    modelo: Mikrotik RB750Gr3
+    equipo: Mikrotik RB750 — DHCP, NAT, PPPoE a Internet
+    mapa: [45, 480]
+
+  # ---------------------------------------------------------------- Torres
+  - host: Union_de_los_Rios
+    nombre: Unión de los Ríos
+    rol: torre
+    ip: 192.168.88.11   # COMPLETAR: IP de gestión real
+    padre: Gateway_Mikrotik
+    estado: operativo
+    perfiles: [icmp, airos_snmp]
+    funcion: ap
+    modelo: Ubiquiti PowerBeam 5AC Gen2
+    equipo: Torre backbone — AP airMAX hacia Rodeo del Padre y Ex Aserradero
+    mapa: [160, 390]
+
+  - host: Rodeo_del_Padre
+    nombre: Rodeo del Padre
+    rol: torre
+    ip: 192.168.88.12   # COMPLETAR: IP de gestión real
+    padre: Union_de_los_Rios
+    estado: operativo
+    perfiles: [icmp, airos_snmp]
+    funcion: sm
+    modelo: Ubiquiti PowerBeam 5AC Gen2
+    equipo: Torre backbone — enlace desde Unión de los Ríos
+    mapa: [360, 390]
+
+  - host: Ex_Aserradero
+    nombre: Ex Aserradero
+    rol: torre
+    ip: 192.168.88.13   # COMPLETAR: IP de gestión real
+    padre: Union_de_los_Rios
+    estado: operativo
+    perfiles: [icmp, airos_snmp]
+    funcion: sm
+    modelo: Ubiquiti PowerBeam 5AC Gen2
+    equipo: Torre backbone — enlace desde Unión de los Ríos
+    mapa: [160, 545]
+
+  - host: El_Carrizal
+    nombre: El Carrizal
+    rol: torre
+    ip: 192.168.88.14   # COMPLETAR: IP de gestión real
+    padre: Ex_Aserradero
+    estado: operativo
+    perfiles: [icmp]
+    funcion: router
+    modelo: Ubiquiti airCube AC
+    equipo: "Router de torre airCube (sin SNMP, solo disponibilidad)"
+    mapa: [360, 545]
+
+  # ---------------------------------------------------------------- Nodos
+  - host: Nodo_Kika
+    nombre: Nodo Kika
+    rol: nodo
+    ip: 192.168.88.21   # COMPLETAR: IP de gestión real
+    padre: Union_de_los_Rios
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [150, 200]
+
+  - host: Nodo_CheoMaricel
+    nombre: Nodo Cheo/Maricel
+    rol: nodo
+    ip: 192.168.88.22   # COMPLETAR: IP de gestión real
+    padre: Union_de_los_Rios
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [355, 195]
+
+  - host: Nodo_AlePatricio
+    nombre: Nodo Ale/Patricio
+    rol: nodo
+    ip: 192.168.88.23   # COMPLETAR: IP de gestión real
+    padre: Rodeo_del_Padre
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [590, 195]
+
+  - host: Nodo_Franco
+    nombre: Nodo Franco (1)
+    rol: nodo
+    ip: 192.168.88.24   # COMPLETAR: IP de gestión real
+    padre: Rodeo_del_Padre
+    estado: en_proceso
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [625, 265]
+
+  - host: Nodo_Franco_2
+    nombre: Nodo Franco (2)
+    rol: nodo
+    ip: 192.168.88.29   # COMPLETAR: IP de gestión real
+    padre: Nodo_Franco
+    estado: en_proceso
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [740, 205]
+
+  - host: Mesada
+    nombre: Mesada
+    rol: nodo
+    ip: 192.168.88.25   # COMPLETAR: IP de gestión real
+    padre: El_Carrizal
+    estado: operativo
+    perfiles: [icmp, airos_snmp]
+    funcion: sm
+    modelo: Ubiquiti LiteBeam 5AC Gen2
+    equipo: SM LiteBeam (enlace desde El Carrizal) + AP LiteBeam a Escuela
+    mapa: [625, 450]
+    dispositivos:
+      - host: Mesada_AP_Escuela
+        nombre: Mesada · AP a Escuela
+        ip: 192.168.88.51   # COMPLETAR: IP de gestión real
+        funcion: ap
+        modelo: Ubiquiti LiteBeam 5AC Gen2
+        perfiles: [icmp, airos_snmp]
+
+  - host: Nodo_JuanCarlos
+    nombre: Nodo Juan Carlos
+    rol: nodo
+    ip: 192.168.88.26   # COMPLETAR: IP de gestión real
+    padre: El_Carrizal
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [535, 555]
+
+  - host: Nodo_DonJulio
+    nombre: Nodo Don Julio
+    rol: nodo
+    ip: 192.168.88.28   # COMPLETAR: IP de gestión real
+    padre: Nodo_JuanCarlos
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [785, 675]
+
+  - host: Cerro_Blanco
+    nombre: Cerro Blanco
+    rol: nodo
+    ip: 192.168.88.27   # COMPLETAR: IP de gestión real
+    padre: El_Carrizal
+    estado: en_proceso
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [185, 670]
+
+  # ------------------------------------------------- Hogares / instituciones
+  - host: Kika
+    nombre: Kika
+    rol: hogar
+    ip: 192.168.88.31   # COMPLETAR: IP de gestión real
+    padre: Nodo_Kika
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [130, 85]
+
+  - host: CheoMaricel
+    nombre: Cheo/Maricel
+    rol: hogar
+    ip: 192.168.88.32   # COMPLETAR: IP de gestión real
+    padre: Nodo_CheoMaricel
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [400, 85]
+
+  - host: AlePatricio
+    nombre: Ale/Patricio
+    rol: hogar
+    ip: 192.168.88.33   # COMPLETAR: IP de gestión real
+    padre: Nodo_AlePatricio
+    estado: operativo
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [660, 90]
+
+  - host: Franco
+    nombre: Franco
+    rol: hogar
+    ip: 192.168.88.34   # COMPLETAR: IP de gestión real
+    padre: Nodo_Franco_2
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [885, 90]
+
+  - host: Escuela_Rural
+    nombre: Escuela Rural
+    rol: institucion
+    ip: 192.168.88.15   # COMPLETAR: IP de gestión real
+    padre: Mesada_AP_Escuela
+    estado: operativo
+    perfiles: [icmp, airos_snmp]
+    funcion: sm
+    modelo: Ubiquiti NanoStation Loco M5
+    equipo: SM NanoLoco + AP NanoLoco hacia Esther + router airCube
+    mapa: [745, 330]
+    dispositivos:
+      - host: Escuela_AP_Esther
+        nombre: Escuela · AP a Esther
+        ip: 192.168.88.55   # COMPLETAR: IP de gestión real
+        funcion: ap
+        modelo: Ubiquiti NanoStation Loco M5
+        perfiles: [icmp, airos_snmp]
+      - host: Escuela_Router
+        nombre: Escuela · Router airCube
+        ip: 192.168.88.52   # COMPLETAR: IP de gestión real
+        funcion: router
+        modelo: Ubiquiti airCube AC
+        perfiles: [icmp]
+
+  - host: Esther
+    nombre: Esther
+    rol: hogar
+    ip: 192.168.88.35   # COMPLETAR: IP de gestión real
+    padre: Escuela_AP_Esther
+    estado: operativo
+    perfiles: [icmp, airos_snmp]
+    funcion: sm
+    modelo: Ubiquiti NanoStation Loco M5
+    equipo: SM NanoLoco + router airCube
+    mapa: [885, 225]
+    dispositivos:
+      - host: Esther_Router
+        nombre: Esther · Router airCube
+        ip: 192.168.88.53   # COMPLETAR: IP de gestión real
+        funcion: router
+        modelo: Ubiquiti airCube AC
+        perfiles: [icmp]
+
+  - host: Walter
+    nombre: Walter
+    rol: hogar
+    ip: 192.168.88.38   # COMPLETAR: IP de gestión real
+    padre: El_Carrizal
+    estado: operativo
+    perfiles: [icmp, airos_snmp]
+    funcion: sm
+    modelo: Ubiquiti NanoStation Loco M5
+    equipo: SM NanoLoco + router airCube
+    mapa: [400, 690]
+    dispositivos:
+      - host: Walter_Router
+        nombre: Walter · Router airCube
+        ip: 192.168.88.54   # COMPLETAR: IP de gestión real
+        funcion: router
+        modelo: Ubiquiti airCube AC
+        perfiles: [icmp]
+
+  - host: JuanCarlos
+    nombre: Juan Carlos
+    rol: hogar
+    ip: 192.168.88.36   # COMPLETAR: IP de gestión real
+    padre: Nodo_JuanCarlos
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [870, 470]
+
+  - host: FabianLucianaLasGuindas
+    nombre: Fabián/Luciana (Las Guindas)
+    rol: hogar
+    ip: 192.168.88.37   # COMPLETAR: IP de gestión real
+    padre: Nodo_JuanCarlos
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar (AP LiteBeam "a Guindas" según relevamiento)
+    mapa: [855, 575]
+
+  - host: Gladys
+    nombre: Gladys
+    rol: hogar
+    ip: 192.168.88.39   # COMPLETAR: IP de gestión real
+    padre: Cerro_Blanco
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [70, 800]
+
+  - host: EulaliaDomingo
+    nombre: Eulalia/Domingo
+    rol: hogar
+    ip: 192.168.88.40   # COMPLETAR: IP de gestión real
+    padre: Cerro_Blanco
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [440, 800]
+
+  - host: Martin
+    nombre: Martín
+    rol: hogar
+    ip: 192.168.88.41   # COMPLETAR: IP de gestión real
+    padre: El_Carrizal
+    estado: en_proceso
+    perfiles: [icmp, airos_snmp]
+    funcion: sm
+    modelo: Ubiquiti NanoStation Loco M5
+    equipo: SM NanoLoco (AP NanoLoco en El Carrizal)
+    mapa: [710, 800]
+
+  - host: DonJulio
+    nombre: Don Julio
+    rol: hogar
+    ip: 192.168.88.42   # COMPLETAR: IP de gestión real
+    padre: Nodo_DonJulio
+    estado: sin_configurar
+    perfiles: [icmp]
+    equipo: A relevar
+    mapa: [890, 800]
+
+  # ---------------------------------------------- Access points UniFi (opcional)
+  # Si la red incorpora APs UniFi administrados por UniFi Network, agregarlos con
+  # perfiles [icmp, unifi_api] y las macros {$UNIFI.HOST}, {$UNIFI.PORT},
+  # {$UNIFI.SITE.ID} y {$UNIFI.DEVICE.ID} (ver Guía de integración, sección UniFi).
+
+# Enlaces entre elementos que no siguen la relación padre -> hijo (ninguno en LAB).
+enlaces_extra: []

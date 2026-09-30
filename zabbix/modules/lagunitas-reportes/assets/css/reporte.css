@@ -1,0 +1,321 @@
+/* Reports -> Disponibilidad de la red */
+
+.lr-page {
+	--lr-bg: #ffffff;
+	--lr-panel: #f6f8fa;
+	--lr-border: #dde3e8;
+	--lr-text: #1f2d36;
+	--lr-muted: #6c7c87;
+	--lr-accent: #0a72b8;
+	--lr-accent-soft: #e5f1fa;
+	--lr-ok: #2f9a57;
+	--lr-warn: #d69a00;
+	--lr-bad: #d9423e;
+	--lr-info: #1e88e5;
+	--lr-track: #e7ebef;
+	display: flex; flex-direction: column; gap: 14px; max-width: 1500px; color: var(--lr-text); font-size: 12px;
+}
+html[color-scheme="dark"] .lr-page {
+	--lr-bg: #2b2b2b;
+	--lr-panel: #313336;
+	--lr-border: #474a4e;
+	--lr-text: #eef1f3;
+	--lr-muted: #a0aab1;
+	--lr-accent: #4aa8e8;
+	--lr-accent-soft: rgba(74, 168, 232, .14);
+	--lr-ok: #4cc27a;
+	--lr-warn: #f2bd2c;
+	--lr-bad: #f06a66;
+	--lr-track: #45484c;
+}
+
+.lr-head {
+	display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; padding: 18px 20px;
+	border: 1px solid var(--lr-border); border-left: 5px solid var(--lr-accent); border-radius: 8px; background: var(--lr-bg);
+}
+.lr-org { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--lr-accent); }
+.lr-head h1 { margin: 4px 0 6px; font-size: 22px; font-weight: 700; color: var(--lr-text); }
+.lr-head p { margin: 0; color: var(--lr-muted); }
+[contenteditable="true"] { outline: none; border-radius: 3px; }
+[contenteditable="true"]:hover, [contenteditable="true"]:focus { box-shadow: 0 0 0 1px var(--lr-border); }
+.lr-head-actions { display: flex; gap: 8px; flex-shrink: 0; }
+.lr-btn {
+	display: inline-flex; align-items: center; height: 30px; padding: 0 14px; border: 1px solid var(--lr-accent);
+	border-radius: 4px; background: var(--lr-accent-soft); color: var(--lr-accent) !important; font: inherit;
+	font-weight: 600; text-decoration: none !important; cursor: pointer;
+}
+.lr-btn-primary { background: var(--lr-accent); color: #fff !important; }
+
+.lr-filtros {
+	display: flex; flex-wrap: wrap; align-items: flex-end; gap: 12px; padding: 12px 16px;
+	border: 1px solid var(--lr-border); border-radius: 8px; background: var(--lr-panel);
+}
+.lr-filtros label { display: flex; flex-direction: column; gap: 4px; color: var(--lr-muted); font-weight: 600; }
+.lr-filtros label[hidden] { display: none; }
+.lr-filtros input, .lr-filtros select {
+	height: 28px; padding: 0 8px; border: 1px solid var(--lr-border); border-radius: 4px;
+	background: var(--lr-bg); color: var(--lr-text); font: inherit;
+}
+.lr-filtros input[type="number"] { width: 90px; }
+
+.lr-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.lr-card {
+	padding: 12px 14px; border: 1px solid var(--lr-border); border-left: 4px solid var(--lr-c);
+	border-radius: 6px; background: var(--lr-bg);
+}
+.lr-card span { display: block; margin-bottom: 6px; font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--lr-muted); }
+.lr-card b { font-size: 22px; font-weight: 700; color: var(--lr-text); }
+.lr-c-ok { --lr-c: var(--lr-ok); }
+.lr-c-warn { --lr-c: var(--lr-warn); }
+.lr-c-bad { --lr-c: var(--lr-bad); }
+.lr-c-info { --lr-c: var(--lr-accent); }
+
+.lr-conclusiones {
+	padding: 12px 18px; border: 1px solid var(--lr-border); border-left: 5px solid var(--lr-warn);
+	border-radius: 8px; background: var(--lr-bg);
+}
+.lr-conclusiones h2, .lr-sec h2 { margin: 0; font-size: 14px; font-weight: 700; color: var(--lr-text); }
+.lr-conclusiones ul { margin: 8px 0 0; padding-left: 18px; }
+.lr-conclusiones li { margin: 4px 0; line-height: 1.5; }
+
+.lr-sec { border: 1px solid var(--lr-border); border-radius: 8px; background: var(--lr-bg); overflow: hidden; }
+.lr-sec-head { display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: var(--lr-panel); border-bottom: 1px solid var(--lr-border); }
+.lr-pill { padding: 1px 8px; border-radius: 10px; border: 1px solid var(--lr-border); color: var(--lr-muted); font-weight: 600; }
+.lr-table-wrap { overflow-x: auto; }
+.lr-table { width: 100%; border-collapse: collapse; }
+.lr-table th {
+	padding: 8px 12px; text-align: left; font-size: 10px; font-weight: 700; letter-spacing: .05em;
+	text-transform: uppercase; color: var(--lr-muted); border-bottom: 1px solid var(--lr-border); white-space: nowrap;
+}
+.lr-table > tbody > tr > td { padding: 8px 12px; border-bottom: 1px solid var(--lr-border); vertical-align: top; }
+.lr-table > tbody > tr:last-child > td { border-bottom: 0; }
+.lr-caido > td:first-child { box-shadow: inset 3px 0 0 var(--lr-bad); }
+.lr-table summary { cursor: pointer; list-style-position: outside; }
+.lr-table summary small { display: block; margin-top: 2px; color: var(--lr-muted); }
+.lr-det { width: 100%; margin: 8px 0 4px; border: 1px solid var(--lr-border); border-collapse: collapse; }
+.lr-det th, .lr-det td { padding: 4px 8px; border-bottom: 1px solid var(--lr-border); text-align: left; }
+.lr-muted { color: var(--lr-muted); padding: 6px 0; }
+
+.lr-bar-wrap { display: flex; align-items: center; gap: 8px; min-width: 170px; }
+.lr-bar { position: relative; flex: 0 0 90px; height: 8px; border-radius: 4px; background: var(--lr-track); overflow: hidden; }
+.lr-bar span { position: absolute; inset: 0 auto 0 0; border-radius: 4px; }
+.lr-bar-wrap b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lr-n-ok { background: var(--lr-ok); }
+.lr-n-warn { background: var(--lr-warn); }
+.lr-n-bad { background: var(--lr-bad); }
+
+.lr-tag { display: inline-block; padding: 2px 8px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+.lr-tag-ok { background: rgba(47, 154, 87, .14); color: var(--lr-ok); }
+.lr-tag-bad { background: rgba(217, 66, 62, .14); color: var(--lr-bad); }
+.lr-empty { padding: 30px; text-align: center; color: var(--lr-muted); border: 1px dashed var(--lr-border); border-radius: 8px; }
+.lr-foot { color: var(--lr-muted); font-size: 11px; line-height: 1.5; }
+
+/* Impresión / PDF: solo el reporte, en claro y sin la interfaz de Zabbix. */
+@media print {
+	@page { size: A4 landscape; margin: 12mm; }
+	.sidebar, .header-title, .header-controls, .lr-no-print, .filter-space, footer, .msg-bad, .msg-good { display: none !important; }
+	body, .wrapper, main, .layout-wrapper { background: #fff !important; }
+	.layout-wrapper, main { margin: 0 !important; padding: 0 !important; }
+	.lr-page {
+		--lr-bg: #fff; --lr-panel: #f4f6f8; --lr-border: #d5dbe0; --lr-text: #111; --lr-muted: #555; --lr-track: #e5e8eb;
+		--lr-ok: #237a45; --lr-warn: #a87700; --lr-bad: #b3261e; --lr-accent: #0a5f99;
+		max-width: none; font-size: 10px;
+	}
+	.lr-sec, .lr-card, .lr-conclusiones { break-inside: avoid; }
+	.lr-table summary { list-style: none; }
+	* { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+
+/* ------------------------------------------------ v1.1: filtros, tarjetas y detalle técnico */
+.lr-page { --lr-violeta: #7e57c2; --lr-aff: #df7626; --lr-na: #8a97a1; }
+html[color-scheme="dark"] .lr-page { --lr-violeta: #a58cf0; --lr-aff: #f59a4e; --lr-na: #9aa6af; }
+.lr-filtros-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(165px, 1fr)); gap: 10px 12px; }
+.lr-filtros-grid.lr-dos { grid-template-columns: 1fr 1fr; margin-top: 8px; }
+.lr-filtros-grid input, .lr-filtros-grid select { width: 100%; box-sizing: border-box; }
+.lr-personalizar summary { cursor: pointer; color: var(--lr-accent); font-weight: 600; }
+.lr-c-violeta { --lr-c: var(--lr-violeta); }
+.lr-c-aff { --lr-c: var(--lr-aff); }
+.lr-c-na { --lr-c: var(--lr-na); }
+.lr-card small { display: block; margin-top: 4px; color: var(--lr-muted); font-size: 10px; }
+.lr-sub { display: block; margin-top: 2px; color: var(--lr-muted); font-size: 11px; font-weight: 400; }
+.lr-mono { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.lr-pill-val { display: inline-block; padding: 3px 10px; border-radius: 12px; font-weight: 700; white-space: nowrap; }
+.lr-p-ok { background: rgba(47, 154, 87, .14); color: var(--lr-ok); }
+.lr-p-warn { background: rgba(214, 154, 0, .16); color: var(--lr-warn); }
+.lr-p-bad { background: rgba(217, 66, 62, .14); color: var(--lr-bad); }
+.lr-p-na { color: var(--lr-muted); }
+.lr-ind { display: inline-block; margin: 0 4px 2px 0; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: 700; }
+.lr-ind-icmp { background: rgba(30, 136, 229, .14); color: var(--lr-info); }
+.lr-ind-snmp { background: rgba(47, 154, 87, .14); color: var(--lr-ok); }
+.lr-ind-api { background: rgba(126, 87, 194, .16); color: var(--lr-violeta); }
+.lr-tag-warn { background: rgba(214, 154, 0, .16); color: var(--lr-warn); }
+.lr-tag-aff { background: rgba(223, 118, 38, .15); color: var(--lr-aff); }
+.lr-tag-info { background: rgba(30, 136, 229, .14); color: var(--lr-info); }
+.lr-tag-na { background: rgba(138, 151, 161, .16); color: var(--lr-muted); }
+.lr-btn-sm { height: 26px; padding: 0 10px; font-size: 11px; }
+.lr-det-row > td { padding: 0 12px 6px !important; border-bottom: 1px solid var(--lr-border); }
+.lr-det-row summary { color: var(--lr-accent); font-size: 11px; font-weight: 600; cursor: pointer; }
+.lr-table > tbody > tr:has(+ .lr-det-row) > td { border-bottom: 0; }
+.lr-criterio {
+	padding: 12px 16px; border: 1px solid var(--lr-border); border-left: 5px solid var(--lr-info);
+	border-radius: 8px; background: var(--lr-bg); line-height: 1.55; font-size: 11px; color: var(--lr-text);
+}
+.lr-banner {
+	padding: 12px 16px; border: 1px solid var(--lr-border); border-left: 5px solid var(--lr-accent);
+	border-radius: 8px; background: var(--lr-accent-soft);
+}
+.lr-banner div { margin-top: 4px; color: var(--lr-muted); }
+.lr-conclusiones li.lr-c-crit { color: var(--lr-bad); }
+.lr-conclusiones li.lr-c-warn { color: var(--lr-warn); }
+.lr-conclusiones li.lr-c-ok { color: var(--lr-ok); }
+.lr-conclusiones li span { color: var(--lr-text); }
+.lr-h2 { margin: 6px 0 -4px; font-size: 16px; font-weight: 600; color: var(--lr-text); }
+.lr-sec-head small { color: var(--lr-muted); }
+.lr-dl { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 0 24px; margin: 0; padding: 6px 16px; }
+.lr-dl div { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--lr-border); }
+.lr-dl dt { color: var(--lr-muted); }
+.lr-dl dd { margin: 0; font-weight: 600; text-align: right; word-break: break-word; }
+
+.lr-metricas { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.lr-metrica {
+	padding: 12px 14px; border: 1px solid var(--lr-border); border-top: 4px solid var(--lr-mc, var(--lr-border));
+	border-radius: 8px; background: var(--lr-bg); break-inside: avoid;
+}
+.lr-borde-ok { --lr-mc: var(--lr-ok); }
+.lr-borde-warn { --lr-mc: var(--lr-warn); }
+.lr-borde-bad { --lr-mc: var(--lr-bad); }
+.lr-borde-na { --lr-mc: var(--lr-border); }
+.lr-metrica-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 6px; }
+.lr-metrica-head h3 { flex: 1 0 100%; margin: 0 0 2px; font-size: 13px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--lr-muted); }
+.lr-metrica dl { margin: 0 0 8px; }
+.lr-metrica dl div { display: flex; justify-content: space-between; padding: 3px 0; }
+.lr-metrica dt { color: var(--lr-muted); }
+.lr-metrica dd { margin: 0; font-weight: 700; font-variant-numeric: tabular-nums; }
+.lr-spark { display: block; width: 100%; height: 70px; background: var(--lr-panel); border-radius: 4px; }
+.lr-spark-line { fill: none; stroke: var(--lr-accent); stroke-width: 2; vector-effect: non-scaling-stroke; }
+.lr-spark-area { fill: var(--lr-accent); opacity: .12; }
+.lr-th-warn, .lr-th-crit { stroke-width: 1; stroke-dasharray: 4 3; vector-effect: non-scaling-stroke; }
+.lr-th-warn { stroke: var(--lr-warn); }
+.lr-th-crit { stroke: var(--lr-bad); }
+.lr-spark-ejes { display: flex; justify-content: space-between; margin-top: 2px; font-size: 9px; color: var(--lr-muted); }
+.lr-spark-vacio { display: grid; place-items: center; height: 70px; border-radius: 4px; background: var(--lr-panel); color: var(--lr-muted); text-align: center; font-size: 11px; }
+.lr-umbral { margin: 8px 0 2px; font-size: 11px; }
+.lr-umbral small { color: var(--lr-muted); }
+.lr-item-key { margin: 4px 0 0; font-size: 10px; color: var(--lr-muted); font-family: monospace; }
+
+.lr-mini-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; padding: 12px 14px 0; }
+.lr-mini-cards div { padding: 8px 10px; border: 1px solid var(--lr-border); border-radius: 6px; }
+.lr-mini-cards span { display: block; font-size: 10px; color: var(--lr-muted); text-transform: uppercase; letter-spacing: .04em; }
+.lr-mini-cards b { font-size: 17px; }
+.lr-tabla-filtros { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 12px 14px; }
+.lr-tabla-filtros input { flex: 1 1 260px; }
+.lr-tabla-filtros input, .lr-tabla-filtros select {
+	height: 28px; padding: 0 8px; border: 1px solid var(--lr-border); border-radius: 4px; background: var(--lr-bg); color: var(--lr-text); font: inherit;
+}
+.lr-contador { color: var(--lr-muted); white-space: nowrap; }
+.lr-t-ok { color: var(--lr-ok); }
+.lr-t-warn { color: var(--lr-warn); }
+.lr-t-bad { color: var(--lr-bad); }
+.lr-sev { display: inline-block; padding: 2px 8px; border-radius: 3px; color: #1f1f1f; font-size: 11px; font-weight: 600; }
+.lr-sev-0 { background: #97aab3; }
+.lr-sev-1 { background: #7499ff; }
+.lr-sev-2 { background: #ffc859; }
+.lr-sev-3 { background: #ffa059; }
+.lr-sev-4 { background: #e97659; }
+.lr-sev-5 { background: #e45959; }
+.lr-flap { display: inline-block; margin-left: 4px; padding: 1px 6px; border-radius: 3px; background: rgba(217, 66, 62, .14); color: var(--lr-bad); font-size: 10px; font-weight: 700; }
+.lr-eventos { padding: 10px 14px 14px; }
+.lr-eventos summary { color: var(--lr-accent); font-weight: 600; cursor: pointer; }
+@media print {
+	.lr-filtros, .lr-tabla-filtros { display: none !important; }
+	.lr-metricas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	[data-lr-fila][hidden] { display: table-row !important; }
+}
+
+/* Impresión / PDF: el reporte se ajusta al ancho de la hoja. Zabbix fija anchos
+   mínimos y desbordes de pantalla en sus contenedores; sin esto, la hoja recortaba
+   el lado derecho del reporte. */
+@media print {
+	@page { size: A4 portrait; margin: 10mm; }
+	html, body, .wrapper, .layout-wrapper, main, .lr-page {
+		display: block !important; width: auto !important; min-width: 0 !important; max-width: none !important;
+		height: auto !important; min-height: 0 !important; overflow: visible !important; position: static !important;
+		margin: 0 !important; padding: 0 !important;
+	}
+	.lr-page > * + * { margin-top: 12px; }
+	.lr-page * { min-width: 0 !important; }
+	.lr-table-wrap, .lr-sec { overflow: visible !important; }
+	.lr-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+	.lr-card b { font-size: 18px; }
+	.lr-mini-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+	.lr-dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.lr-head { break-inside: avoid; }
+	.lr-h2 { break-after: avoid; }
+	.lr-table { table-layout: auto; }
+	.lr-table th { white-space: normal; }
+	.lr-sec .lr-table > tbody > tr > td { font-size: 9.5px; padding: 5px 6px; }
+	.lr-sec .lr-table th { padding: 5px 6px; }
+	.lr-ellipsis { max-width: none; white-space: normal; }
+	.lr-conclusiones li, .lr-table td { overflow-wrap: break-word; }
+	.lr-table > tbody > tr { break-inside: avoid; }
+}
+/* El reporte general (tabla de 14 columnas) se imprime apaisado. */
+@page lr-apaisado { size: A4 landscape; margin: 10mm; }
+@media print { .lr-page-general { page: lr-apaisado; } }
+
+/* Pie de página propio. Definir cajas de margen hace que Chrome (131+) omita su
+   encabezado/pie automático (URL, fecha y título). Safari no las soporta: allí se
+   desmarca "Imprimir encabezados y pies de página" en el diálogo de impresión. */
+@page {
+	margin: 10mm 10mm 14mm;
+	@top-left { content: none; }
+	@top-right { content: none; }
+	@bottom-left { content: "Red Comunitaria y Científica Las Lagunitas — Monitoreo Zabbix"; font: 8px sans-serif; color: #6c7c87; }
+	@bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8px sans-serif; color: #6c7c87; }
+}
+@page lr-apaisado {
+	margin: 10mm 10mm 14mm;
+	@bottom-left { content: "Red Comunitaria y Científica Las Lagunitas — Monitoreo Zabbix"; font: 8px sans-serif; color: #6c7c87; }
+	@bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8px sans-serif; color: #6c7c87; }
+}
+
+/* Tarjetas y gráficos sin cortes entre páginas: las grillas CSS se fragmentan aunque
+   pidan break-inside: avoid (Safari lo ignora). Como bloques en línea, cada tarjeta es
+   indivisible y pasa entera a la página siguiente. */
+@media print {
+	.lr-cards, .lr-metricas, .lr-mini-cards { display: block !important; font-size: 0; }
+	.lr-card, .lr-metrica, .lr-mini-cards > div {
+		display: inline-block; vertical-align: top; box-sizing: border-box; font-size: 10px;
+		break-inside: avoid; page-break-inside: avoid;
+	}
+	.lr-card { width: calc((100% - 30px) / 4); margin: 0 10px 10px 0; }
+	.lr-card:nth-child(4n) { margin-right: 0; }
+	.lr-metrica { width: calc((100% - 12px) / 2); margin: 0 12px 12px 0; }
+	.lr-metrica:nth-child(2n) { margin-right: 0; }
+	.lr-mini-cards > div { width: calc((100% - 24px) / 4); margin: 0 8px 8px 0; }
+	.lr-mini-cards > div:nth-child(4n) { margin-right: 0; }
+	.lr-metrica-head, .lr-metrica dl, .lr-metrica dl div { break-inside: avoid; }
+	.lr-h2, .lr-sec-head { break-after: avoid; page-break-after: avoid; }
+	.lr-conclusiones, .lr-banner, .lr-dl div { break-inside: avoid; page-break-inside: avoid; }
+}
+/* El formulario de filtros es un bloque (flex + wrap en columna estiraba la grilla). */
+form.lr-filtros { display: block; }
+.lr-filtros > * + * { margin-top: 10px; }
+.lr-filtros-grid { align-items: start; }
+
+/* Tabla principal compacta: 14 columnas en el ancho disponible. */
+.lr-page { max-width: none; }
+.lr-sec .lr-table th { padding: 7px 8px; }
+.lr-sec .lr-table > tbody > tr > td { padding: 7px 8px; font-size: 11.5px; }
+.lr-col-equipo { min-width: 190px; max-width: 260px; }
+.lr-col-equipo b { display: block; line-height: 1.3; }
+.lr-ellipsis { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 250px; }
+.lr-nw, .lr-mono { white-space: nowrap; }
+.lr-num { text-align: center; }
+.lr-pill-val { padding: 2px 8px; }
+.lr-tag { padding: 2px 7px; }
+.lr-btn-sm { white-space: nowrap; }
+
+/* El tema de Zabbix pone borde y fondo a todo <section>: los contenedores de grilla
+   no son cajas (evita el "recuadro dentro de recuadro" alrededor de las tarjetas). */
+.lr-page section.lr-cards, .lr-page section.lr-metricas { border: 0; background: transparent; }

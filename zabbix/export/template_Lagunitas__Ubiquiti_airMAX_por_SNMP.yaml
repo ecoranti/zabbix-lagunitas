@@ -1,0 +1,1809 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 861b1d1f6bfb4ede924e44a88146dcff
+      name: 'Templates/Las Lagunitas'
+  templates:
+    - uuid: ffc5101cdb3a4ff8b3bfd779f3bfd83b
+      template: 'Lagunitas - Ubiquiti airMAX por SNMP'
+      name: 'Lagunitas - Ubiquiti airMAX por SNMP'
+      description: 'Radios Ubiquiti airMAX (airOS 6/8) por SNMP v2c: calidad del enlace inalámbrico (señal, ruido, SNR, CCQ, airMAX quality/capacity), estaciones asociadas, interfaces y sistema. Habilitar en airOS: Services -> SNMP Agent (comunidad = {$SNMP_COMMUNITY}). Usar junto con ''Lagunitas - Disponibilidad ICMP''.'
+      groups:
+        - name: 'Templates/Las Lagunitas'
+      items:
+        - uuid: fd87255751484f50ad16afca3890cc9f
+          name: 'airMAX: calidad'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.6.1.3.1]'
+          key: airmax.airmax.calidad
+          history: 90d
+          value_type: FLOAT
+          units: '%'
+          description: 'airMAX quality: estabilidad del enlace (TDMA).'
+          tags:
+            - tag: componente
+              value: airmax
+          triggers:
+            - uuid: 53442c58bb4346c88a38ae90b95d7b04
+              expression: 'avg(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.airmax.calidad,15m)<{$AIRMAX.CALIDAD.WARN}'
+              name: '{HOST.NAME}: calidad airMAX baja'
+              opdata: 'Valor: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'Enlace inestable según airMAX.'
+              tags:
+                - tag: alcance
+                  value: radio
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 6224a2ce556f40b1b559d73484cebdcf
+          name: 'airMAX: capacidad'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.6.1.4.1]'
+          key: airmax.airmax.capacidad
+          history: 90d
+          value_type: FLOAT
+          units: '%'
+          description: 'airMAX capacity: % de la capacidad teórica disponible.'
+          tags:
+            - tag: componente
+              value: airmax
+          triggers:
+            - uuid: 9d57fcc32113409488ee43958fd60eb8
+              expression: 'avg(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.airmax.capacidad,15m)<{$AIRMAX.CAPACIDAD.WARN}'
+              name: '{HOST.NAME}: capacidad airMAX baja'
+              opdata: 'Valor: {ITEM.LASTVALUE1}'
+              priority: INFO
+              description: 'El enlace entrega una fracción baja de su capacidad teórica.'
+              tags:
+                - tag: alcance
+                  value: radio
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 2454a7f679ba4c1f9d58528b26ba02ba
+          name: 'Sistema: uso de CPU'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.8.3.0]'
+          key: airmax.cpu
+          history: 90d
+          value_type: FLOAT
+          units: '%'
+          description: 'ubntHostCpuLoad (airOS 8). En airOS 6 puede no estar disponible.'
+          tags:
+            - tag: componente
+              value: rendimiento
+          triggers:
+            - uuid: 18f841ea5baf47a8a7c9773fc7b24b05
+              expression: 'min(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.cpu,5m)>{$AIRMAX.CPU.WARN}'
+              name: '{HOST.NAME}: uso de CPU alto'
+              priority: WARNING
+              tags:
+                - tag: alcance
+                  value: rendimiento
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 5861e420ebfd4b26b0468ac87064ed17
+          name: 'Memoria: libre'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.10002.1.1.1.1.2.0]'
+          key: airmax.memoria.libre
+          history: 90d
+          units: B
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1024'
+          tags:
+            - tag: componente
+              value: rendimiento
+        - uuid: a4ee71250900489eb7ca6cdba0d76ee5
+          name: 'Memoria: total'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.10002.1.1.1.1.1.0]'
+          key: airmax.memoria.total
+          delay: 1h
+          history: 90d
+          units: B
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1024'
+          tags:
+            - tag: componente
+              value: rendimiento
+        - uuid: d7a911ad9175472b8a9adb61475ecc41
+          name: 'Memoria: uso'
+          type: CALCULATED
+          key: airmax.memoria.uso
+          history: 90d
+          value_type: FLOAT
+          units: '%'
+          params: '100*(1-last(//airmax.memoria.libre)/last(//airmax.memoria.total))'
+          tags:
+            - tag: componente
+              value: rendimiento
+          triggers:
+            - uuid: c0ea2194908948039765af2f24062249
+              expression: 'min(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.memoria.uso,5m)>{$AIRMAX.MEMORIA.WARN}'
+              name: '{HOST.NAME}: uso de memoria alto'
+              priority: WARNING
+              tags:
+                - tag: alcance
+                  value: rendimiento
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: c0736b7e628a4cfba67106419ca44e2a
+          name: 'Radio: antena'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.1.1.9.1]'
+          key: airmax.radio.antena
+          delay: 1h
+          history: 365d
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: 8857ef6cb78549159826755c80af9f2f
+          name: 'Radio: DFS habilitado'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.1.1.5.1]'
+          key: airmax.radio.dfs
+          delay: 1h
+          history: 90d
+          valuemap:
+            name: Sí/No
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: 3fa2d7da0f434e0f8c663720c6a2f294
+          name: 'Radio: distancia configurada'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.1.1.7.1]'
+          key: airmax.radio.distancia
+          delay: 15m
+          history: 90d
+          units: m
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: 8ffe1eccca314bd48a71aa5ea17c0311
+          name: 'Radio: frecuencia'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.1.1.4.1]'
+          key: airmax.radio.frecuencia
+          delay: 5m
+          history: 90d
+          units: MHz
+          tags:
+            - tag: componente
+              value: radio
+          triggers:
+            - uuid: 28cc33eacf0245e0a1bfd02c50d251fb
+              expression: 'change(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.radio.frecuencia)<>0'
+              name: '{HOST.NAME}: cambió la frecuencia de radio'
+              priority: INFO
+              description: 'Cambio de canal (manual o automático por DFS).'
+              manual_close: 'YES'
+              tags:
+                - tag: alcance
+                  value: radio
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 259513281a154463ba9a0f674b62872f
+          name: 'Radio: modo'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.1.1.2.1]'
+          key: airmax.radio.modo
+          delay: 5m
+          history: 90d
+          valuemap:
+            name: 'airMAX - Modo de radio'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1h
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: 9bcbad0c87484ecc9e696f79d03884db
+          name: 'Radio: potencia de transmisión'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.1.1.6.1]'
+          key: airmax.radio.potencia
+          delay: 5m
+          history: 90d
+          value_type: FLOAT
+          units: dBm
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: 1f7a8b6658a24b68b5bd425ed391ba28
+          name: 'Sistema: firmware airOS'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.2.840.10036.3.1.2.1.4.5]'
+          key: airmax.sistema.firmware
+          delay: 1h
+          history: 365d
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: componente
+              value: sistema
+          triggers:
+            - uuid: 4add4f27e7ab4ef5844a0f7b6ab4567c
+              expression: 'last(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.sistema.firmware,#1)<>last(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.sistema.firmware,#2)'
+              name: '{HOST.NAME}: cambió el firmware'
+              priority: INFO
+              manual_close: 'YES'
+              tags:
+                - tag: alcance
+                  value: sistema
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 75266226d0b440c4b58ec67595ee62c8
+          name: 'Sistema: modelo'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.2.840.10036.3.1.2.1.3.5]'
+          key: airmax.sistema.modelo
+          delay: 1h
+          history: 365d
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: componente
+              value: sistema
+        - uuid: 2e7eadb9a53342aab8e52f4551f25c0e
+          name: 'Sistema: nombre (sysName)'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.1.5.0]'
+          key: airmax.sistema.nombre
+          delay: 1h
+          history: 30d
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: componente
+              value: sistema
+        - uuid: cd7a732b10654cd596e228a687f9b9bf
+          name: 'Sistema: uptime'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.1.3.0]'
+          key: airmax.sistema.uptime
+          history: 90d
+          units: uptime
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: componente
+              value: sistema
+          triggers:
+            - uuid: 8302c71abb2d43f19c2ba7b86d89cde8
+              expression: 'last(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.sistema.uptime)<600'
+              name: '{HOST.NAME}: el equipo se reinició'
+              priority: INFO
+              description: 'Uptime menor a 10 min: corte de energía (batería/solar) o reinicio.'
+              manual_close: 'YES'
+              tags:
+                - tag: alcance
+                  value: sistema
+                - tag: equipo
+                  value: '{HOST.HOST}'
+            - uuid: d3afe08dd3c4499183f9f9af5d45e2e4
+              expression: 'nodata(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.sistema.uptime,{$SNMP.SIN.DATOS})=1'
+              name: '{HOST.NAME}: sin datos SNMP'
+              priority: AVERAGE
+              description: 'El equipo no responde SNMP. Si responde al ping: revisar que el agente SNMP de airOS esté habilitado, la comunidad y el firewall.'
+              tags:
+                - tag: alcance
+                  value: snmp
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 64f511468cc94d8c9502545e33789722
+          name: 'Sistema: temperatura'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.8.4.0]'
+          key: airmax.temperatura
+          delay: 5m
+          history: 90d
+          value_type: FLOAT
+          units: °C
+          description: 'ubntHostTemperature (solo algunos modelos).'
+          tags:
+            - tag: componente
+              value: rendimiento
+          triggers:
+            - uuid: cf3787fdd31a4eb48bec10f71dfe6b8e
+              expression: 'avg(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.temperatura,10m)>{$AIRMAX.TEMP.WARN}'
+              name: '{HOST.NAME}: temperatura alta'
+              priority: WARNING
+              tags:
+                - tag: alcance
+                  value: rendimiento
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: fd1dbf2b29974820839ed79035647a13
+          name: 'Inalámbrico: ancho de canal'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.14.1]'
+          key: airmax.wl.canal
+          delay: 5m
+          history: 90d
+          units: MHz
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: c99ce7939f7e4b5d9481da2e094d0e4a
+          name: 'Inalámbrico: CCQ'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.7.1]'
+          key: airmax.wl.ccq
+          history: 90d
+          value_type: FLOAT
+          units: '%'
+          description: 'Client Connection Quality: % de transmisiones exitosas. >90 % es bueno.'
+          tags:
+            - tag: componente
+              value: radio
+          triggers:
+            - uuid: d9e100cc385841bca8b577f75b84d185
+              expression: 'avg(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.wl.ccq,15m)<{$AIRMAX.CCQ.WARN}'
+              name: '{HOST.NAME}: CCQ bajo'
+              opdata: 'Valor: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'Muchas retransmisiones: interferencia, señal marginal o clientes lejanos.'
+              tags:
+                - tag: alcance
+                  value: radio
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 689f5e6bc1464ab2b698553394b1b0a4
+          name: 'Inalámbrico: estaciones asociadas'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.15.1]'
+          key: airmax.wl.estaciones
+          history: 90d
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: 60bf8d8b398f4712811a4c639cd0a134
+          name: 'Inalámbrico: RSSI'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.6.1]'
+          key: airmax.wl.rssi
+          history: 90d
+          value_type: FLOAT
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: 1e37bb214baf4780845df1d392d8cfff
+          name: 'Inalámbrico: piso de ruido'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.8.1]'
+          key: airmax.wl.ruido
+          history: 90d
+          value_type: FLOAT
+          units: dBm
+          description: 'Ruido del canal. Normal: -90 a -100 dBm; más alto indica interferencia.'
+          tags:
+            - tag: componente
+              value: radio
+          triggers:
+            - uuid: 5981ab6ade374116b8cbc84d1c3473d3
+              expression: 'avg(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.wl.ruido,15m)>{$AIRMAX.RUIDO.WARN}'
+              name: '{HOST.NAME}: ruido alto en el canal'
+              opdata: 'Valor: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'Interferencia: evaluar cambio de frecuencia o ancho de canal (usar airView).'
+              tags:
+                - tag: alcance
+                  value: radio
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: ca1f1563b46d41ef927ad8b56f0aa988
+          name: 'Inalámbrico: tasa RX'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.10.1]'
+          key: airmax.wl.rx
+          history: 90d
+          units: bps
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1000'
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: b3fcf26380034d05a9e81c695220c6b3
+          name: 'Inalámbrico: señal'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.5.1]'
+          key: airmax.wl.senal
+          history: 90d
+          value_type: FLOAT
+          units: dBm
+          description: 'Potencia recibida. Excelente > -55, buena -55 a -65, aceptable -65 a -75, pobre < -75 dBm.'
+          tags:
+            - tag: componente
+              value: radio
+          triggers:
+            - uuid: d31c3b3c0bc94d018262500e10e8320d
+              expression: 'avg(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.wl.senal,10m)<{$AIRMAX.SENAL.CRIT}'
+              name: '{HOST.NAME}: señal crítica'
+              opdata: 'Señal: {ITEM.LASTVALUE1}'
+              priority: AVERAGE
+              description: 'Señal promedio de 10 min por debajo de {$AIRMAX.SENAL.CRIT} dBm: el enlace está al borde de cortarse. Revisar alineación, línea de vista y obstrucciones.'
+              tags:
+                - tag: alcance
+                  value: radio
+                - tag: equipo
+                  value: '{HOST.HOST}'
+            - uuid: 15df43f16bfc4f15aef7a59930076dc1
+              expression: 'avg(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.wl.senal,10m)<{$AIRMAX.SENAL.WARN}'
+              name: '{HOST.NAME}: señal débil'
+              opdata: 'Señal: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              dependencies:
+                - name: '{HOST.NAME}: señal crítica'
+                  expression: 'avg(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.wl.senal,10m)<{$AIRMAX.SENAL.CRIT}'
+              tags:
+                - tag: alcance
+                  value: radio
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 798b43c27b5647799e64893779919b72
+          name: 'Inalámbrico: SNR'
+          type: CALCULATED
+          key: airmax.wl.snr
+          history: 90d
+          value_type: FLOAT
+          units: dB
+          params: last(//airmax.wl.senal)-last(//airmax.wl.ruido)
+          description: 'Señal menos ruido. >30 dB excelente, 20-30 bueno, <15 dB enlace degradado.'
+          tags:
+            - tag: componente
+              value: radio
+          triggers:
+            - uuid: cd12f63288ff432dae1a29ebee23747a
+              expression: 'avg(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.wl.snr,15m)<{$AIRMAX.SNR.WARN}'
+              name: '{HOST.NAME}: SNR bajo'
+              opdata: 'Valor: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'La relación señal/ruido limita la modulación: menor velocidad y más reintentos.'
+              tags:
+                - tag: alcance
+                  value: radio
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: ffb11c5fcf724d6eae39164362342956
+          name: 'Inalámbrico: SSID'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.2.1]'
+          key: airmax.wl.ssid
+          delay: 1h
+          history: 365d
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: 0d4a94ae7714447e8fa2a6ea4eeca6d7
+          name: 'Inalámbrico: tasa TX'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.5.1.9.1]'
+          key: airmax.wl.tx
+          history: 90d
+          units: bps
+          description: 'Tasa de modulación de transmisión (no es tráfico real).'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1000'
+          tags:
+            - tag: componente
+              value: radio
+        - uuid: afa602c2379642d59514c8ec4d49d076
+          name: 'SNMP: disponibilidad del agente'
+          type: INTERNAL
+          key: 'zabbix[host,snmp,available]'
+          history: 30d
+          valuemap:
+            name: 'SNMP - Disponibilidad'
+          tags:
+            - tag: componente
+              value: snmp
+      discovery_rules:
+        - uuid: 7087d32a610d446ead9c334882e7bd67
+          name: 'Descubrimiento de interfaces'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#IFNAME},1.3.6.1.2.1.31.1.1.1.1,{#IFTYPE},1.3.6.1.2.1.2.2.1.3,{#IFALIAS},1.3.6.1.2.1.31.1.1.1.18]'
+          key: airmax.if.discovery
+          delay: 1h
+          filter:
+            conditions:
+              - macro: '{#IFNAME}'
+                value: '{$AIRMAX.IF.MATCHES}'
+                formulaid: A
+          description: 'Interfaces del equipo (IF-MIB). Filtro: {$AIRMAX.IF.MATCHES}'
+          item_prototypes:
+            - uuid: fbaac36a526245c8aac55be3d7a69630
+              name: 'Interfaz {#IFNAME}: errores de entrada'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}]'
+              key: 'airmax.if.errin[{#IFNAME}]'
+              delay: 3m
+              history: 30d
+              value_type: FLOAT
+              units: /s
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+              trigger_prototypes:
+                - uuid: 454b117bcb214d1daf8488da385d6285
+                  expression: 'min(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.if.errin[{#IFNAME}],5m)>{$IF.ERRORES.WARN}'
+                  name: '{HOST.NAME}: errores en la interfaz {#IFNAME}'
+                  priority: WARNING
+                  description: 'Errores de recepción sostenidos: cable/conector dañado, dúplex o interferencia.'
+                  tags:
+                    - tag: alcance
+                      value: red
+                    - tag: equipo
+                      value: '{HOST.HOST}'
+                    - tag: interfaz
+                      value: '{#IFNAME}'
+            - uuid: dd7efae747ab4dc7a1a3b201ef42dd89
+              name: 'Interfaz {#IFNAME}: errores de salida'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}]'
+              key: 'airmax.if.errout[{#IFNAME}]'
+              delay: 3m
+              history: 30d
+              value_type: FLOAT
+              units: /s
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+            - uuid: a97d10268c5f48b3988cb345584b6950
+              name: 'Interfaz {#IFNAME}: estado'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}]'
+              key: 'airmax.if.estado[{#IFNAME}]'
+              history: 90d
+              valuemap:
+                name: 'IF-MIB - Estado de interfaz'
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+              trigger_prototypes:
+                - uuid: 0d2ac9cafad44ff5981a0fd68d8e8d1a
+                  expression: 'last(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.if.estado[{#IFNAME}])=2 and last(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.if.estado[{#IFNAME}],#2)=1'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.if.estado[{#IFNAME}])=1'
+                  name: '{HOST.NAME}: interfaz {#IFNAME} sin enlace'
+                  priority: AVERAGE
+                  description: 'La interfaz pasó de ''up'' a ''down'': cable, conector (humedad) o equipo vecino.'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: alcance
+                      value: red
+                    - tag: equipo
+                      value: '{HOST.HOST}'
+                    - tag: interfaz
+                      value: '{#IFNAME}'
+            - uuid: e1b5ca26317443f48ae2117fc79e60e4
+              name: 'Interfaz {#IFNAME}: tráfico entrante'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.6.{#SNMPINDEX}]'
+              key: 'airmax.if.in[{#IFNAME}]'
+              history: 30d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+            - uuid: d48ab0f842d347ffac0f6b76e6b5bcdf
+              name: 'Interfaz {#IFNAME}: tráfico saliente'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.10.{#SNMPINDEX}]'
+              key: 'airmax.if.out[{#IFNAME}]'
+              history: 30d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+            - uuid: 268c2911ceea469aab0d9e7121da7879
+              name: 'Interfaz {#IFNAME}: velocidad'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.15.{#SNMPINDEX}]'
+              key: 'airmax.if.velocidad[{#IFNAME}]'
+              delay: 1h
+              history: 30d
+              units: bps
+              preprocessing:
+                - type: MULTIPLIER
+                  parameters:
+                    - '1000000'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1d
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+        - uuid: 484c662fa1284d0a9557f9a0e2f7a79a
+          name: 'Descubrimiento de estaciones asociadas'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#STANOMBRE},1.3.6.1.4.1.41112.1.4.7.1.2,{#STAIP},1.3.6.1.4.1.41112.1.4.7.1.10]'
+          key: airmax.sta.discovery
+          delay: 10m
+          lifetime: 1d
+          description: 'En un AP: cada cliente (SM) conectado. En una estación: el AP al que se asocia.'
+          item_prototypes:
+            - uuid: 5110b157cbf345e68dca10300cd1f217
+              name: 'Estación {#STANOMBRE}: airMAX calidad'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.7.1.8.{#SNMPINDEX}]'
+              key: 'airmax.sta.calidad[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              value_type: FLOAT
+              units: '%'
+              tags:
+                - tag: componente
+                  value: estacion
+                - tag: estacion
+                  value: '{#STANOMBRE}'
+            - uuid: ef4b2a8b24784f63895b898eb4911e17
+              name: 'Estación {#STANOMBRE}: airMAX capacidad'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.7.1.9.{#SNMPINDEX}]'
+              key: 'airmax.sta.capacidad[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              value_type: FLOAT
+              units: '%'
+              tags:
+                - tag: componente
+                  value: estacion
+                - tag: estacion
+                  value: '{#STANOMBRE}'
+            - uuid: 0fb1ef50cee0415ca97d4fc9638f6751
+              name: 'Estación {#STANOMBRE}: CCQ'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.7.1.6.{#SNMPINDEX}]'
+              key: 'airmax.sta.ccq[{#SNMPINDEX}]'
+              history: 30d
+              value_type: FLOAT
+              units: '%'
+              tags:
+                - tag: componente
+                  value: estacion
+                - tag: estacion
+                  value: '{#STANOMBRE}'
+            - uuid: a8e72c3fd1b24391a005ed1e86de4ff3
+              name: 'Estación {#STANOMBRE}: tiempo conectada'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.7.1.15.{#SNMPINDEX}]'
+              key: 'airmax.sta.conexion[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              units: uptime
+              preprocessing:
+                - type: MULTIPLIER
+                  parameters:
+                    - '0.01'
+              tags:
+                - tag: componente
+                  value: estacion
+                - tag: estacion
+                  value: '{#STANOMBRE}'
+            - uuid: ace2b65375f84992a180e078d72e8e89
+              name: 'Estación {#STANOMBRE}: distancia'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.7.1.5.{#SNMPINDEX}]'
+              key: 'airmax.sta.distancia[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              units: m
+              tags:
+                - tag: componente
+                  value: estacion
+                - tag: estacion
+                  value: '{#STANOMBRE}'
+            - uuid: 2cecd85508494ed0be0ceeb8cbd53e81
+              name: 'Estación {#STANOMBRE}: latencia TX'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.7.1.21.{#SNMPINDEX}]'
+              key: 'airmax.sta.latencia[{#SNMPINDEX}]'
+              history: 30d
+              value_type: FLOAT
+              units: ms
+              tags:
+                - tag: componente
+                  value: estacion
+                - tag: estacion
+                  value: '{#STANOMBRE}'
+            - uuid: 909d3562d7424b24b4c7f7645f367e18
+              name: 'Estación {#STANOMBRE}: ruido'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.7.1.4.{#SNMPINDEX}]'
+              key: 'airmax.sta.ruido[{#SNMPINDEX}]'
+              delay: 5m
+              history: 30d
+              value_type: FLOAT
+              units: dBm
+              tags:
+                - tag: componente
+                  value: estacion
+                - tag: estacion
+                  value: '{#STANOMBRE}'
+            - uuid: 82be08eeecae427296ac16da6c01f327
+              name: 'Estación {#STANOMBRE}: tasa RX'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.7.1.12.{#SNMPINDEX}]'
+              key: 'airmax.sta.rx[{#SNMPINDEX}]'
+              history: 30d
+              units: bps
+              preprocessing:
+                - type: MULTIPLIER
+                  parameters:
+                    - '1000'
+              tags:
+                - tag: componente
+                  value: estacion
+                - tag: estacion
+                  value: '{#STANOMBRE}'
+            - uuid: 3d24c11a8ad14704aadf0dee225da702
+              name: 'Estación {#STANOMBRE}: señal'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.7.1.3.{#SNMPINDEX}]'
+              key: 'airmax.sta.senal[{#SNMPINDEX}]'
+              history: 30d
+              value_type: FLOAT
+              units: dBm
+              tags:
+                - tag: componente
+                  value: estacion
+                - tag: estacion
+                  value: '{#STANOMBRE}'
+              trigger_prototypes:
+                - uuid: 41438d2a60a14d3aa6188e0ea6431350
+                  expression: 'avg(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.sta.senal[{#SNMPINDEX}],10m)<{$AIRMAX.SENAL.WARN}'
+                  name: '{HOST.NAME}: señal débil de la estación {#STANOMBRE}'
+                  opdata: 'Señal: {ITEM.LASTVALUE1}'
+                  priority: WARNING
+                  description: 'La estación asociada recibe una señal pobre: revisar alineación, obstáculos (vegetación) o potencia.'
+                  tags:
+                    - tag: alcance
+                      value: radio
+                    - tag: equipo
+                      value: '{HOST.HOST}'
+                    - tag: estacion
+                      value: '{#STANOMBRE}'
+            - uuid: 6817feabea824b98b369241d3350a2bf
+              name: 'Estación {#STANOMBRE}: tasa TX'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.4.1.41112.1.4.7.1.11.{#SNMPINDEX}]'
+              key: 'airmax.sta.tx[{#SNMPINDEX}]'
+              history: 30d
+              units: bps
+              preprocessing:
+                - type: MULTIPLIER
+                  parameters:
+                    - '1000'
+              tags:
+                - tag: componente
+                  value: estacion
+                - tag: estacion
+                  value: '{#STANOMBRE}'
+      tags:
+        - tag: clase
+          value: red
+        - tag: fabricante
+          value: ubiquiti
+        - tag: objetivo
+          value: radio
+      macros:
+        - macro: '{$AIRMAX.CALIDAD.WARN}'
+          value: '60'
+          description: 'airMAX quality (%) mínima'
+        - macro: '{$AIRMAX.CAPACIDAD.WARN}'
+          value: '40'
+          description: 'airMAX capacity (%) mínima'
+        - macro: '{$AIRMAX.CCQ.WARN}'
+          value: '75'
+          description: 'CCQ (%) mínimo aceptable'
+        - macro: '{$AIRMAX.CPU.WARN}'
+          value: '90'
+          description: 'CPU (%) sostenida 5 min'
+        - macro: '{$AIRMAX.IF.MATCHES}'
+          value: '^(eth|ath|wlan|br)[0-9]+$'
+          description: 'Interfaces a descubrir'
+        - macro: '{$AIRMAX.MEMORIA.WARN}'
+          value: '90'
+          description: 'Memoria (%) sostenida 5 min'
+        - macro: '{$AIRMAX.RUIDO.WARN}'
+          value: '-85'
+          description: 'Piso de ruido (dBm) por encima del cual hay interferencia. Normal: -90 a -100'
+        - macro: '{$AIRMAX.SENAL.CRIT}'
+          value: '-82'
+          description: 'Señal (dBm) crítica: enlace al borde de cortarse'
+        - macro: '{$AIRMAX.SENAL.WARN}'
+          value: '-75'
+          description: 'Señal (dBm) promedio 10 min por debajo de la cual se advierte. Ideal: -50 a -65'
+        - macro: '{$AIRMAX.SNR.WARN}'
+          value: '20'
+          description: 'Relación señal/ruido (dB) mínima. >25 dB permite modulaciones altas'
+        - macro: '{$AIRMAX.TEMP.WARN}'
+          value: '75'
+          description: 'Temperatura (°C)'
+        - macro: '{$IF.ERRORES.WARN}'
+          value: '2'
+          description: 'Errores/s en una interfaz'
+        - macro: '{$SNMP.SIN.DATOS}'
+          value: 5m
+          description: 'Tiempo sin respuesta SNMP'
+        - macro: '{$SNMP_COMMUNITY}'
+          value: public
+          description: 'Comunidad SNMP v2c'
+      dashboards:
+        - uuid: 5e4b9e32e1234a1a9aaf9369ac17a9e2
+          name: 'Detalle de radio airMAX'
+          pages:
+            - name: Enlace
+              widgets:
+                - type: gauge
+                  name: Señal
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '0'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.senal
+                    - type: STRING
+                      name: max
+                      value: '-40'
+                    - type: STRING
+                      name: min
+                      value: '-95'
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: INTEGER
+                      name: show.3
+                      value: '4'
+                    - type: INTEGER
+                      name: show.4
+                      value: '5'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '-95'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FB8C00
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '-80'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '-72'
+                    - type: STRING
+                      name: thresholds.3.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.3.threshold
+                      value: '-65'
+                    - type: INTEGER
+                      name: th_show_arc
+                      value: '1'
+                    - type: INTEGER
+                      name: th_show_labels
+                      value: '1'
+                - type: item
+                  name: Modo
+                  'y': '5'
+                  width: '12'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.radio.modo
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: svggraph
+                  name: 'Señal y ruido'
+                  'y': '8'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: 1E88E5
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '0'
+                    - type: STRING
+                      name: ds.0.data_set_label
+                      value: Señal
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.0.itemids.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.senal
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: ds.1.color
+                      value: E53935
+                    - type: INTEGER
+                      name: ds.1.dataset_type
+                      value: '0'
+                    - type: STRING
+                      name: ds.1.data_set_label
+                      value: Ruido
+                    - type: INTEGER
+                      name: ds.1.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.1.itemids.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.ruido
+                    - type: INTEGER
+                      name: ds.1.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.1.width
+                      value: '2'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: svggraph
+                  name: 'Tasas de modulación TX/RX'
+                  'y': '14'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: E53935
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '0'
+                    - type: STRING
+                      name: ds.0.data_set_label
+                      value: TX
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.0.itemids.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.tx
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: ds.1.color
+                      value: 1E88E5
+                    - type: INTEGER
+                      name: ds.1.dataset_type
+                      value: '0'
+                    - type: STRING
+                      name: ds.1.data_set_label
+                      value: RX
+                    - type: INTEGER
+                      name: ds.1.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.1.itemids.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.rx
+                    - type: INTEGER
+                      name: ds.1.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.1.width
+                      value: '2'
+                    - type: STRING
+                      name: lefty_min
+                      value: '0'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: item
+                  name: Frecuencia
+                  x: '12'
+                  'y': '5'
+                  width: '12'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.radio.frecuencia
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: gauge
+                  name: SNR
+                  x: '18'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '0'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.snr
+                    - type: STRING
+                      name: max
+                      value: '60'
+                    - type: STRING
+                      name: min
+                      value: '0'
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: INTEGER
+                      name: show.3
+                      value: '4'
+                    - type: INTEGER
+                      name: show.4
+                      value: '5'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '15'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '25'
+                    - type: INTEGER
+                      name: th_show_arc
+                      value: '1'
+                    - type: INTEGER
+                      name: th_show_labels
+                      value: '1'
+                - type: item
+                  name: 'Ancho de canal'
+                  x: '24'
+                  'y': '5'
+                  width: '12'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.canal
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: gauge
+                  name: CCQ
+                  x: '36'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '0'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.ccq
+                    - type: STRING
+                      name: max
+                      value: '100'
+                    - type: STRING
+                      name: min
+                      value: '0'
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: INTEGER
+                      name: show.3
+                      value: '4'
+                    - type: INTEGER
+                      name: show.4
+                      value: '5'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '70'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '85'
+                    - type: INTEGER
+                      name: th_show_arc
+                      value: '1'
+                    - type: INTEGER
+                      name: th_show_labels
+                      value: '1'
+                - type: item
+                  name: 'Potencia TX'
+                  x: '36'
+                  'y': '5'
+                  width: '12'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.radio.potencia
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: svggraph
+                  name: 'CCQ y airMAX'
+                  x: '36'
+                  'y': '8'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: 43A047
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '0'
+                    - type: STRING
+                      name: ds.0.data_set_label
+                      value: CCQ
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.0.itemids.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.ccq
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: ds.1.color
+                      value: 1E88E5
+                    - type: INTEGER
+                      name: ds.1.dataset_type
+                      value: '0'
+                    - type: STRING
+                      name: ds.1.data_set_label
+                      value: Calidad
+                    - type: INTEGER
+                      name: ds.1.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.1.itemids.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.airmax.calidad
+                    - type: INTEGER
+                      name: ds.1.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.1.width
+                      value: '2'
+                    - type: STRING
+                      name: ds.2.color
+                      value: FB8C00
+                    - type: INTEGER
+                      name: ds.2.dataset_type
+                      value: '0'
+                    - type: STRING
+                      name: ds.2.data_set_label
+                      value: Capacidad
+                    - type: INTEGER
+                      name: ds.2.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.2.itemids.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.airmax.capacidad
+                    - type: INTEGER
+                      name: ds.2.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.2.width
+                      value: '2'
+                    - type: STRING
+                      name: lefty_min
+                      value: '0'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: svggraph
+                  name: 'Tráfico por interfaz'
+                  x: '36'
+                  'y': '14'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: 1E88E5
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '1'
+                    - type: STRING
+                      name: ds.0.data_set_label
+                      value: Entrante
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: STRING
+                      name: ds.0.items.0
+                      value: 'Interfaz *: tráfico entrante'
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: ds.1.color
+                      value: E53935
+                    - type: INTEGER
+                      name: ds.1.dataset_type
+                      value: '1'
+                    - type: STRING
+                      name: ds.1.data_set_label
+                      value: Saliente
+                    - type: INTEGER
+                      name: ds.1.fill
+                      value: '2'
+                    - type: STRING
+                      name: ds.1.items.0
+                      value: 'Interfaz *: tráfico saliente'
+                    - type: INTEGER
+                      name: ds.1.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.1.width
+                      value: '2'
+                    - type: STRING
+                      name: lefty_min
+                      value: '0'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: item
+                  name: Distancia
+                  x: '48'
+                  'y': '5'
+                  width: '12'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.radio.distancia
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: gauge
+                  name: 'Capacidad airMAX'
+                  x: '54'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '0'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.airmax.capacidad
+                    - type: STRING
+                      name: max
+                      value: '100'
+                    - type: STRING
+                      name: min
+                      value: '0'
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: INTEGER
+                      name: show.3
+                      value: '4'
+                    - type: INTEGER
+                      name: show.4
+                      value: '5'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '40'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '60'
+                    - type: INTEGER
+                      name: th_show_arc
+                      value: '1'
+                    - type: INTEGER
+                      name: th_show_labels
+                      value: '1'
+                - type: item
+                  name: Estaciones
+                  x: '60'
+                  'y': '5'
+                  width: '12'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.estaciones
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+            - name: 'Estaciones y sistema'
+              widgets:
+                - type: svggraph
+                  name: 'Señal por estación'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: 1E88E5
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '1'
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: STRING
+                      name: ds.0.items.0
+                      value: 'Estación *: señal'
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: item
+                  name: Modelo
+                  'y': '6'
+                  width: '18'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.sistema.modelo
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: svggraph
+                  name: 'CPU y memoria'
+                  'y': '9'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: E53935
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '0'
+                    - type: STRING
+                      name: ds.0.data_set_label
+                      value: CPU
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.0.itemids.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.cpu
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: ds.1.color
+                      value: 1E88E5
+                    - type: INTEGER
+                      name: ds.1.dataset_type
+                      value: '0'
+                    - type: STRING
+                      name: ds.1.data_set_label
+                      value: Memoria
+                    - type: INTEGER
+                      name: ds.1.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.1.itemids.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.memoria.uso
+                    - type: INTEGER
+                      name: ds.1.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.1.width
+                      value: '2'
+                    - type: STRING
+                      name: lefty_min
+                      value: '0'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: item
+                  name: Firmware
+                  x: '18'
+                  'y': '6'
+                  width: '18'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.sistema.firmware
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: svggraph
+                  name: 'CCQ por estación'
+                  x: '36'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: 43A047
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '1'
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: STRING
+                      name: ds.0.items.0
+                      value: 'Estación *: CCQ'
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: lefty_min
+                      value: '0'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: item
+                  name: Uptime
+                  x: '36'
+                  'y': '6'
+                  width: '18'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.sistema.uptime
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: svggraph
+                  name: Temperatura
+                  x: '36'
+                  'y': '9'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: FB8C00
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '0'
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.0.itemids.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.temperatura
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: item
+                  name: SSID
+                  x: '54'
+                  'y': '6'
+                  width: '18'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Ubiquiti airMAX por SNMP'
+                        key: airmax.wl.ssid
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+      valuemaps:
+        - uuid: 5cbb73ef8b5849219d30a3990613dad9
+          name: 'airMAX - Modo de radio'
+          mappings:
+            - value: '1'
+              newvalue: 'Estación (SM)'
+            - value: '2'
+              newvalue: 'Punto de acceso (AP)'
+            - value: '3'
+              newvalue: 'AP repetidor'
+            - value: '4'
+              newvalue: 'AP WDS'
+        - uuid: 8536d56a806c4cacb522f0d2ae3a5ade
+          name: 'IF-MIB - Estado de interfaz'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing
+            - value: '4'
+              newvalue: desconocido
+            - value: '5'
+              newvalue: dormant
+            - value: '6'
+              newvalue: 'no presente'
+            - value: '7'
+              newvalue: 'capa inferior caída'
+        - uuid: 4a1231eed0ee40c18dffca4156a8e34b
+          name: 'SNMP - Disponibilidad'
+          mappings:
+            - value: '0'
+              newvalue: Desconocido
+            - value: '1'
+              newvalue: Disponible
+            - value: '2'
+              newvalue: 'No disponible'
+        - uuid: e4c4665b6b5740219b8f3bdab10880cb
+          name: Sí/No
+          mappings:
+            - value: '0'
+              newvalue: 'No'
+            - value: '1'
+              newvalue: Sí
+  triggers:
+    - uuid: 21fa2232b23f488fbc2f38399b1e16d7
+      expression: 'max(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.wl.estaciones,5m)=0 and last(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.radio.modo)>=2'
+      name: '{HOST.NAME}: radio AP sin estaciones asociadas'
+      priority: AVERAGE
+      description: 'El AP no tiene clientes conectados: el enlace con la(s) estación(es) remota(s) cayó.'
+      dependencies:
+        - name: '{HOST.NAME}: sin datos SNMP'
+          expression: 'nodata(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.sistema.uptime,{$SNMP.SIN.DATOS})=1'
+      tags:
+        - tag: alcance
+          value: radio
+        - tag: equipo
+          value: '{HOST.HOST}'

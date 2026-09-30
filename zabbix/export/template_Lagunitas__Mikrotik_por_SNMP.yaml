@@ -1,0 +1,1056 @@
+zabbix_export:
+  version: '7.0'
+  template_groups:
+    - uuid: 861b1d1f6bfb4ede924e44a88146dcff
+      name: 'Templates/Las Lagunitas'
+  templates:
+    - uuid: 8f2583bb10544eeb9fccd4842d9df628
+      template: 'Lagunitas - Mikrotik por SNMP'
+      name: 'Lagunitas - Mikrotik por SNMP'
+      description: 'Routers Mikrotik (RouterOS) por SNMP v2c: CPU, memoria, temperatura, voltaje de alimentación, leases DHCP, interfaces y enlace PPPoE a Internet. Habilitar con: /snmp set enabled=yes ; /snmp community add name=<comunidad> addresses=<IP Zabbix>. Usar junto con ''Lagunitas - Disponibilidad ICMP''.'
+      groups:
+        - name: 'Templates/Las Lagunitas'
+      items:
+        - uuid: 5b865555b6834e2f8579683762a05f52
+          name: 'Sistema: uso de CPU'
+          type: SNMP_AGENT
+          snmp_oid: 'walk[1.3.6.1.2.1.25.3.3.1.2]'
+          key: mikrotik.cpu
+          history: 90d
+          value_type: FLOAT
+          units: '%'
+          description: 'Promedio de hrProcessorLoad de todos los núcleos.'
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var v = value.split('\n').map(function (l) { var m = l.match(/(-?\d+)\s*$/); return m ? parseInt(m[1], 10) : null; }).filter(function (x) { return x !== null; });
+                  if (!v.length) { throw 'sin datos de CPU'; }
+                  return v.reduce(function (a, b) { return a + b; }, 0) / v.length;
+          tags:
+            - tag: componente
+              value: rendimiento
+          triggers:
+            - uuid: 892cfbab009844d7bfc50b1a2a0078bf
+              expression: 'min(/Lagunitas - Mikrotik por SNMP/mikrotik.cpu,5m)>{$MIKROTIK.CPU.WARN}'
+              name: '{HOST.NAME}: uso de CPU alto'
+              priority: WARNING
+              tags:
+                - tag: alcance
+                  value: rendimiento
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: d77304278d1a4aaf9cb2bf4a0956ea0e
+          name: 'Clientes: leases DHCP activos'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.6.1.0]'
+          key: mikrotik.dhcp.clientes
+          history: 90d
+          description: 'Dispositivos con IP asignada por el Mikrotik (aprox. usuarios conectados).'
+          tags:
+            - tag: componente
+              value: clientes
+          triggers:
+            - uuid: 9b35a4dade5e41858e4219ab425b105d
+              expression: 'max(/Lagunitas - Mikrotik por SNMP/mikrotik.dhcp.clientes,30m)=0'
+              name: '{HOST.NAME}: sin clientes DHCP'
+              priority: WARNING
+              description: 'Ningún dispositivo tiene IP asignada en 30 min: posible caída de la red de distribución o del servidor DHCP.'
+              dependencies:
+                - name: '{HOST.NAME}: sin datos SNMP'
+                  expression: 'nodata(/Lagunitas - Mikrotik por SNMP/mikrotik.sistema.uptime,{$SNMP.SIN.DATOS})=1'
+              tags:
+                - tag: alcance
+                  value: clientes
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: eec4fcf1bc354a288a74c691cbda5596
+          name: 'Memoria: total'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.25.2.3.1.5.65536]'
+          key: mikrotik.memoria.total
+          delay: 1h
+          history: 90d
+          units: B
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1024'
+          tags:
+            - tag: componente
+              value: rendimiento
+        - uuid: dafe98d1b1d24d52a3f08a982e42cad5
+          name: 'Memoria: usada'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.25.2.3.1.6.65536]'
+          key: mikrotik.memoria.usada
+          history: 90d
+          units: B
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '1024'
+          tags:
+            - tag: componente
+              value: rendimiento
+        - uuid: b43cfd625b7342a684a397ceddccf39a
+          name: 'Memoria: uso'
+          type: CALCULATED
+          key: mikrotik.memoria.uso
+          history: 90d
+          value_type: FLOAT
+          units: '%'
+          params: '100*last(//mikrotik.memoria.usada)/last(//mikrotik.memoria.total)'
+          tags:
+            - tag: componente
+              value: rendimiento
+          triggers:
+            - uuid: d22cb84c1f374cdf96978ec20de417bc
+              expression: 'min(/Lagunitas - Mikrotik por SNMP/mikrotik.memoria.uso,5m)>{$MIKROTIK.MEMORIA.WARN}'
+              name: '{HOST.NAME}: uso de memoria alto'
+              priority: WARNING
+              tags:
+                - tag: alcance
+                  value: rendimiento
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 87ec07da8f9f4d99aa37b2655c328dbc
+          name: 'Sistema: firmware (RouterBOOT)'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.7.4.0]'
+          key: mikrotik.sistema.firmware
+          delay: 1h
+          history: 365d
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: componente
+              value: sistema
+        - uuid: 940340bc6bab424e8593ce40949cb42e
+          name: 'Sistema: modelo'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.1.1.0]'
+          key: mikrotik.sistema.modelo
+          delay: 1h
+          history: 365d
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: componente
+              value: sistema
+        - uuid: ef92632d4dea427cb2044950766bc056
+          name: 'Sistema: nombre (sysName)'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.1.5.0]'
+          key: mikrotik.sistema.nombre
+          delay: 1h
+          history: 30d
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: componente
+              value: sistema
+        - uuid: f3e7da923c054f82b82fd342b8143baa
+          name: 'Sistema: versión de RouterOS'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.4.4.0]'
+          key: mikrotik.sistema.routeros
+          delay: 1h
+          history: 365d
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: componente
+              value: sistema
+          triggers:
+            - uuid: 37c9db32b75f47cd9898344e2a46dca4
+              expression: 'last(/Lagunitas - Mikrotik por SNMP/mikrotik.sistema.routeros,#1)<>last(/Lagunitas - Mikrotik por SNMP/mikrotik.sistema.routeros,#2)'
+              name: '{HOST.NAME}: cambió la versión de RouterOS'
+              priority: INFO
+              manual_close: 'YES'
+              tags:
+                - tag: alcance
+                  value: sistema
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: fdee33e77c224bebbf3df876e5bc0402
+          name: 'Sistema: número de serie'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.7.3.0]'
+          key: mikrotik.sistema.serie
+          delay: 1h
+          history: 365d
+          value_type: CHAR
+          trends: '0'
+          preprocessing:
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 1d
+          tags:
+            - tag: componente
+              value: sistema
+        - uuid: 018dc55942684e3393e6d01be58279ad
+          name: 'Sistema: uptime'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.2.1.1.3.0]'
+          key: mikrotik.sistema.uptime
+          history: 90d
+          units: uptime
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.01'
+          tags:
+            - tag: componente
+              value: sistema
+          triggers:
+            - uuid: 537c88dfbfb04ff382b39cb4c55112d4
+              expression: 'last(/Lagunitas - Mikrotik por SNMP/mikrotik.sistema.uptime)<600'
+              name: '{HOST.NAME}: el router se reinició'
+              priority: INFO
+              manual_close: 'YES'
+              tags:
+                - tag: alcance
+                  value: sistema
+                - tag: equipo
+                  value: '{HOST.HOST}'
+            - uuid: 41e4ea67b3cb493c9946953e223d3f59
+              expression: 'nodata(/Lagunitas - Mikrotik por SNMP/mikrotik.sistema.uptime,{$SNMP.SIN.DATOS})=1'
+              name: '{HOST.NAME}: sin datos SNMP'
+              priority: AVERAGE
+              description: 'El router no responde SNMP: verificar /snmp (enabled, comunidad, addresses) y el firewall (UDP 161 desde la IP del servidor Zabbix).'
+              tags:
+                - tag: alcance
+                  value: snmp
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: ae66a7e0e5244fb2a07b4cef9c2be9dd
+          name: 'Energía: temperatura de placa'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.3.10.0]'
+          key: mikrotik.temperatura
+          delay: 5m
+          history: 90d
+          value_type: FLOAT
+          units: °C
+          description: 'mtxrHlTemperature (décimas de °C). No todos los modelos tienen sensor.'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: componente
+              value: energia
+          triggers:
+            - uuid: 9609b8d803bd45d39115feb8d6c1bb49
+              expression: 'avg(/Lagunitas - Mikrotik por SNMP/mikrotik.temperatura,10m)>{$MIKROTIK.TEMP.WARN}'
+              name: '{HOST.NAME}: temperatura alta'
+              priority: WARNING
+              tags:
+                - tag: alcance
+                  value: energia
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 38de4fc78a584f26839c333c5cc349c6
+          name: 'Energía: temperatura de CPU'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.3.11.0]'
+          key: mikrotik.temperatura.cpu
+          delay: 5m
+          history: 90d
+          value_type: FLOAT
+          units: °C
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: componente
+              value: energia
+        - uuid: 59bd596a473c4f34a76bbcf12a95c13d
+          name: 'Energía: voltaje de alimentación'
+          type: SNMP_AGENT
+          snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.3.8.0]'
+          key: mikrotik.voltaje
+          history: 90d
+          value_type: FLOAT
+          units: V
+          description: 'mtxrHlVoltage. En nodos solares refleja el estado de la batería de 12 V: 12,7 V ≈ 100 %, 12,2 V ≈ 50 %, <11,8 V descarga profunda.'
+          preprocessing:
+            - type: MULTIPLIER
+              parameters:
+                - '0.1'
+          tags:
+            - tag: componente
+              value: energia
+          triggers:
+            - uuid: 2d8350410c1f43e5b4b7bc11efdf58fd
+              expression: 'avg(/Lagunitas - Mikrotik por SNMP/mikrotik.voltaje,10m)<{$MIKROTIK.VOLTAJE.WARN}'
+              name: '{HOST.NAME}: voltaje bajo'
+              opdata: 'Voltaje: {ITEM.LASTVALUE1}'
+              priority: WARNING
+              description: 'La batería está por debajo del 50 %: días nublados o panel sucio/sombreado.'
+              dependencies:
+                - name: '{HOST.NAME}: voltaje crítico'
+                  expression: 'avg(/Lagunitas - Mikrotik por SNMP/mikrotik.voltaje,5m)<{$MIKROTIK.VOLTAJE.CRIT}'
+              tags:
+                - tag: alcance
+                  value: energia
+                - tag: equipo
+                  value: '{HOST.HOST}'
+            - uuid: 0ed668df32724c3fbe48e9c5a7a85f3e
+              expression: 'avg(/Lagunitas - Mikrotik por SNMP/mikrotik.voltaje,5m)<{$MIKROTIK.VOLTAJE.CRIT}'
+              name: '{HOST.NAME}: voltaje crítico'
+              opdata: 'Voltaje: {ITEM.LASTVALUE1}'
+              priority: HIGH
+              description: 'Batería en descarga profunda: el nodo se apagará. Revisar panel solar, regulador de carga y batería.'
+              tags:
+                - tag: alcance
+                  value: energia
+                - tag: equipo
+                  value: '{HOST.HOST}'
+            - uuid: 36707d26881f49d6803e6fc08e4fe8a3
+              expression: 'avg(/Lagunitas - Mikrotik por SNMP/mikrotik.voltaje,10m)>{$MIKROTIK.VOLTAJE.MAX}'
+              name: '{HOST.NAME}: voltaje excesivo'
+              priority: AVERAGE
+              description: 'Sobretensión: posible falla del regulador de carga.'
+              tags:
+                - tag: alcance
+                  value: energia
+                - tag: equipo
+                  value: '{HOST.HOST}'
+        - uuid: 39a4d2f820ae4757b438e9c5756590eb
+          name: 'SNMP: disponibilidad del agente'
+          type: INTERNAL
+          key: 'zabbix[host,snmp,available]'
+          history: 30d
+          valuemap:
+            name: 'SNMP - Disponibilidad'
+          tags:
+            - tag: componente
+              value: snmp
+      discovery_rules:
+        - uuid: 9640643763b944e7a99c74e93e64d105
+          name: 'Descubrimiento de interfaces'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#IFNAME},1.3.6.1.2.1.31.1.1.1.1,{#IFTYPE},1.3.6.1.2.1.2.2.1.3,{#IFALIAS},1.3.6.1.2.1.31.1.1.1.18]'
+          key: mikrotik.if.discovery
+          delay: 1h
+          filter:
+            conditions:
+              - macro: '{#IFNAME}'
+                value: '{$MIKROTIK.IF.MATCHES}'
+                formulaid: A
+          description: 'Interfaces del equipo (IF-MIB). Filtro: {$MIKROTIK.IF.MATCHES}'
+          item_prototypes:
+            - uuid: e805f3694b4e48418ae0924bdbbb467d
+              name: 'Interfaz {#IFNAME}: errores de entrada'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}]'
+              key: 'mikrotik.if.errin[{#IFNAME}]'
+              delay: 3m
+              history: 30d
+              value_type: FLOAT
+              units: /s
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+              trigger_prototypes:
+                - uuid: 09ef3f50250544649e6cd55a2fd6971e
+                  expression: 'min(/Lagunitas - Mikrotik por SNMP/mikrotik.if.errin[{#IFNAME}],5m)>{$IF.ERRORES.WARN}'
+                  name: '{HOST.NAME}: errores en la interfaz {#IFNAME}'
+                  priority: WARNING
+                  description: 'Errores de recepción sostenidos: cable/conector dañado, dúplex o interferencia.'
+                  tags:
+                    - tag: alcance
+                      value: red
+                    - tag: equipo
+                      value: '{HOST.HOST}'
+                    - tag: interfaz
+                      value: '{#IFNAME}'
+            - uuid: d7991acc975c47b5bb262600d96b14b4
+              name: 'Interfaz {#IFNAME}: errores de salida'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}]'
+              key: 'mikrotik.if.errout[{#IFNAME}]'
+              delay: 3m
+              history: 30d
+              value_type: FLOAT
+              units: /s
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+            - uuid: bfaa9fffa71e4ea8957195ca4439396f
+              name: 'Interfaz {#IFNAME}: estado'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}]'
+              key: 'mikrotik.if.estado[{#IFNAME}]'
+              history: 90d
+              valuemap:
+                name: 'IF-MIB - Estado de interfaz'
+              preprocessing:
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1h
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+              trigger_prototypes:
+                - uuid: ecc78f0905ed434f8c1b81c2c029537e
+                  expression: 'last(/Lagunitas - Mikrotik por SNMP/mikrotik.if.estado[{#IFNAME}])=2 and last(/Lagunitas - Mikrotik por SNMP/mikrotik.if.estado[{#IFNAME}],#2)=1'
+                  recovery_mode: RECOVERY_EXPRESSION
+                  recovery_expression: 'last(/Lagunitas - Mikrotik por SNMP/mikrotik.if.estado[{#IFNAME}])=1'
+                  name: '{HOST.NAME}: interfaz {#IFNAME} sin enlace'
+                  priority: AVERAGE
+                  description: 'La interfaz pasó de ''up'' a ''down'': cable, conector (humedad) o equipo vecino.'
+                  manual_close: 'YES'
+                  tags:
+                    - tag: alcance
+                      value: red
+                    - tag: equipo
+                      value: '{HOST.HOST}'
+                    - tag: interfaz
+                      value: '{#IFNAME}'
+            - uuid: 88ca4cdbd00e4306a961dba81483d512
+              name: 'Interfaz {#IFNAME}: tráfico entrante'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.6.{#SNMPINDEX}]'
+              key: 'mikrotik.if.in[{#IFNAME}]'
+              history: 30d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+            - uuid: 1c6fe70f45184033a4fba8de2708f01d
+              name: 'Interfaz {#IFNAME}: tráfico saliente'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.10.{#SNMPINDEX}]'
+              key: 'mikrotik.if.out[{#IFNAME}]'
+              history: 30d
+              units: bps
+              preprocessing:
+                - type: CHANGE_PER_SECOND
+                  parameters:
+                    - ''
+                - type: MULTIPLIER
+                  parameters:
+                    - '8'
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+            - uuid: 947b4d0222254ded922d01ac280c62f9
+              name: 'Interfaz {#IFNAME}: velocidad'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.15.{#SNMPINDEX}]'
+              key: 'mikrotik.if.velocidad[{#IFNAME}]'
+              delay: 1h
+              history: 30d
+              units: bps
+              preprocessing:
+                - type: MULTIPLIER
+                  parameters:
+                    - '1000000'
+                - type: DISCARD_UNCHANGED_HEARTBEAT
+                  parameters:
+                    - 1d
+              tags:
+                - tag: componente
+                  value: red
+                - tag: interfaz
+                  value: '{#IFNAME}'
+        - uuid: 4ecbd23bab304cff9c59bd9bd24ee119
+          name: 'Descubrimiento del enlace a Internet (WAN)'
+          type: SNMP_AGENT
+          snmp_oid: 'discovery[{#IFNAME},1.3.6.1.2.1.31.1.1.1.1]'
+          key: mikrotik.wan.discovery
+          delay: 10m
+          filter:
+            conditions:
+              - macro: '{#IFNAME}'
+                value: '{$MIKROTIK.WAN.IFNAME}'
+                formulaid: A
+          lifetime: 30d
+          item_prototypes:
+            - uuid: a6b307758c424ffcbabec6c3bd38d42a
+              name: 'Internet ({#IFNAME}): estado'
+              type: SNMP_AGENT
+              snmp_oid: 'get[1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}]'
+              key: 'mikrotik.wan.estado[{#IFNAME}]'
+              history: 90d
+              valuemap:
+                name: 'IF-MIB - Estado de interfaz'
+              tags:
+                - tag: componente
+                  value: internet
+              trigger_prototypes:
+                - uuid: 529482f6435a400fa8297a514151bc7a
+                  expression: 'last(/Lagunitas - Mikrotik por SNMP/mikrotik.wan.estado[{#IFNAME}])<>1 or nodata(/Lagunitas - Mikrotik por SNMP/mikrotik.wan.estado[{#IFNAME}],5m)=1'
+                  name: '{HOST.NAME}: sin enlace a Internet ({#IFNAME})'
+                  priority: DISASTER
+                  description: 'La sesión PPPoE con la Cooperativa de Alpa Corral está caída: toda la red comunitaria queda sin Internet (la red interna puede seguir funcionando).'
+                  tags:
+                    - tag: alcance
+                      value: internet
+                    - tag: equipo
+                      value: '{HOST.HOST}'
+      tags:
+        - tag: clase
+          value: red
+        - tag: fabricante
+          value: mikrotik
+        - tag: objetivo
+          value: router
+      macros:
+        - macro: '{$IF.ERRORES.WARN}'
+          value: '2'
+          description: 'Errores/s en una interfaz'
+        - macro: '{$MIKROTIK.CPU.WARN}'
+          value: '85'
+          description: 'CPU (%) sostenida 5 min'
+        - macro: '{$MIKROTIK.IF.MATCHES}'
+          value: ^(ether|sfp|wlan|bridge|pppoe|vlan|lte)
+          description: 'Interfaces a descubrir'
+        - macro: '{$MIKROTIK.MEMORIA.WARN}'
+          value: '90'
+          description: 'Memoria (%) sostenida 5 min'
+        - macro: '{$MIKROTIK.TEMP.WARN}'
+          value: '65'
+          description: 'Temperatura de placa (°C)'
+        - macro: '{$MIKROTIK.VOLTAJE.CRIT}'
+          value: '11.6'
+          description: 'Voltaje (V) crítico: descarga profunda, corte inminente'
+        - macro: '{$MIKROTIK.VOLTAJE.MAX}'
+          value: '14.8'
+          description: 'Voltaje (V) máximo: sobrecarga del regulador solar'
+        - macro: '{$MIKROTIK.VOLTAJE.WARN}'
+          value: '12.0'
+          description: 'Voltaje (V) de advertencia. Batería VRLA 12 V: 12,0 V ≈ 50 % de carga'
+        - macro: '{$MIKROTIK.WAN.IFNAME}'
+          value: '^pppoe-out[0-9]+$'
+          description: 'Interfaz de salida a Internet (PPPoE con la Cooperativa)'
+        - macro: '{$SNMP.SIN.DATOS}'
+          value: 5m
+          description: 'Tiempo sin respuesta SNMP'
+        - macro: '{$SNMP_COMMUNITY}'
+          value: public
+          description: 'Comunidad SNMP v2c'
+      dashboards:
+        - uuid: 7d74ea99edc149f99de78f6843bebbdb
+          name: 'Detalle del router Mikrotik'
+          pages:
+            - name: Router
+              widgets:
+                - type: gauge
+                  name: Voltaje
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '1'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Mikrotik por SNMP'
+                        key: mikrotik.voltaje
+                    - type: STRING
+                      name: max
+                      value: '15'
+                    - type: STRING
+                      name: min
+                      value: '10'
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: INTEGER
+                      name: show.3
+                      value: '4'
+                    - type: INTEGER
+                      name: show.4
+                      value: '5'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '10'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FB8C00
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '11.6'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '12.0'
+                    - type: STRING
+                      name: thresholds.3.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.3.threshold
+                      value: '12.4'
+                    - type: STRING
+                      name: thresholds.4.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.4.threshold
+                      value: '14.8'
+                    - type: INTEGER
+                      name: th_show_arc
+                      value: '1'
+                    - type: INTEGER
+                      name: th_show_labels
+                      value: '1'
+                - type: item
+                  name: 'Clientes DHCP'
+                  'y': '5'
+                  width: '18'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Mikrotik por SNMP'
+                        key: mikrotik.dhcp.clientes
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: svggraph
+                  name: 'Voltaje de alimentación (batería)'
+                  'y': '8'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: FB8C00
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '0'
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.0.itemids.0
+                      value:
+                        host: 'Lagunitas - Mikrotik por SNMP'
+                        key: mikrotik.voltaje
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: svggraph
+                  name: 'Tráfico por interfaz'
+                  'y': '14'
+                  width: '72'
+                  height: '7'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: 1E88E5
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '1'
+                    - type: STRING
+                      name: ds.0.data_set_label
+                      value: Entrante
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: STRING
+                      name: ds.0.items.0
+                      value: 'Interfaz *: tráfico entrante'
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: ds.1.color
+                      value: E53935
+                    - type: INTEGER
+                      name: ds.1.dataset_type
+                      value: '1'
+                    - type: STRING
+                      name: ds.1.data_set_label
+                      value: Saliente
+                    - type: INTEGER
+                      name: ds.1.fill
+                      value: '2'
+                    - type: STRING
+                      name: ds.1.items.0
+                      value: 'Interfaz *: tráfico saliente'
+                    - type: INTEGER
+                      name: ds.1.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.1.width
+                      value: '2'
+                    - type: STRING
+                      name: lefty_min
+                      value: '0'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: gauge
+                  name: CPU
+                  x: '18'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '0'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Mikrotik por SNMP'
+                        key: mikrotik.cpu
+                    - type: STRING
+                      name: max
+                      value: '100'
+                    - type: STRING
+                      name: min
+                      value: '0'
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: INTEGER
+                      name: show.3
+                      value: '4'
+                    - type: INTEGER
+                      name: show.4
+                      value: '5'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '60'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '85'
+                    - type: INTEGER
+                      name: th_show_arc
+                      value: '1'
+                    - type: INTEGER
+                      name: th_show_labels
+                      value: '1'
+                - type: item
+                  name: RouterOS
+                  x: '18'
+                  'y': '5'
+                  width: '18'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Mikrotik por SNMP'
+                        key: mikrotik.sistema.routeros
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: gauge
+                  name: Memoria
+                  x: '36'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '0'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Mikrotik por SNMP'
+                        key: mikrotik.memoria.uso
+                    - type: STRING
+                      name: max
+                      value: '100'
+                    - type: STRING
+                      name: min
+                      value: '0'
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: INTEGER
+                      name: show.3
+                      value: '4'
+                    - type: INTEGER
+                      name: show.4
+                      value: '5'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '70'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '90'
+                    - type: INTEGER
+                      name: th_show_arc
+                      value: '1'
+                    - type: INTEGER
+                      name: th_show_labels
+                      value: '1'
+                - type: item
+                  name: Modelo
+                  x: '36'
+                  'y': '5'
+                  width: '18'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Mikrotik por SNMP'
+                        key: mikrotik.sistema.modelo
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                - type: svggraph
+                  name: 'Clientes DHCP'
+                  x: '36'
+                  'y': '8'
+                  width: '36'
+                  height: '6'
+                  fields:
+                    - type: STRING
+                      name: ds.0.color
+                      value: 43A047
+                    - type: INTEGER
+                      name: ds.0.dataset_type
+                      value: '0'
+                    - type: INTEGER
+                      name: ds.0.fill
+                      value: '2'
+                    - type: ITEM
+                      name: ds.0.itemids.0
+                      value:
+                        host: 'Lagunitas - Mikrotik por SNMP'
+                        key: mikrotik.dhcp.clientes
+                    - type: INTEGER
+                      name: ds.0.transparency
+                      value: '5'
+                    - type: INTEGER
+                      name: ds.0.type
+                      value: '2'
+                    - type: INTEGER
+                      name: ds.0.width
+                      value: '2'
+                    - type: STRING
+                      name: lefty_min
+                      value: '0'
+                    - type: INTEGER
+                      name: legend
+                      value: '1'
+                    - type: INTEGER
+                      name: legend_statistic
+                      value: '1'
+                - type: gauge
+                  name: Temperatura
+                  x: '54'
+                  width: '18'
+                  height: '5'
+                  fields:
+                    - type: INTEGER
+                      name: decimal_places
+                      value: '0'
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Mikrotik por SNMP'
+                        key: mikrotik.temperatura
+                    - type: STRING
+                      name: max
+                      value: '90'
+                    - type: STRING
+                      name: min
+                      value: '0'
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+                    - type: INTEGER
+                      name: show.2
+                      value: '3'
+                    - type: INTEGER
+                      name: show.3
+                      value: '4'
+                    - type: INTEGER
+                      name: show.4
+                      value: '5'
+                    - type: STRING
+                      name: thresholds.0.color
+                      value: 43A047
+                    - type: STRING
+                      name: thresholds.0.threshold
+                      value: '0'
+                    - type: STRING
+                      name: thresholds.1.color
+                      value: FFC107
+                    - type: STRING
+                      name: thresholds.1.threshold
+                      value: '55'
+                    - type: STRING
+                      name: thresholds.2.color
+                      value: E53935
+                    - type: STRING
+                      name: thresholds.2.threshold
+                      value: '65'
+                    - type: INTEGER
+                      name: th_show_arc
+                      value: '1'
+                    - type: INTEGER
+                      name: th_show_labels
+                      value: '1'
+                - type: item
+                  name: Uptime
+                  x: '54'
+                  'y': '5'
+                  width: '18'
+                  height: '3'
+                  fields:
+                    - type: ITEM
+                      name: itemid.0
+                      value:
+                        host: 'Lagunitas - Mikrotik por SNMP'
+                        key: mikrotik.sistema.uptime
+                    - type: INTEGER
+                      name: show.0
+                      value: '1'
+                    - type: INTEGER
+                      name: show.1
+                      value: '2'
+      valuemaps:
+        - uuid: 5d4af10e4ba44ed2ab8bd4a7301582d8
+          name: 'IF-MIB - Estado de interfaz'
+          mappings:
+            - value: '1'
+              newvalue: up
+            - value: '2'
+              newvalue: down
+            - value: '3'
+              newvalue: testing
+            - value: '4'
+              newvalue: desconocido
+            - value: '5'
+              newvalue: dormant
+            - value: '6'
+              newvalue: 'no presente'
+            - value: '7'
+              newvalue: 'capa inferior caída'
+        - uuid: c6cd8bb78722492eb6d56498faca6ce7
+          name: 'SNMP - Disponibilidad'
+          mappings:
+            - value: '0'
+              newvalue: Desconocido
+            - value: '1'
+              newvalue: Disponible
+            - value: '2'
+              newvalue: 'No disponible'

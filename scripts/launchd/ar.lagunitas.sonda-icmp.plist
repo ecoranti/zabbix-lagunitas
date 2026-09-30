@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SOLO LABORATORIO: sonda ICMP que hace ping desde la Mac a los equipos con perfil
+  icmp_sonda (el AP UniFi real) y envía los resultados a Zabbix cada 10 s. Hace falta
+  porque la red de Colima responde el ping de cualquier IP externa.
+  Instalación (reemplazar RUTA_DEL_REPO por la ruta real, ej. /Users/gala/zabbix-lab):
+    sed "s#RUTA_DEL_REPO#$PWD#g" scripts/launchd/ar.lagunitas.sonda-icmp.plist \
+      > ~/Library/LaunchAgents/ar.lagunitas.sonda-icmp.plist
+    launchctl load ~/Library/LaunchAgents/ar.lagunitas.sonda-icmp.plist
+  Desinstalar:
+    launchctl unload ~/Library/LaunchAgents/ar.lagunitas.sonda-icmp.plist
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>ar.lagunitas.sonda-icmp</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>-lc</string>
+		<string>cd RUTA_DEL_REPO &amp;&amp; exec bin/lagunitas lab sonda</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/sbin</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>ThrottleInterval</key>
+	<integer>30</integer>
+	<key>StandardOutPath</key>
+	<string>/tmp/lagunitas-sonda.log</string>
+	<key>StandardErrorPath</key>
+	<string>/tmp/lagunitas-sonda.log</string>
+</dict>
+</plist>
