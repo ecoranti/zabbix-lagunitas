@@ -315,3 +315,7 @@ form.lr-filtros { display: block; }
 .lr-pill-val { padding: 2px 8px; }
 .lr-tag { padding: 2px 7px; }
 .lr-btn-sm { white-space: nowrap; }
+
+/* El tema de Zabbix pone borde y fondo a todo <section>: los contenedores de grilla
+   no son cajas (evita el "recuadro dentro de recuadro" alrededor de las tarjetas). */
+.lr-page section.lr-cards, .lr-page section.lr-metricas { border: 0; background: transparent; }
