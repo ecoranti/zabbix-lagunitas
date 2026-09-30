@@ -240,6 +240,7 @@ html[color-scheme="dark"] .lr-page { --lr-violeta: #a58cf0; --lr-aff: #f59a4e; -
 	html, body, .wrapper, .layout-wrapper, main, .lr-page {
 		display: block !important; width: auto !important; min-width: 0 !important; max-width: none !important;
 		height: auto !important; min-height: 0 !important; overflow: visible !important; position: static !important;
+		margin: 0 !important; padding: 0 !important;
 	}
 	.lr-page > * + * { margin-top: 12px; }
 	.lr-page * { min-width: 0 !important; }
@@ -261,6 +262,42 @@ html[color-scheme="dark"] .lr-page { --lr-violeta: #a58cf0; --lr-aff: #f59a4e; -
 /* El reporte general (tabla de 14 columnas) se imprime apaisado. */
 @page lr-apaisado { size: A4 landscape; margin: 10mm; }
 @media print { .lr-page-general { page: lr-apaisado; } }
+
+/* Pie de página propio. Definir cajas de margen hace que Chrome (131+) omita su
+   encabezado/pie automático (URL, fecha y título). Safari no las soporta: allí se
+   desmarca "Imprimir encabezados y pies de página" en el diálogo de impresión. */
+@page {
+	margin: 10mm 10mm 14mm;
+	@top-left { content: none; }
+	@top-right { content: none; }
+	@bottom-left { content: "Red Comunitaria y Científica Las Lagunitas — Monitoreo Zabbix"; font: 8px sans-serif; color: #6c7c87; }
+	@bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8px sans-serif; color: #6c7c87; }
+}
+@page lr-apaisado {
+	margin: 10mm 10mm 14mm;
+	@bottom-left { content: "Red Comunitaria y Científica Las Lagunitas — Monitoreo Zabbix"; font: 8px sans-serif; color: #6c7c87; }
+	@bottom-right { content: "Página " counter(page) " de " counter(pages); font: 8px sans-serif; color: #6c7c87; }
+}
+
+/* Tarjetas y gráficos sin cortes entre páginas: las grillas CSS se fragmentan aunque
+   pidan break-inside: avoid (Safari lo ignora). Como bloques en línea, cada tarjeta es
+   indivisible y pasa entera a la página siguiente. */
+@media print {
+	.lr-cards, .lr-metricas, .lr-mini-cards { display: block !important; font-size: 0; }
+	.lr-card, .lr-metrica, .lr-mini-cards > div {
+		display: inline-block; vertical-align: top; box-sizing: border-box; font-size: 10px;
+		break-inside: avoid; page-break-inside: avoid;
+	}
+	.lr-card { width: calc((100% - 30px) / 4); margin: 0 10px 10px 0; }
+	.lr-card:nth-child(4n) { margin-right: 0; }
+	.lr-metrica { width: calc((100% - 12px) / 2); margin: 0 12px 12px 0; }
+	.lr-metrica:nth-child(2n) { margin-right: 0; }
+	.lr-mini-cards > div { width: calc((100% - 24px) / 4); margin: 0 8px 8px 0; }
+	.lr-mini-cards > div:nth-child(4n) { margin-right: 0; }
+	.lr-metrica-head, .lr-metrica dl, .lr-metrica dl div { break-inside: avoid; }
+	.lr-h2, .lr-sec-head { break-after: avoid; page-break-after: avoid; }
+	.lr-conclusiones, .lr-banner, .lr-dl div { break-inside: avoid; page-break-inside: avoid; }
+}
 /* El formulario de filtros es un bloque (flex + wrap en columna estiraba la grilla). */
 form.lr-filtros { display: block; }
 .lr-filtros > * + * { margin-top: 10px; }
