@@ -88,7 +88,7 @@ def build_pages(api: ZabbixAPI, inv: dict, hostids: dict[str, str], groups: dict
     if ap:
         it = _items_de(api, ap)
         pct = [(0, VERDE), (60, AMARILLO), (85, ROJO)]
-        pages.append({"name": "AP UniFi", "widgets": [
+        widgets_ap = [
             W.item_value("Estado (UniFi)", it["ap.disponible"], (0, 0, 18, 4), value_size=35,
                          thresholds=[(0, ROJO), (1, VERDE)]),
             W.item_value("Uptime", it["ap.uptime"], (18, 0, 18, 4)),
@@ -109,7 +109,31 @@ def build_pages(api: ZabbixAPI, inv: dict, hostids: dict[str, str], groups: dict
                 {"itemids": [it["ap.radio.5ghz.retries"]], "color": VERDE, "label": "5 GHz"},
                 {"itemids": [it["ap.radio.6ghz.retries"]], "color": NARANJA, "label": "6 GHz"}],
                 lefty_min=0),
-        ]})
+        ]
+        # Lo mismo que "Detalle por equipo": latencia y pérdida por ICMP (si el AP tiene el
+        # perfil icmp, como en producción), disponibilidad, recursos, clientes y problemas.
+        y = 15
+        if "icmppingsec" in it:
+            widgets_ap += [
+                W.svggraph("Latencia (ICMP)", (0, y, 36, 5),
+                           [{"itemids": [it["icmppingsec"]], "color": "1E88E5"}], lefty_min=0),
+                W.svggraph("Pérdida de paquetes (ICMP)", (36, y, 36, 5),
+                           [{"itemids": [it["icmppingloss"]], "color": ROJO, "stairs": True}], lefty_min=0),
+            ]
+            y += 5
+        widgets_ap += [
+            W.svggraph("Disponibilidad (1 = en línea según UniFi)", (0, y, 72, 4),
+                       [{"itemids": [it["ap.disponible"]], "color": VERDE, "stairs": True, "fill": 4}],
+                       lefty_min=0, legend=False),
+            W.svggraph("CPU y memoria", (0, y + 4, 36, 5), [
+                {"itemids": [it["ap.cpu.util"]], "color": "1E88E5", "label": "CPU"},
+                {"itemids": [it["ap.mem.util"]], "color": "8E24AA", "label": "Memoria"}],
+                lefty_min=0, units="%"),
+            W.svggraph("Clientes conectados", (36, y + 4, 36, 5),
+                       [{"itemids": [it["ap.clients.count"]], "color": VERDE, "stairs": True}], lefty_min=0),
+            W.problems("Problemas del AP", (0, y + 9, 72, 5), hostids=[ap], show_lines=10),
+        ]
+        pages.append({"name": "AP UniFi", "widgets": widgets_ap})
 
     # ------------------------------------------------------------------ 4. SLA
     pages.append({"name": "SLA", "widgets": [

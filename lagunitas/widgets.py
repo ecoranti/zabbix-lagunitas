@@ -96,8 +96,9 @@ def svggraph(name, pos, datasets, override=None, lefty_min=None, units=None, leg
 
 
 def problems(name, pos, groupids=(), severities=(), override=None, show_lines=25,
-             show_tags=1, reference=None):
+             show_tags=1, reference=None, hostids=()):
     fields = [f(f"groupids.{i}", g, GROUP) for i, g in enumerate(groupids)]
+    fields += [f(f"hostids.{i}", h, HOST) for i, h in enumerate(hostids)]
     fields += [f(f"severities.{i}", s, INT) for i, s in enumerate(severities)]
     fields += [f("show_lines", show_lines, INT), f("show_tags", show_tags, INT),
                f("show_opdata", 1, INT), f("highlight_row", 1, INT)]

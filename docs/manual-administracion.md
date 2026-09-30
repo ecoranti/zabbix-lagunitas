@@ -102,7 +102,9 @@ disponibilidad 24 h / 7 d, latencia, gráficos y problemas) muestran ese equipo.
 
 ### Páginas "AP UniFi" y "SLA"
 
-- *AP UniFi*: CPU, memoria, clientes, reintentos, tráfico del uplink y estado del controlador.
+- *AP UniFi*: estado, uptime, firmware y controlador; CPU, memoria, clientes y reintentos; tráfico
+  del uplink y reintentos por banda; latencia y pérdida por ICMP; disponibilidad según UniFi;
+  evolución de CPU/memoria y de clientes; y los problemas del AP.
 - *SLA*: cumplimiento mensual por equipo (servicio) y ranking de disponibilidad de 7 días.
 
 Además, cada equipo tiene su **dashboard propio** (*Monitoring → Hosts → columna Dashboards*),
