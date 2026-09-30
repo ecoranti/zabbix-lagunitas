@@ -158,7 +158,8 @@ def cmd_lab(args) -> None:
      "estado": lambda: lab.estado(inv),
      "escenario": lambda: lab.escenario(inv, args.equipo, args.escenario),
      "caida": lambda: lab.caida(inv, args.equipo, args.solo),
-     "recuperar": lambda: lab.recuperar(inv, args.equipo, args.solo)}[args.accion]()
+     "recuperar": lambda: lab.recuperar(inv, args.equipo, args.solo),
+     "sonda": lambda: lab.sonda(inv, _api(), args.intervalo, args.una_vez)}[args.accion]()
 
 
 def main(argv=None) -> None:
@@ -187,11 +188,13 @@ def main(argv=None) -> None:
     ui.set_defaults(func=lambda a: diagnostico.unifi_ids(a.host, a.puerto))
 
     l = sub.add_parser("lab", help="simulador de la red en Docker (solo entorno LAB)")
-    l.add_argument("accion", choices=["levantar", "apagar", "estado", "caida", "recuperar", "escenario"])
+    l.add_argument("accion", choices=["levantar", "apagar", "estado", "caida", "recuperar", "escenario", "sonda"])
     l.add_argument("equipo", nargs="?", help="nombre técnico del equipo (caida/recuperar/escenario)")
     l.add_argument("escenario", nargs="?", help="escenario SNMP: normal, " + ", ".join(lab.ESCENARIOS))
     l.add_argument("--solo", action="store_true",
                    help="caida/recuperar: solo ese equipo, sin sus dependientes")
+    l.add_argument("--intervalo", type=int, default=10, help="sonda: segundos entre mediciones")
+    l.add_argument("--una-vez", action="store_true", help="sonda: una medición y salir")
     l.set_defaults(func=cmd_lab)
 
     args = p.parse_args(argv)

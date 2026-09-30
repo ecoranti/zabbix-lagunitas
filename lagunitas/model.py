@@ -4,6 +4,10 @@ SITIO_GRUPO = "Las Lagunitas"
 TEMPLATE_GRUPO = "Templates/Las Lagunitas"
 
 TPL_ICMP = "Lagunitas - Disponibilidad ICMP"
+# Solo laboratorio: el ping lo hace una sonda en el host (bin/lagunitas lab sonda) y lo envía a
+# Zabbix, porque la red de Colima responde ICMP por cualquier IP externa. Mismas claves y
+# triggers que TPL_ICMP: dashboards, reportes y dependencias lo tratan igual.
+TPL_ICMP_SONDA = "Lagunitas - Disponibilidad ICMP - sonda externa"
 
 # Intervalo de todas las mediciones (macro global, ajustable sin reaprovisionar).
 # Los datos estáticos (modelo, firmware, SSID...) y los descubrimientos LLD conservan
@@ -20,6 +24,7 @@ TPL_MIKROTIK = "Lagunitas - Mikrotik por SNMP"
 # se usa para dependencias padre -> hijo, enlaces del mapa y servicios.
 TRIGGER_CAIDA = {
     TPL_ICMP: "{HOST.NAME}: sin respuesta (ICMP)",
+    TPL_ICMP_SONDA: "{HOST.NAME}: sin respuesta (ICMP)",
     TPL_UNIFI: "{HOST.NAME}: AP fuera de línea según UniFi",
 }
 
@@ -63,6 +68,7 @@ ESTADOS = {
 PERFILES = {
     "icmp": {"templates": [TPL_ICMP], "interfaz": 1},
     "unifi_api": {"templates": [TPL_UNIFI], "interfaz": 1},
+    "icmp_sonda": {"templates": [TPL_ICMP_SONDA], "interfaz": 1},  # solo laboratorio
     # Radios Ubiquiti airMAX (PowerBeam, LiteBeam, NanoStation, NanoLoco) y routers
     # Mikrotik, por SNMP v2c. Se combinan con "icmp" (disponibilidad).
     "airos_snmp": {"templates": [TPL_AIRMAX], "interfaz": 2},

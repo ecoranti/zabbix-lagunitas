@@ -26,10 +26,11 @@ Cada contenedor simulado responde ICMP en su IP fija. Los equipos con perfil `ai
 resto, un contenedor Alpine mínimo. Los contenedores tienen `restart: unless-stopped` y no usan
 `--rm`, por lo que sobreviven a reinicios.
 
-> **Limitación de Colima:** su red responde ICMP por *cualquier* IP externa (incluso inexistentes).
-> Por eso, en el laboratorio el AP real **no** usa el perfil `icmp`: su disponibilidad se toma del
-> estado que informa la API de UniFi. Los contenedores de `lagunitas_net` sí son reales. En
-> producción (Linux) el ICMP es fiel.
+> **Limitación de Colima:** su red responde ICMP por *cualquier* IP externa (incluso inexistentes):
+> desde el contenedor del Zabbix server, `192.168.1.250` "responde" aunque no exista, y la latencia
+> al AP da ~0,8 ms cuando la real es ~4 ms. Por eso el AP real usa el perfil **`icmp_sonda`**: el
+> ping lo hace la Mac y lo envía a Zabbix (ver "Sonda ICMP"). Los contenedores de `lagunitas_net`
+> sí son reales. En producción (Linux) no existe esta limitación y el AP usa el perfil `icmp`.
 
 ---
 
@@ -105,11 +106,30 @@ valores `numeric` oscilan en el tiempo para producir gráficos realistas).
 
 ---
 
-## 6. Problemas frecuentes del laboratorio
+## 6. Sonda ICMP (AP real)
+
+`bin/lagunitas lab sonda` hace ping desde la Mac, cada 10 s, a los equipos con perfil `icmp_sonda`
+y envía disponibilidad, pérdida y latencia a Zabbix (`history.push`). El template
+*Lagunitas - Disponibilidad ICMP - sonda externa* usa las mismas claves y triggers que el de
+producción, así que dashboards, reportes, widget y dependencias funcionan igual. Si la sonda se
+detiene, aparece la alerta *la sonda ICMP no envía datos*.
+
+```bash
+bin/lagunitas lab sonda --una-vez      # una medición, muestra el resultado
+bin/lagunitas lab sonda                # continuo (Ctrl+C para detener)
+```
+
+Para que arranque sola al iniciar sesión: `scripts/launchd/ar.lagunitas.sonda-icmp.plist`
+(instrucciones dentro del archivo). Log: `/tmp/lagunitas-sonda.log`.
+
+---
+
+## 7. Problemas frecuentes del laboratorio
 
 | Síntoma | Solución |
 |---|---|
 | `failed to connect to the docker API ... colima` | Colima detenida: `colima start` o `./start.sh` |
 | Un equipo simulado figura caído | `bin/lagunitas lab estado`; `bin/lagunitas lab recuperar <equipo>` o `bin/lagunitas lab levantar` |
-| El AP "responde ping" aunque esté apagado | Limitación de Colima (§1): por eso el AP se monitorea solo por API |
+| El AP "responde ping" aunque esté apagado | Limitación de Colima (§1): el AP usa la sonda ICMP (§6), no el fping del server |
+| Alerta *la sonda ICMP no envía datos* | Sonda detenida: `bin/lagunitas lab sonda` o cargar el agente launchd (§6) |
 | AP UniFi: *controlador UniFi no accesible* | Verificar que UniFi OS Server esté corriendo y el puerto actual (§5) |

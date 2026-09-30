@@ -122,9 +122,12 @@ def build_pages(api: ZabbixAPI, inv: dict, hostids: dict[str, str], groups: dict
             ]
             y += 5
         widgets_ap += [
-            W.svggraph("Disponibilidad (1 = en línea según UniFi)", (0, y, 72, 4),
-                       [{"itemids": [it["ap.disponible"]], "color": VERDE, "stairs": True, "fill": 4}],
-                       lefty_min=0, legend=False),
+            W.svggraph("Disponibilidad (1 = activo)", (0, y, 72, 4),
+                       [{"itemids": [it["ap.disponible"]], "color": VERDE, "stairs": True, "fill": 4,
+                         "label": "Según UniFi"}]
+                       + ([{"itemids": [it["icmpping"]], "color": "1E88E5", "stairs": True, "fill": 0,
+                            "label": "Ping (ICMP)"}] if "icmpping" in it else []),
+                       lefty_min=0),
             W.svggraph("CPU y memoria", (0, y + 4, 36, 5), [
                 {"itemids": [it["ap.cpu.util"]], "color": "1E88E5", "label": "CPU"},
                 {"itemids": [it["ap.mem.util"]], "color": "8E24AA", "label": "Memoria"}],

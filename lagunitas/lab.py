@@ -208,3 +208,52 @@ def estado(inv: dict, log=print) -> None:
         cont = c["State"] if c else "sin contenedor"
         log(f"  {e['host']:<26} {e['ip']:<12} {perfil_simulado(e):<10} inventario={e['estado']:<15} "
             f"contenedor={cont}")
+
+
+# ---------------------------------------------------------------- sonda ICMP (host)
+
+def _ping(ip: str) -> tuple[int, float, float | None]:
+    """Ping desde el host (fuera de Colima): (disponible, pérdida %, latencia media en s)."""
+    import re
+    r = subprocess.run(["ping", "-n", "-q", "-c", "3", "-i", "0.2", "-t", "3", ip],
+                       capture_output=True, text=True)
+    perdida = re.search(r"([\d.]+)% packet loss", r.stdout)
+    rtt = re.search(r"= [\d.]+/([\d.]+)/", r.stdout)
+    perdida_pct = float(perdida.group(1)) if perdida else 100.0
+    return (1 if perdida_pct < 100 else 0, perdida_pct,
+            float(rtt.group(1)) / 1000 if rtt else None)
+
+
+def sonda(inv: dict, api, intervalo: int = 10, una_vez: bool = False, log=print) -> None:
+    """Mide ICMP desde el host y lo envía a Zabbix (history.push) para los equipos con
+    perfil icmp_sonda. La red de Colima responde el ping de cualquier IP externa, así que
+    el fping del server no sirve para equipos reales fuera de lagunitas_net."""
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+    equipos = [e for e in inv["todos"] if "icmp_sonda" in e["perfiles"] and e["estado"] == "operativo"]
+    if not equipos:
+        log("  ningún equipo operativo con perfil icmp_sonda en el inventario")
+        return
+    log(f"  sonda ICMP cada {intervalo} s: " + ", ".join(f"{e['host']} ({e['ip']})" for e in equipos))
+    while True:
+        inicio = time.time()
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            resultados = list(pool.map(lambda e: (e, _ping(str(e["ip"]))), equipos))
+        datos = []
+        for e, (disp, perdida, rtt) in resultados:
+            reloj = int(time.time())
+            datos += [{"host": e["host"], "key": "icmpping", "value": disp, "clock": reloj},
+                      {"host": e["host"], "key": "icmppingloss", "value": perdida, "clock": reloj}]
+            # Como fping: sin respuesta, la latencia es 0.
+            datos.append({"host": e["host"], "key": "icmppingsec", "value": rtt or 0, "clock": reloj})
+            if una_vez:
+                log(f"  {e['host']:<26} {'responde' if disp else 'SIN RESPUESTA':<14} "
+                    f"pérdida {perdida:.0f} %  latencia {rtt * 1000:.1f} ms" if rtt else
+                    f"  {e['host']:<26} SIN RESPUESTA  pérdida {perdida:.0f} %")
+        try:
+            api.call("history.push", datos)
+        except Exception as exc:  # Zabbix reiniciándose: se reintenta en el próximo ciclo
+            log(f"  error al enviar a Zabbix: {exc}")
+        if una_vez:
+            return
+        time.sleep(max(1.0, intervalo - (time.time() - inicio)))

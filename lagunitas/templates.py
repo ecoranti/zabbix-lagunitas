@@ -12,7 +12,8 @@ Monitoring -> Hosts -> Dashboards (o desde el mapa / navegador de equipos).
 from __future__ import annotations
 
 from . import widgets as W
-from .model import INTERVALO, INTERVALO_VALOR, SEVERIDAD, TEMPLATE_GRUPO, TPL_ICMP, TPL_UNIFI, TRIGGER_CAIDA
+from .model import (INTERVALO, INTERVALO_VALOR, SEVERIDAD, TEMPLATE_GRUPO, TPL_ICMP, TPL_ICMP_SONDA,
+                    TPL_UNIFI, TRIGGER_CAIDA)
 from .zbx import ZabbixAPI
 
 # ----------------------------------------------------------------- utilidades
@@ -136,9 +137,15 @@ def _dep_item(key, name, master, jsonpath=None, value_type=0, units="", valuemap
 # ------------------------------------------------------ template ICMP genérico
 
 
-def install_icmp(api: ZabbixAPI, groupid: str) -> dict:
+def install_icmp(api: ZabbixAPI, groupid: str, sonda: bool = False) -> dict:
+    """Template ICMP. Con sonda=True (solo laboratorio) los tres ítems son trapper y los
+    alimenta `bin/lagunitas lab sonda` desde el host; claves y triggers son los mismos."""
+    nombre = TPL_ICMP_SONDA if sonda else TPL_ICMP
     tid = ensure_template(
-        api, TPL_ICMP, groupid,
+        api, nombre, groupid,
+        "SOLO LABORATORIO. Disponibilidad, pérdida y latencia medidas por la sonda del host "
+        "(bin/lagunitas lab sonda) y enviadas a Zabbix: la red de Colima responde el ping "
+        "de cualquier IP externa, así que el fping del server no es confiable allí." if sonda else
         "Disponibilidad, pérdida de paquetes y latencia por ICMP (fping del Zabbix server). "
         "No requiere agente en el equipo: sirve para torres, nodos y routers AirCube de hogares.",
         macros=[
@@ -153,16 +160,18 @@ def install_icmp(api: ZabbixAPI, groupid: str) -> dict:
     )
     vm = ensure_valuemap(api, tid, "Lagunitas - Estado", {0: "Caído", 1: "Activo"})
     tag_disp = _tags(componente="disponibilidad")
+    # Chequeo simple (3) con fping, o trapper (2) que recibe los valores de la sonda.
+    tipo = {"type": 2, "trapper_hosts": ""} if sonda else {"type": 3, "delay": INTERVALO}
     ping = ensure_item(api, tid, {
-        "name": "Disponibilidad (ICMP)", "key_": "icmpping", "type": 3, "value_type": 3,
-        "delay": INTERVALO, "history": "90d", "trends": "365d", "valuemapid": vm, "tags": tag_disp,
+        **tipo, "name": "Disponibilidad (ICMP)", "key_": "icmpping", "value_type": 3,
+        "history": "90d", "trends": "365d", "valuemapid": vm, "tags": tag_disp,
         "description": "1 si el equipo responde al ping, 0 si no responde."})
     loss = ensure_item(api, tid, {
-        "name": "Pérdida de paquetes (ICMP)", "key_": "icmppingloss", "type": 3, "value_type": 0,
-        "units": "%", "delay": INTERVALO, "history": "90d", "trends": "365d", "tags": tag_disp})
+        **tipo, "name": "Pérdida de paquetes (ICMP)", "key_": "icmppingloss", "value_type": 0,
+        "units": "%", "history": "90d", "trends": "365d", "tags": tag_disp})
     rtt = ensure_item(api, tid, {
-        "name": "Latencia (ICMP)", "key_": "icmppingsec", "type": 3, "value_type": 0,
-        "units": "s", "delay": INTERVALO, "history": "90d", "trends": "365d", "tags": tag_disp})
+        **tipo, "name": "Latencia (ICMP)", "key_": "icmppingsec", "value_type": 0,
+        "units": "s", "history": "90d", "trends": "365d", "tags": tag_disp})
     sla24 = ensure_item(api, tid, {
         "name": "Disponibilidad últimas 24 h", "key_": "lagunitas.disponibilidad[24h]", "type": 15,
         "value_type": 0, "units": "%", "delay": "1m", "history": "90d", "trends": "365d",
@@ -172,9 +181,9 @@ def install_icmp(api: ZabbixAPI, groupid: str) -> dict:
         "value_type": 0, "units": "%", "delay": "1m", "history": "90d", "trends": "365d",
         "params": "avg(//icmpping,7d)*100", "tags": tag_disp})
 
-    t = TPL_ICMP
+    t = nombre
     caida = ensure_trigger(api, tid, {
-        "description": TRIGGER_CAIDA[TPL_ICMP],
+        "description": TRIGGER_CAIDA[nombre],
         "expression": f"max(/{t}/icmpping,{{$ICMP.CAIDA.PERIODO}})=0",
         "priority": SEVERIDAD["high"], "manual_close": 0,
         "tags": _tags(alcance="disponibilidad", equipo="{HOST.HOST}"),
@@ -197,6 +206,14 @@ def install_icmp(api: ZabbixAPI, groupid: str) -> dict:
         "tags": _tags(alcance="calidad", equipo="{HOST.HOST}"),
         "dependencies": [{"triggerid": caida}],
         "comments": "Latencia promedio de 5 minutos por encima de {$ICMP.LATENCIA.WARN} s."})
+    if sonda:
+        ensure_trigger(api, tid, {
+            "description": "{HOST.NAME}: la sonda ICMP no envía datos",
+            "expression": f"nodata(/{t}/icmpping,3m)=1",
+            "priority": SEVERIDAD["warning"],
+            "tags": _tags(alcance="monitoreo", equipo="{HOST.HOST}"),
+            "comments": "La sonda del laboratorio está detenida: bin/lagunitas lab sonda "
+                        "(o el agente launchd ar.lagunitas.sonda-icmp)."})
 
     verde, amarillo, rojo = "43A047", "FFC107", "E53935"
     pages = [{"name": "Estado", "widgets": [
@@ -406,5 +423,6 @@ def install_all(api: ZabbixAPI) -> dict:
     from . import templates_snmp
     ensure_intervalo(api)
     gid = ensure_template_group(api, TEMPLATE_GRUPO)
-    return {TPL_ICMP: install_icmp(api, gid), TPL_UNIFI: install_unifi(api, gid),
+    return {TPL_ICMP: install_icmp(api, gid), TPL_ICMP_SONDA: install_icmp(api, gid, sonda=True),
+            TPL_UNIFI: install_unifi(api, gid),
             **templates_snmp.install_all(api, gid)}

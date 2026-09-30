@@ -366,16 +366,16 @@ elementos:
   # AP UniFi de la casa del alumno: único equipo físico del LAB. No forma parte
   # de la topología de campo, por eso no tiene padre.
   # IMPORTANTE (LAB sobre Colima): la red de Colima responde ICMP por cualquier
-  # IP externa, así que un ping al AP desde el LAB siempre "responde". Por eso
-  # aquí NO se usa el perfil icmp: la disponibilidad del AP sale del estado que
-  # informa la API de UniFi (ONLINE/OFFLINE). En producción (Linux) ICMP es real.
+  # IP externa, así que el ping del Zabbix server al AP siempre "responde". Por eso
+  # aquí se usa icmp_sonda: el ping lo hace la Mac (bin/lagunitas lab sonda) y lo
+  # envía a Zabbix. En producción (Linux) el AP usa el perfil icmp normal.
   - host: AP-U7-Pro-Wall
     nombre: AP U7 Pro Wall (real)
     rol: ap
     ip: 192.168.1.113
     padre: null
     estado: operativo
-    perfiles: [unifi_api]
+    perfiles: [icmp_sonda, unifi_api]
     funcion: ap
     modelo: Ubiquiti UniFi U7 Pro Wall
     equipo: Ubiquiti UniFi U7 Pro Wall

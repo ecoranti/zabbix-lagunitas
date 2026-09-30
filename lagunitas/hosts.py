@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 
-from .model import ESTADOS, PERFILES, ROLES, SITIO_GRUPO, TPL_ICMP, TPL_UNIFI, TRIGGER_CAIDA
+from .model import ESTADOS, PERFILES, ROLES, SITIO_GRUPO, TPL_ICMP, TPL_ICMP_SONDA, TPL_UNIFI, TRIGGER_CAIDA
 from .zbx import ZabbixAPI
 
 # Objetos de la versión anterior del laboratorio (scripts sueltos, v1).
@@ -29,6 +29,8 @@ def ensure_groups(api: ZabbixAPI) -> dict[str, str]:
 def template_de_disponibilidad(elemento: dict) -> str | None:
     if "icmp" in elemento["perfiles"]:
         return TPL_ICMP
+    if "icmp_sonda" in elemento["perfiles"]:
+        return TPL_ICMP_SONDA
     if "unifi_api" in elemento["perfiles"]:
         return TPL_UNIFI
     return None
