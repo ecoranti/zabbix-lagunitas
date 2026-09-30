@@ -228,9 +228,39 @@ html[color-scheme="dark"] .lr-page { --lr-violeta: #a58cf0; --lr-aff: #f59a4e; -
 .lr-eventos summary { color: var(--lr-accent); font-weight: 600; cursor: pointer; }
 @media print {
 	.lr-filtros, .lr-tabla-filtros { display: none !important; }
-	.lr-metricas { grid-template-columns: repeat(3, 1fr); }
+	.lr-metricas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 	[data-lr-fila][hidden] { display: table-row !important; }
 }
+
+/* Impresión / PDF: el reporte se ajusta al ancho de la hoja. Zabbix fija anchos
+   mínimos y desbordes de pantalla en sus contenedores; sin esto, la hoja recortaba
+   el lado derecho del reporte. */
+@media print {
+	@page { size: A4 portrait; margin: 10mm; }
+	html, body, .wrapper, .layout-wrapper, main, .lr-page {
+		display: block !important; width: auto !important; min-width: 0 !important; max-width: none !important;
+		height: auto !important; min-height: 0 !important; overflow: visible !important; position: static !important;
+	}
+	.lr-page > * + * { margin-top: 12px; }
+	.lr-page * { min-width: 0 !important; }
+	.lr-table-wrap, .lr-sec { overflow: visible !important; }
+	.lr-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+	.lr-card b { font-size: 18px; }
+	.lr-mini-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+	.lr-dl { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+	.lr-head { break-inside: avoid; }
+	.lr-h2 { break-after: avoid; }
+	.lr-table { table-layout: auto; }
+	.lr-table th { white-space: normal; }
+	.lr-sec .lr-table > tbody > tr > td { font-size: 9.5px; padding: 5px 6px; }
+	.lr-sec .lr-table th { padding: 5px 6px; }
+	.lr-ellipsis { max-width: none; white-space: normal; }
+	.lr-conclusiones li, .lr-table td { overflow-wrap: break-word; }
+	.lr-table > tbody > tr { break-inside: avoid; }
+}
+/* El reporte general (tabla de 14 columnas) se imprime apaisado. */
+@page lr-apaisado { size: A4 landscape; margin: 10mm; }
+@media print { .lr-page-general { page: lr-apaisado; } }
 /* El formulario de filtros es un bloque (flex + wrap en columna estiraba la grilla). */
 form.lr-filtros { display: block; }
 .lr-filtros > * + * { margin-top: 10px; }

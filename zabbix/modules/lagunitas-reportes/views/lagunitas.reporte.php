@@ -29,7 +29,7 @@ $tipos = ['airmax' => 'Radio airMAX', 'mikrotik' => 'Router Mikrotik', 'icmp' =>
 
 ob_start();
 ?>
-<div class="lr-page">
+<div class="lr-page lr-page-general">
 	<div class="lr-head">
 		<div>
 			<div class="lr-org" data-lr-text="org">Red Comunitaria y Científica Las Lagunitas</div>
