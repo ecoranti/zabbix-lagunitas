@@ -139,3 +139,47 @@ def unifi_ids(host: str, puerto: str, api_key: str | None = None, log=print) -> 
 
 
 __all__ = ["probar_snmp", "unifi_ids", "ROOT"]
+
+
+# ---------------------------------------------------------------- Telegram
+
+def _telegram(metodo: str, datos: dict | None = None) -> dict:
+    """Llama a la API de bots de Telegram con el token de .env (el token nunca se imprime)."""
+    import requests
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token:
+        raise SystemExit("Falta TELEGRAM_BOT_TOKEN en .env (ver docs/manual-administracion.md, Notificaciones)")
+    r = requests.post(f"https://api.telegram.org/bot{token}/{metodo}", json=datos or {}, timeout=15)
+    cuerpo = r.json()
+    if not cuerpo.get("ok"):
+        raise SystemExit(f"Telegram rechazó la llamada: {cuerpo.get('description', r.status_code)}")
+    return cuerpo["result"]
+
+
+def telegram_chat_id(log=print) -> None:
+    """Lista los chats que le escribieron al bot (para completar TELEGRAM_CHAT_ID)."""
+    bot = _telegram("getMe")
+    log(f"  Bot: @{bot['username']} ({bot['first_name']})")
+    chats = {}
+    for u in _telegram("getUpdates"):
+        msg = u.get("message") or u.get("channel_post") or u.get("my_chat_member") or {}
+        chat = msg.get("chat")
+        if chat:
+            chats[chat["id"]] = chat
+    if not chats:
+        log("  Ningún chat todavía: escribile cualquier mensaje al bot (o agregalo a un grupo y escribí\n"
+            "  algo en el grupo) y volvé a correr este comando.")
+        return
+    for cid, c in chats.items():
+        nombre = c.get("title") or " ".join(x for x in (c.get("first_name"), c.get("last_name")) if x)
+        log(f"  TELEGRAM_CHAT_ID={cid}    ({c['type']}: {nombre})")
+
+
+def probar_telegram(log=print) -> None:
+    chat = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    if not chat:
+        raise SystemExit("Falta TELEGRAM_CHAT_ID en .env: obtenelo con bin/lagunitas telegram-chat-id")
+    _telegram("sendMessage", {"chat_id": chat, "text":
+              "✅ Prueba de notificaciones — Monitoreo Red Las Lagunitas.\n"
+              "Si ves este mensaje, Zabbix puede avisarte por Telegram."})
+    log(f"  Mensaje de prueba enviado al chat {chat}")

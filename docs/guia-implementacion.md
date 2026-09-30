@@ -224,12 +224,30 @@ Lista hosts faltantes, ítems no soportados y problemas abiertos. En el frontend
 
 ### Notificaciones por Telegram
 
-1. Crear un bot con **@BotFather** (`/newbot`) y copiar el token.
-2. Agregar el bot a un grupo de operadores y obtener el `chat_id` (por ejemplo con
-   `https://api.telegram.org/bot<TOKEN>/getUpdates` después de escribir en el grupo).
-3. Completar `TELEGRAM_BOT_TOKEN` y `TELEGRAM_CHAT_ID` en `.env` y ejecutar
-   `bin/lagunitas aprovisionar --solo alertas`.
-4. Probar desde *Alerts → Media types → Telegram → Test*.
+1. En Telegram, abrir **@BotFather**, enviar `/newbot`, elegir un nombre (por ejemplo *Monitoreo
+   Las Lagunitas*) y un usuario terminado en `bot`. BotFather responde con el **token** del bot.
+2. Guardar el token en `.env` como `TELEGRAM_BOT_TOKEN` (editando el archivo; el token es un
+   secreto y no debe pegarse en chats ni commits).
+3. Crear un grupo de Telegram para los operadores, **agregar el bot** y escribir cualquier mensaje
+   en el grupo. Obtener el identificador del chat:
+
+   ```bash
+   bin/lagunitas telegram-chat-id
+   ```
+
+   Muestra una línea `TELEGRAM_CHAT_ID=...` por cada chat (los grupos tienen ID negativo). Copiarla
+   en `.env`.
+4. Configurar Zabbix y probar el envío:
+
+   ```bash
+   bin/lagunitas aprovisionar --solo alertas
+   bin/lagunitas probar-telegram
+   ```
+
+   El aprovisionamiento habilita el media type *Telegram* con mensajes en español
+   (🔴 problema, ✅ resuelto, 💬 actualización) y lo asigna al usuario `Admin` para severidades
+   Average, High y Disaster. En Telegram, cada "Resuelto" aparece como respuesta al mensaje del
+   problema.
 
 La acción *Las Lagunitas - Notificar caídas* avisa problemas de severidad **Average o mayor**,
 envía un recordatorio a los 30 minutos si siguen abiertos y avisa la recuperación.

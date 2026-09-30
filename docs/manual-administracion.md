@@ -190,6 +190,10 @@ Lagunitas* por todos sus medios, repite a los 30 minutos si el problema sigue y 
 recuperación. Los problemas suprimidos (mantenimiento) no se notifican. Configuración de
 Telegram: ver la Guía de implementación, sección *Notificaciones por Telegram*.
 
+Para agregar a otra persona: sumarla al grupo de Telegram de operadores (no hace falta tocar
+Zabbix). Para comprobar que el canal funciona: `bin/lagunitas probar-telegram`. Si las alertas
+no llegan, revisar *Reports → Action log* (columna *Info* con el error de Telegram).
+
 ---
 
 ### Cómo leer las métricas de radio y energía

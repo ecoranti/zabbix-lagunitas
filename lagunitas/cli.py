@@ -186,6 +186,10 @@ def main(argv=None) -> None:
     ui.add_argument("host", help="IP o nombre del controlador UniFi")
     ui.add_argument("puerto", nargs="?", default="443", help="puerto HTTPS (por defecto 443)")
     ui.set_defaults(func=lambda a: diagnostico.unifi_ids(a.host, a.puerto))
+    sub.add_parser("telegram-chat-id", help="muestra el chat ID de quienes le escribieron al bot de Telegram"
+                   ).set_defaults(func=lambda a: diagnostico.telegram_chat_id())
+    sub.add_parser("probar-telegram", help="envía un mensaje de prueba al chat de TELEGRAM_CHAT_ID"
+                   ).set_defaults(func=lambda a: diagnostico.probar_telegram())
 
     l = sub.add_parser("lab", help="simulador de la red en Docker (solo entorno LAB)")
     l.add_argument("accion", choices=["levantar", "apagar", "estado", "caida", "recuperar", "escenario", "sonda"])

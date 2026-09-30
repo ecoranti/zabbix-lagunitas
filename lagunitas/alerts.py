@@ -48,27 +48,46 @@ def ensure_action(api: ZabbixAPI, hostgroupid: str, usrgrpid: str, severidad_min
     return api.call("action.create", {"name": ACCION_NOMBRE, "eventsource": 0, **params})["actionids"][0]
 
 
+# Mensajes en español (texto plano: el script de Zabbix escapa el texto según el modo de formato,
+# así que HTML/Markdown no aportan negritas y Markdown falla con guiones bajos en los nombres).
+PLANTILLAS_TELEGRAM = [
+    {"eventsource": 0, "recovery": 0, "subject": "🔴 {EVENT.SEVERITY}: {EVENT.NAME}",
+     "message": "Equipo: {HOST.NAME} ({HOST.IP})\nInicio: {EVENT.DATE} {EVENT.TIME}\n"
+                "Dato: {EVENT.OPDATA}\nRed Las Lagunitas · evento {EVENT.ID}"},
+    {"eventsource": 0, "recovery": 1, "subject": "✅ Resuelto: {EVENT.NAME}",
+     "message": "Equipo: {HOST.NAME}\nDuración: {EVENT.DURATION}\n"
+                "Resuelto: {EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME}"},
+    {"eventsource": 0, "recovery": 2, "subject": "💬 Actualización: {EVENT.NAME}",
+     "message": "{USER.FULLNAME} {EVENT.UPDATE.ACTION} ({EVENT.UPDATE.DATE} {EVENT.UPDATE.TIME})\n"
+                "{EVENT.UPDATE.MESSAGE}\nEstado actual: {EVENT.STATUS}"},
+]
+
+
 def ensure_telegram(api: ZabbixAPI, log=print) -> None:
     token, chat = os.environ.get("TELEGRAM_BOT_TOKEN"), os.environ.get("TELEGRAM_CHAT_ID")
     if not (token and chat):
         log("  Telegram: sin TELEGRAM_BOT_TOKEN/TELEGRAM_CHAT_ID en .env (se omite)")
         return
-    mt = api.call("mediatype.get", {"filter": {"name": ["Telegram"]}, "output": ["mediatypeid"],
-                                    "selectParameters": "extend"})
+    # En 7.0 los parámetros del webhook vienen con output=extend (no hay selectParameters).
+    mt = api.call("mediatype.get", {"filter": {"name": ["Telegram"]}, "output": "extend",
+                                    "selectMessageTemplates": "extend"})
     if not mt:
         log("  [aviso] no existe el media type 'Telegram' en este Zabbix")
         return
     mt = mt[0]
-    params = [{"name": p["name"], "value": token if p["name"] == "api_token" else p["value"]}
-              for p in mt["parameters"]]
-    api.call("mediatype.update", {"mediatypeid": mt["mediatypeid"], "status": 0, "parameters": params})
+    valores = {"api_token": token, "api_parse_mode": ""}
+    params = [{"name": p["name"], "value": valores.get(p["name"], p["value"])} for p in mt["parameters"]]
+    plantillas = [{k: t[k] for k in ("eventsource", "recovery", "subject", "message")}
+                  for t in mt["message_templates"] if t["eventsource"] != "0"] + PLANTILLAS_TELEGRAM
+    api.call("mediatype.update", {"mediatypeid": mt["mediatypeid"], "status": 0, "parameters": params,
+                                  "message_templates": plantillas})
     admin = api.call("user.get", {"filter": {"username": ["Admin"]}, "output": ["userid"],
                                   "selectMedias": ["mediatypeid", "sendto", "active", "severity", "period"]})[0]
     medias = [m for m in admin["medias"] if m["mediatypeid"] != mt["mediatypeid"]]
     medias.append({"mediatypeid": mt["mediatypeid"], "sendto": chat, "active": 0,
                    "severity": 56, "period": "1-7,00:00-24:00"})  # 56 = average + high + disaster
     api.call("user.update", {"userid": admin["userid"], "medias": medias})
-    log("  Telegram: media type habilitado y asignado al usuario Admin")
+    log(f"  Telegram: media type habilitado (mensajes en español) y asignado al usuario Admin (chat {chat})")
 
 
 def ensure_alerting(api: ZabbixAPI, groups: dict[str, str], log=print) -> None:
