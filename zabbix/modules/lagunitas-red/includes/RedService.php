@@ -202,7 +202,8 @@ class RedService {
 			$tags = array_column($h['tags'], 'value', 'tag');
 			$rol = $tags['rol'] ?? ($h['inventory']['type'] ?? '') ?: 'Otro';
 			$it = $items[$hid] ?? [];
-			$es_ap = array_key_exists('ap.disponible', $it) && !array_key_exists('icmpping', $it);
+			// AP UniFi: tiene métricas de la API (puede tener además ping, como en producción).
+			$es_ap = array_key_exists('ap.disponible', $it);
 			$tipo = array_key_exists('airmax.wl.senal', $it) ? 'airmax'
 				: (array_key_exists('mikrotik.voltaje', $it) ? 'mikrotik' : ($es_ap ? 'unifi' : 'icmp'));
 			$disp = $it['icmpping'] ?? $it['ap.disponible'] ?? null;

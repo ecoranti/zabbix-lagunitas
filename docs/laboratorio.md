@@ -27,6 +27,7 @@ cómo probar alertas, cómo trabajar el código y cómo resolver los problemas q
 | Simular una caída | `bin/lagunitas lab caida Nodo_Kika` / `bin/lagunitas lab recuperar Nodo_Kika` |
 | Ping real al AP | `bin/lagunitas lab sonda` (o el agente launchd) |
 | Secretos | `.env` (nunca se sube a git) |
+| Alertas por Telegram | Grupo *Operadores Las Lagunitas* (bot `@lagunitasBot`); prueba: `bin/lagunitas probar-telegram` |
 | Rama de trabajo | `feature/produccion-v2` (PR #1 hacia `main`) |
 
 ---
@@ -244,7 +245,8 @@ bin/lagunitas lab caida Kika --solo          # solo ese equipo, sin sus dependie
 
 `caida` detiene también a los equipos aguas abajo, porque en la red real pierden el camino. Así
 se ve el efecto de las dependencias: **una sola alerta** por la caída troncal. La alerta aparece
-a los ~90 s (`{$ICMP.CAIDA.PERIODO}`).
+a los ~2 min: cada nivel de la topología espera 15 s más que su padre (90 s el gateway,
+105 s las torres, 120 s el nivel siguiente…), así el padre siempre se detecta primero.
 
 Qué mirar: *Estado de la red* (panal y mapa en rojo), *Equipos* (el equipo "Caído" y sus
 dependientes "Sin servicio"), *Monitoring → Problems* y, después, el reporte.
@@ -271,7 +273,7 @@ valores numéricos oscilan para que los gráficos se vean realistas).
 
 ### AP real
 
-- Apagar el AP (o desenchufarlo): a los ~90 s aparece *sin respuesta (ICMP)*; la de UniFi queda
+- Apagar el AP (o desenchufarlo): a los ~90 s (es raíz, nivel 0) aparece *sin respuesta (ICMP)*; la de UniFi queda
   suprimida por dependencia.
 - Apagar UniFi OS Server: aparece *controlador UniFi no accesible* a los 3 min.
 - Detener la sonda: aparece *la sonda ICMP no envía datos* a los 3 min.
@@ -399,6 +401,7 @@ el índice.
 | Chrome: `ERR_ADDRESS_UNREACHABLE` con `gala.local` | macOS bloquea a Chrome la red local | Usar `http://localhost:8090`, o *Ajustes del Sistema → Privacidad y seguridad → Red local* → activar Chrome y reiniciarlo |
 | Gráficos vacíos o con fechas viejas | Selector de tiempo fijado en un rango absoluto | Elegir *Last 6 hours* arriba a la derecha |
 | Un cambio en un módulo no se ve | Caché del navegador | **Cmd + Shift + R**; la versión nueva en *Modules* aparece con **Scan directory** |
+| Zabbix muestra *Cannot load modules at: modules/lagunitas-…* | Git reescribió las carpetas de los módulos (cambio de rama, merge) y el contenedor web quedó apuntando a las viejas | `docker compose up -d --force-recreate zabbix-web` (no pierde datos) |
 | Un equipo simulado figura caído | Contenedor detenido | `bin/lagunitas lab estado`; `bin/lagunitas lab recuperar <equipo>` o `bin/lagunitas lab levantar` |
 | Alertas de radio/energía que no se van | Quedó un escenario activo | `bin/lagunitas lab escenario <equipo> normal` |
 | *controlador UniFi no accesible* | UniFi OS Server apagado o cambió el puerto | Abrir UniFi OS Server; ver el puerto con `lsof` (sección *AP UniFi real*) y reaprovisionar hosts |

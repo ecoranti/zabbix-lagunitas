@@ -120,7 +120,7 @@ generado por el template.
 
 | Trigger | Condición | Severidad |
 |---|---|---|
-| `<equipo>: sin respuesta (ICMP)` | Sin respuesta al ping durante `{$ICMP.CAIDA.PERIODO}` (90 s) | High |
+| `<equipo>: sin respuesta (ICMP)` | Sin respuesta al ping durante `{$ICMP.CAIDA.PERIODO}`: 90 s en el gateway y 15 s más por cada nivel de la topología | High |
 | `<equipo>: pérdida de paquetes alta` | Pérdida mínima de 5 min > `{$ICMP.PERDIDA.WARN}` (20 %) | Warning |
 | `<equipo>: latencia alta` | Latencia promedio de 5 min > `{$ICMP.LATENCIA.WARN}` (0,15 s) | Warning |
 
@@ -137,7 +137,12 @@ generado por el template.
 | `cambió la versión de firmware` | Cambio de versión | Information |
 
 Las advertencias dependen del trigger de caída del mismo equipo, y el trigger de caída de cada
-equipo depende del de su padre: **una caída troncal genera una sola alerta**.
+equipo depende del de su padre: **una caída troncal genera una sola alerta**. Para que esto
+funcione cuando padre e hijos caen a la vez, cada nivel tarda 15 s más que su padre en declarar
+la caída (90 s el gateway, 105 s las torres, 120 s el nivel siguiente… hasta 225 s en el equipo
+más profundo). El aprovisionamiento lo calcula desde el inventario (macro `{$ICMP.CAIDA.PERIODO}`
+de cada host). Sin este escalonado, un hijo que se detecta un segundo antes que su padre genera
+una alerta propia.
 
 ### Qué hacer ante una caída
 
@@ -189,6 +194,14 @@ La acción *Las Lagunitas - Notificar caídas* avisa (≥ Average) al grupo *Ope
 Lagunitas* por todos sus medios, repite a los 30 minutos si el problema sigue y avisa la
 recuperación. Los problemas suprimidos (mantenimiento) no se notifican. Configuración de
 Telegram: ver la Guía de implementación, sección *Notificaciones por Telegram*.
+
+Para agregar a otra persona: sumarla al grupo de Telegram de operadores (no hace falta tocar
+Zabbix). Para comprobar que el canal funciona: `bin/lagunitas probar-telegram`. Si las alertas
+no llegan, revisar *Reports → Action log* (columna *Info* con el error de Telegram).
+
+El bot es de solo envío y lo que se le escriba no tiene efecto. Si aparecen mensajes que no
+generó Zabbix, el token está comprometido: revocarlo como indica la Guía de implementación
+(*Seguridad del bot de Telegram*). Revisión periódica: `bin/lagunitas probar-telegram`.
 
 ---
 

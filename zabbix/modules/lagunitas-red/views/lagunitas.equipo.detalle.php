@@ -99,6 +99,10 @@ if ($e['es_ap']) {
 	echo $kpi('Memoria', Html::num($mem, 1, '%'), Html::nivelPct($mem));
 	echo $kpi('Clientes', Html::num(Html::valorItem($it, 'ap.clients.count'), 0));
 	echo $kpi('Uptime', $up !== null ? Html::duracion((int) $up) : '—');
+	if ($e['latencia_ms'] !== null) {
+		echo $kpi('Latencia', Html::num($e['latencia_ms'], 1, 'ms'), Html::nivelLatencia($e['latencia_ms']));
+		echo $kpi('Pérdida', Html::num($e['perdida'], 0, '%'), Html::nivelPerdida($e['perdida']));
+	}
 }
 else {
 	echo $kpi('Latencia', Html::num($e['latencia_ms'], 1, 'ms'), Html::nivelLatencia($e['latencia_ms']));
@@ -206,6 +210,9 @@ if ($e['es_ap']) {
 	echo $grafico($it['ap.clients.count'] ?? null, 'Clientes conectados');
 	echo $grafico($it['ap.uplink.rx'] ?? null, 'Uplink RX');
 	echo $grafico($it['ap.radio.5ghz.retries'] ?? null, 'Reintentos TX 5 GHz');
+	if (isset($it['icmppingsec'])) {
+		echo $grafico($it['icmppingsec'], 'Latencia (ICMP)');
+	}
 }
 else {
 	if ($e['tipo'] === 'airmax') {

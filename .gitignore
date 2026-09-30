@@ -15,3 +15,8 @@ Manual de administracion - Red Las Lagunitas (Zabbix).docx
 # Copias de trabajo de Word (las guías se generan con scripts/md2docx.py)
 docs/* v2*.docx
 docs/~$*.docx
+
+# Capturas del informe (se incrustan en el Word y en docs/informe/media)
+docs/informe/capturas/
+# Copias de trabajo del informe fuera de docs/informe/
+docs/Informe PPS*.docx

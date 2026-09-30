@@ -137,7 +137,7 @@ class Html {
 			.'<col style="width:13%"><col style="width:10%"><col style="width:9%"></colgroup>'
 			.'<thead><tr><th>Estado</th><th>Equipo</th>';
 		$out .= $es_ap
-			? '<th>CPU</th><th>Memoria</th><th>Clientes</th><th>Uptime</th><th>Controlador</th><th></th>'
+			? '<th>CPU</th><th>Memoria</th><th>Clientes</th><th>Uptime</th><th>Controlador</th><th>Latencia</th>'
 			: '<th>Disponibilidad 24 h</th><th>Latencia</th><th>Pérdida</th><th>Enlace / energía</th>'
 				.'<th>Depende de</th>';
 		$out .= '<th>Problemas</th></tr></thead><tbody>';
@@ -177,7 +177,9 @@ class Html {
 				$out .= '<td>'.($up !== null ? self::e(self::duracion((int) $up)) : '—').'</td>';
 				$ctrl = self::valorItem($it, 'net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}]');
 				$out .= '<td>'.($ctrl === null ? '—' : ($ctrl ? '<span class="lg-badge lg-badge-ok">Accesible</span>'
-					: '<span class="lg-badge lg-badge-bad">No accesible</span>')).'</td><td></td>';
+					: '<span class="lg-badge lg-badge-bad">No accesible</span>')).'</td>';
+				$out .= '<td>'.self::barra($e['latencia_ms'] !== null ? min($e['latencia_ms'], 200) : null, 200,
+					self::nivelLatencia($e['latencia_ms']), self::num($e['latencia_ms'], 1, 'ms')).'</td>';
 			}
 			else {
 				$out .= '<td>'.self::barra($e['disp24'], 100, self::nivelDisp($e['disp24']),

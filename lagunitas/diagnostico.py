@@ -139,3 +139,74 @@ def unifi_ids(host: str, puerto: str, api_key: str | None = None, log=print) -> 
 
 
 __all__ = ["probar_snmp", "unifi_ids", "ROOT"]
+
+
+# ---------------------------------------------------------------- Telegram
+
+def _telegram(metodo: str, datos: dict | None = None) -> dict:
+    """Llama a la API de bots de Telegram con el token de .env (el token nunca se imprime)."""
+    import requests
+    token = os.environ.get("TELEGRAM_BOT_TOKEN", "").strip()
+    if not token:
+        raise SystemExit("Falta TELEGRAM_BOT_TOKEN en .env (ver docs/manual-administracion.md, Notificaciones)")
+    r = requests.post(f"https://api.telegram.org/bot{token}/{metodo}", json=datos or {}, timeout=15)
+    cuerpo = r.json()
+    if not cuerpo.get("ok"):
+        raise SystemExit(f"Telegram rechazó la llamada: {cuerpo.get('description', r.status_code)}")
+    return cuerpo["result"]
+
+
+def telegram_chat_id(log=print) -> None:
+    """Lista los chats que le escribieron al bot (para completar TELEGRAM_CHAT_ID)."""
+    bot = _telegram("getMe")
+    log(f"  Bot: @{bot['username']} ({bot['first_name']})")
+    chats = {}
+    for u in _telegram("getUpdates"):
+        msg = u.get("message") or u.get("channel_post") or u.get("my_chat_member") or {}
+        chat = msg.get("chat")
+        if chat:
+            chats[chat["id"]] = chat
+    if not chats:
+        log("  Ningún chat todavía: escribile cualquier mensaje al bot (o agregalo a un grupo y escribí\n"
+            "  algo en el grupo) y volvé a correr este comando.")
+        return
+    for cid, c in chats.items():
+        nombre = c.get("title") or " ".join(x for x in (c.get("first_name"), c.get("last_name")) if x)
+        log(f"  TELEGRAM_CHAT_ID={cid}    ({c['type']}: {nombre})")
+
+
+def probar_telegram(log=print) -> None:
+    chat = os.environ.get("TELEGRAM_CHAT_ID", "").strip()
+    if not chat:
+        raise SystemExit("Falta TELEGRAM_CHAT_ID en .env: obtenelo con bin/lagunitas telegram-chat-id")
+    _telegram("sendMessage", {"chat_id": chat, "text":
+              "✅ Prueba de notificaciones — Monitoreo Red Las Lagunitas.\n"
+              "Si ves este mensaje, Zabbix puede avisarte por Telegram."})
+    log(f"  Mensaje de prueba enviado al chat {chat}")
+    seguridad_telegram(chat, log)
+
+
+def seguridad_telegram(chat: str, log=print) -> None:
+    """Chequea que el bot sea de solo envío (ver Guía de implementación, Seguridad del bot)."""
+    me = _telegram("getMe")
+    webhook = _telegram("getWebhookInfo").get("url", "")
+    comandos = _telegram("getMyCommands")
+    miembro = _telegram("getChatMember", {"chat_id": chat, "user_id": me["id"]})
+    tipo = _telegram("getChat", {"chat_id": chat})["type"]
+    checks = [
+        (not webhook, "sin webhook: nada recibe ni procesa mensajes entrantes",
+         f"hay un webhook configurado ({webhook}): eliminarlo si no es propio"),
+        (not me.get("can_join_groups"), "nadie puede agregar el bot a otros grupos",
+         "cualquiera puede agregar el bot a sus grupos: BotFather -> /setjoingroups -> Disable"),
+        (not me.get("can_read_all_group_messages"), "modo privacidad activo (no lee el grupo)",
+         "el bot lee todos los mensajes del grupo: BotFather -> /setprivacy -> Enable"),
+        (not comandos and not me.get("supports_inline_queries"), "sin comandos ni modo inline",
+         "el bot publica comandos o modo inline: quitarlos (/deletecommands, /setinline)"),
+        (miembro["status"] == "member", "en el grupo es miembro sin permisos de administrador",
+         f"en el grupo es '{miembro['status']}': quitarle los permisos de administrador"),
+        (tipo in ("group", "supergroup"), f"destino: {tipo}",
+         "el destino es un chat privado: para operadores conviene un grupo"),
+    ]
+    log("  Seguridad del bot:")
+    for ok, bien, mal in checks:
+        log(f"    {'OK ' if ok else 'REVISAR'} {bien if ok else mal}")

@@ -82,9 +82,28 @@ def _interfaz(e: dict) -> dict:
     return {**base, "type": 1, "port": "10050"}
 
 
-def _macros(e: dict, log) -> list[dict] | None:
+CAIDA_BASE, CAIDA_POR_NIVEL = 90, 15  # segundos
+
+
+def profundidad(inv: dict, host: str) -> int:
+    """Niveles entre el equipo y la raíz de la topología (gateway = 0)."""
+    n, padre = 0, inv["por_host"][host].get("padre")
+    while padre and n < 50:
+        n, padre = n + 1, inv["por_host"][padre].get("padre")
+    return n
+
+
+def _macros(e: dict, log, inv: dict) -> list[dict] | None:
     """Macros del host. Devuelve None si falta un secreto (no se tocan las existentes)."""
     macros = [{"macro": k, "value": str(v)} for k, v in (e.get("macros") or {}).items()]
+    # Cada nivel espera 15 s más que su padre para declarar la caída: si caen juntos (corte
+    # troncal), el padre entra primero en problema y la dependencia suprime a los hijos.
+    # Sin esto, un hijo que "gana la carrera" genera una alerta propia además de la del padre.
+    nivel = profundidad(inv, e["host"])
+    if nivel and {"icmp", "icmp_sonda"} & set(e["perfiles"]) and \
+            "{$ICMP.CAIDA.PERIODO}" not in (e.get("macros") or {}):
+        macros.append({"macro": "{$ICMP.CAIDA.PERIODO}", "value": f"{CAIDA_BASE + CAIDA_POR_NIVEL * nivel}s",
+                       "description": f"Nivel {nivel} de la topología: detecta después que su padre"})
     if "unifi_api" in e["perfiles"]:
         key = os.environ.get("UNIFI_API_KEY")
         if not key:
@@ -130,7 +149,7 @@ def ensure_hosts(api: ZabbixAPI, inv: dict, groups: dict[str, str], log=print) -
                           "notes": f"Sitio: {inv['por_host'][e['elemento']]['nombre']}. "
                                    f"Depende de: {padre_nombre}"},
         }
-        macros = _macros(e, log)
+        macros = _macros(e, log, inv)
         if macros is not None:
             params["macros"] = macros
 

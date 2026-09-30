@@ -3,11 +3,11 @@
 Páginas:
   1. Estado de la red   honeycomb de equipos, alertas activas y mapa de topología.
   2. Equipos            widget propio: tarjetas, filtros y tablas por rol con detalle por equipo.
-  2. Detalle por equipo navegador de equipos: al seleccionar uno, el resto de los
+  3. Detalle por equipo navegador de equipos: al seleccionar uno, el resto de los
                         widgets de la página muestra sus datos (comunicación entre
                         widgets de Zabbix 7.0).
-  3. AP UniFi           métricas del access point real del laboratorio (si existe).
-  4. SLA                cumplimiento mensual por equipo y ranking de disponibilidad.
+  4. AP UniFi           métricas del access point real del laboratorio (si existe).
+  5. SLA                cumplimiento mensual por equipo y ranking de disponibilidad.
 """
 from __future__ import annotations
 
@@ -38,11 +38,16 @@ def build_pages(api: ZabbixAPI, inv: dict, hostids: dict[str, str], groups: dict
                 sysmapid: str, slaid: str, serviceid: str) -> list[dict]:
     g = [groups[SITIO_GRUPO]]
     pages = []
+    # Una celda por equipo: la disponibilidad por UniFi solo se agrega si algún AP no tiene
+    # ping (si tiene ambas, el AP aparecería dos veces en el panal).
+    panal = ["Disponibilidad (ICMP)"]
+    if any("unifi_api" in e["perfiles"] and not {"icmp", "icmp_sonda"} & set(e["perfiles"])
+           for e in inv["todos"]):
+        panal.append("Disponibilidad (UniFi)")
 
     # ------------------------------------------------------- 1. Estado de la red
     pages.append({"name": "Estado de la red", "widgets": [
-        W.honeycomb("Equipos monitoreados", (0, 0, 26, 8), g,
-                    ["Disponibilidad (ICMP)", "Disponibilidad (UniFi)"], "PANAL",
+        W.honeycomb("Equipos monitoreados", (0, 0, 26, 8), g, panal, "PANAL",
                     thresholds=[(0, ROJO), (1, VERDE)]),
         W.problems_by_severity("Problemas por severidad", (0, 8, 26, 3), g),
         W.mapa("Topología", sysmapid, (26, 0, 46, 15), reference="MAPAT"),

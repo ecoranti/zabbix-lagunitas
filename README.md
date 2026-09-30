@@ -45,7 +45,7 @@ Frontend: <http://localhost:8090> → *Dashboards → Las Lagunitas - Centro de 
 Simular una caída y su recuperación:
 
 ```bash
-bin/lagunitas lab caida Nodo_Kika       # ~90 s después: alerta + mapa en rojo
+bin/lagunitas lab caida Nodo_Kika       # ~2 min después: una alerta + mapa en rojo
 bin/lagunitas lab recuperar Nodo_Kika
 bin/lagunitas lab escenario Walter senal-debil   # falla de radio simulada por SNMP
 bin/lagunitas lab escenario Walter normal
@@ -53,6 +53,7 @@ bin/lagunitas lab escenario Walter normal
 
 ## Documentación
 
+- [Informe de la PPS](docs/informe/README.md): versión web del informe del trabajo final (se genera desde `docs/informe/Informe PPS Elias.docx` con `scripts/informe2md.py`).
 - [Guía de implementación](docs/guia-implementacion.md): instalación en laboratorio y en producción paso a paso.
 - [Guía de integración de equipos](docs/guia-integracion-equipos.md): cómo incorporar cada tipo de equipo (airMAX, Mikrotik, airCube, UniFi), qué datos y alertas aporta, y cómo validarlo.
 - [Manual de administración](docs/manual-administracion.md): operación diaria, alarmas, altas/bajas de equipos, backups y resolución de problemas.
@@ -74,6 +75,13 @@ scripts/                backup, restauración, arranque automático
 legacy/                 scripts de la versión 1 (histórico, no usar)
 docs/                   guías y material de referencia
 ```
+
+## Agradecimientos
+
+A **Willian Tola** ([LinkedIn](https://www.linkedin.com/in/willian-tola-68661b80/)), autor de
+[Reportes-Zabbix](https://github.com/lab24com/Reportes-Zabbix) (lab24com), cuyo trabajo sirvió de
+referencia e inspiración para mejorar la primera versión de este sistema, en particular el módulo de
+reportes. El módulo de este repositorio es una implementación propia para Zabbix 7.0.
 
 ## Seguridad
 
