@@ -399,6 +399,7 @@ el índice.
 | Chrome: `ERR_ADDRESS_UNREACHABLE` con `gala.local` | macOS bloquea a Chrome la red local | Usar `http://localhost:8090`, o *Ajustes del Sistema → Privacidad y seguridad → Red local* → activar Chrome y reiniciarlo |
 | Gráficos vacíos o con fechas viejas | Selector de tiempo fijado en un rango absoluto | Elegir *Last 6 hours* arriba a la derecha |
 | Un cambio en un módulo no se ve | Caché del navegador | **Cmd + Shift + R**; la versión nueva en *Modules* aparece con **Scan directory** |
+| Zabbix muestra *Cannot load modules at: modules/lagunitas-…* | Git reescribió las carpetas de los módulos (cambio de rama, merge) y el contenedor web quedó apuntando a las viejas | `docker compose up -d --force-recreate zabbix-web` (no pierde datos) |
 | Un equipo simulado figura caído | Contenedor detenido | `bin/lagunitas lab estado`; `bin/lagunitas lab recuperar <equipo>` o `bin/lagunitas lab levantar` |
 | Alertas de radio/energía que no se van | Quedó un escenario activo | `bin/lagunitas lab escenario <equipo> normal` |
 | *controlador UniFi no accesible* | UniFi OS Server apagado o cambió el puerto | Abrir UniFi OS Server; ver el puerto con `lsof` (sección *AP UniFi real*) y reaprovisionar hosts |

@@ -2,7 +2,8 @@
 """Convierte el informe de la PPS (Word) a Markdown para verlo en GitHub.
 
 Uso:   brew install pandoc
-       python3 scripts/informe2md.py "docs/referencia/Informe PPS Elias.docx"
+       python3 scripts/informe2md.py                      (usa docs/informe/Informe PPS Elias.docx)
+       python3 scripts/informe2md.py otro-informe.docx
 
 Genera docs/informe/README.md (GitHub lo muestra al abrir la carpeta) y las imágenes en
 docs/informe/media/. El Word es la fuente: editar el Word y volver a correr este script.
@@ -99,9 +100,9 @@ def _videos_existentes(md: Path) -> dict[str, str]:
 
 
 def main() -> None:
-    if len(sys.argv) != 2:
+    if len(sys.argv) > 2:
         sys.exit(__doc__)
-    origen = Path(sys.argv[1]).resolve()
+    origen = Path(sys.argv[1]).resolve() if len(sys.argv) == 2 else DESTINO / "Informe PPS Elias.docx"
     if not shutil.which("pandoc"):
         sys.exit("Falta pandoc: brew install pandoc")
     readme = DESTINO / "README.md"

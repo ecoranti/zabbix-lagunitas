@@ -131,7 +131,7 @@ class ReporteService {
 		if (in_array('mikrotik.voltaje', $keys)) {
 			return 'mikrotik';
 		}
-		if (in_array('ap.disponible', $keys) && !in_array('icmpping', $keys)) {
+		if (in_array('ap.disponible', $keys)) {
 			return 'unifi';
 		}
 
