@@ -15,6 +15,9 @@ en el inventario y cómo verificar que Zabbix obtiene todos sus datos. Complemen
 Para **cada equipo** se sigue el mismo circuito:
 
 1. **Relevar**: sitio, función (AP, SM, router), modelo, IP de gestión y de qué equipo depende.
+   *Monitoring → Descubrimiento de equipos* (o `bin/lagunitas descubrir <rango>`) lista lo que
+   responde en la red y que todavía no está en el inventario, con el tipo detectado y un bloque
+   YAML de partida (ver el Manual de administración, *Descubrir equipos que faltan en el inventario*).
 2. **Preparar el equipo**: habilitar SNMP (airMAX, Mikrotik) o crear la API key (UniFi); permitir
    ping y SNMP desde la IP del servidor Zabbix.
 3. **Probar desde el servidor**: `bin/lagunitas probar-snmp <ip>` (o `unifi-ids` para UniFi).

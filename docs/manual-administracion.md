@@ -316,6 +316,48 @@ más baja): clave `macros:` en su bloque del inventario, por ejemplo
 El provisionador valida el inventario antes de tocar Zabbix: IPs repetidas, padres inexistentes,
 ciclos, roles o estados inválidos.
 
+### Descubrir equipos que faltan en el inventario
+
+*Monitoring → Descubrimiento de equipos* (también el botón **Escanear red** del widget *Red Las
+Lagunitas*; solo usuarios Admin o Super admin) escanea un rango de IPs y **propone** los equipos
+que todavía no están en el inventario. No crea hosts: el inventario sigue siendo la fuente única de
+verdad.
+
+1. Ingresar la red o rango (`192.168.88.0/24`, `192.168.88.1-60` o IPs separadas por comas;
+   máximo 1024 direcciones) y presionar **Escanear**.
+2. El Zabbix server ejecuta la regla en 10 a 60 segundos; la página se actualiza sola cada 5 s y
+   avisa cuando los resultados dejan de cambiar.
+3. Revisar las tres listas:
+   - **Equipos nuevos**: respondieron y no están en Zabbix. Cada uno trae el tipo detectado y los
+     perfiles sugeridos: *Router Mikrotik* (`mikrotik_snmp`), *Radio airMAX* (`airos_snmp`),
+     *Gestión web sin SNMP* (UniFi, airCube) o *Solo responde ping* (`icmp`).
+   - **Ya inventariados**: con una sugerencia si responden SNMP y les falta el perfil
+     correspondiente.
+   - **Inventariados que no respondieron**: equipos monitoreados con IP en el rango que no
+     contestaron a ningún chequeo.
+4. Marcar los equipos a sumar, **Copiar** la propuesta YAML, pegarla en `dispositivos:` del sitio
+   que corresponda (o en `elementos:` agregando `rol`, `estado` y `mapa`), completar lo marcado
+   `COMPLETAR` (función, modelo, padre) y aplicar con `bin/lagunitas aprovisionar`. La validación
+   del inventario rechaza un `padre` o una `funcion` sin completar.
+
+Desde la consola hace lo mismo y compara contra el archivo de inventario:
+
+```bash
+bin/lagunitas descubrir 192.168.88.0/24                 # escanea, espera y muestra la propuesta
+bin/lagunitas descubrir --resultados                    # vuelve a mostrar el último escaneo
+bin/lagunitas descubrir 192.168.88.0/24 --salida nuevos.yaml
+```
+
+Qué hace por debajo: crea la regla de descubrimiento *Las Lagunitas - Escaneo bajo demanda*
+(*Data collection → Discovery*) con chequeos ICMP, SNMP v2c (`sysDescr`, `sysObjectID`,
+`sysName`) y HTTPS 443. Cada escaneo la vuelve a crear para descartar resultados viejos; mientras
+existe se repite una vez por día. La comunidad SNMP es la macro global `{$SNMP_COMMUNITY}`, que
+`bin/lagunitas aprovisionar` carga desde `SNMP_COMMUNITY` del `.env`.
+
+> En el laboratorio con Colima, la máquina virtual contesta el ping por cualquier IP fuera de la
+> red simulada: al escanear la red de la casa, marcar *Ignorar equipos que solo responden ping*
+> (o `--ignorar-solo-ping` en la consola). En producción no hace falta.
+
 ---
 
 ## Pruebas de alarma controladas
@@ -400,6 +442,7 @@ bin/lagunitas verificar                       # salud
 bin/lagunitas validar                         # valida el inventario (sin Zabbix)
 bin/lagunitas probar-snmp <ip>                # prueba SNMP antes de integrar un equipo
 bin/lagunitas unifi-ids <ip> <puerto>         # IDs de site/AP de un controlador UniFi
+bin/lagunitas descubrir <rango>               # equipos de la red que faltan en el inventario
 COMPOSE_DIR=deploy/produccion scripts/backup.sh /var/backups/zabbix   # respaldo
 (cd deploy/produccion && docker compose ps)   # estado del stack
 (cd deploy/produccion && docker compose logs --tail 50 zabbix-server)   # logs

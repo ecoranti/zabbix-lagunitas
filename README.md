@@ -21,6 +21,7 @@ despliegue productivo, y cualquier cambio en la red se aplica con un solo comand
 | Módulo **Disponibilidad de la red** (Reports) | Reporte técnico/gerencial con filtros de período, grupo, equipo, tipo y mantenimientos; disponibilidad *propia* y *de servicio*, indicador detectado, salud y estado actual, MTTR, conclusiones, CSV y PDF. **Detalle técnico** por equipo: comportamiento de cada métrica (actual/promedio/extremo, tendencia, horas fuera de umbral), interfaces, estaciones, problemas agrupados con *flapping* y recomendaciones. |
 | Laboratorio con SNMP simulado | `lab/snmpsim`: agentes SNMP con los OIDs reales de Ubiquiti airMAX y Mikrotik, y escenarios de falla (señal débil, interferencia, batería baja, sin Internet) para validar alertas sin hardware. |
 | Diagnóstico de integración | `bin/lagunitas probar-snmp <ip>` y `bin/lagunitas unifi-ids <ip> <puerto>`. |
+| Módulo **Descubrimiento de equipos** (Monitoring) | Escanea un rango (ICMP, SNMP, HTTPS) con el *network discovery* de Zabbix, clasifica lo que responde y propone el bloque YAML para sumar al inventario los equipos que faltan. No crea hosts. También por consola: `bin/lagunitas descubrir <rango>`. |
 | Dashboard **Las Lagunitas - Centro de monitoreo** | Páginas: Equipos · Estado de la red (panal + mapa + alertas) · Detalle por equipo (navegador) · AP UniFi · SLA. |
 | Servicios y SLA | Árbol de servicios Red → rol → equipo y SLA mensual (objetivo 99,5 %). |
 | Alertas | Grupo *Operadores Las Lagunitas*, acción de notificación (≥ Average) y Telegram opcional. |
@@ -66,7 +67,7 @@ bin/lagunitas lab escenario Walter normal
 ```
 config/                 inventarios (lab y producción)
 lagunitas/              provisionador (Python) — python -m lagunitas / bin/lagunitas
-zabbix/modules/         módulos del frontend (widget y reporte, PHP/JS/CSS)
+zabbix/modules/         módulos del frontend (widget, reporte y descubrimiento, PHP/JS/CSS)
 zabbix/export/          templates y mapa exportados en YAML (bin/lagunitas exportar)
 lab/snmpsim/            agentes SNMP simulados (airMAX AP/SM, Mikrotik) para el laboratorio
 deploy/produccion/      docker compose + Caddy para el servidor productivo

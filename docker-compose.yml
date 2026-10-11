@@ -67,6 +67,7 @@ services:
       # Módulos propios del frontend (widget "Red Las Lagunitas" y reporte de disponibilidad)
       - ./zabbix/modules/lagunitas-red:/usr/share/zabbix/modules/lagunitas-red:ro
       - ./zabbix/modules/lagunitas-reportes:/usr/share/zabbix/modules/lagunitas-reportes:ro
+      - ./zabbix/modules/lagunitas-descubrimiento:/usr/share/zabbix/modules/lagunitas-descubrimiento:ro
     networks:
       - zabbix_net
     depends_on:
