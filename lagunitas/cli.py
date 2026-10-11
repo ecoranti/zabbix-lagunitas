@@ -5,7 +5,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import __version__, alerts, dashboards, diagnostico, hosts, lab, modules, services, templates, topology_map
+from . import __version__, alerts, dashboards, descubrimiento, diagnostico, hosts, lab, modules, services, templates, topology_map
 from .config import InventoryError, ROOT, load_env, load_inventory, settings
 from .model import SITIO_GRUPO, TEMPLATE_GRUPO
 from .zbx import ZabbixAPI
@@ -57,6 +57,7 @@ def cmd_aprovisionar(args) -> None:
         hosts.ensure_zabbix_server_host(api)
         from .model import REFRESCO_WIDGETS
         hosts.ensure_refresco_usuarios(api, REFRESCO_WIDGETS)
+        descubrimiento.ensure_comunidad(api)
     sysmapid = slaid = raiz = None
     if "mapa" in pasos:
         print("[mapa]")
@@ -152,6 +153,59 @@ def cmd_exportar(args) -> None:
     api.close()
 
 
+def cmd_descubrir(args) -> None:
+    """Detectar y proponer: escanea un rango y muestra los equipos que no están en el inventario."""
+    inv, api = _inventario(args.inventario), _api()
+    if args.rango and not args.resultados:
+        try:
+            descubrimiento.direcciones(args.rango)
+        except ValueError as exc:
+            sys.exit(str(exc))
+        if not args.comunidad:
+            descubrimiento.ensure_comunidad(api)
+        druleid = descubrimiento.iniciar(api, args.rango, args.comunidad)
+        print(f"Escaneo de {args.rango} iniciado (regla '{descubrimiento.REGLA_NOMBRE}').")
+        if args.sin_esperar:
+            print("Ver resultados más tarde con:  bin/lagunitas descubrir --resultados")
+            api.close()
+            return
+        print("Esperando resultados (el Zabbix server toma la regla en 10-60 s)...")
+        equipos = descubrimiento.esperar(api, druleid, timeout=args.timeout)
+        rango = args.rango
+    else:
+        r = descubrimiento.regla(api)
+        if not r:
+            sys.exit("No hay escaneos previos. Uso: bin/lagunitas descubrir 10.50.0.0/24")
+        equipos, rango = descubrimiento.resultados(api), r["iprange"]
+    api.close()
+    if args.ignorar_solo_ping:
+        equipos = [e for e in equipos if e["tipo"] != "ping"]
+    c = descubrimiento.comparar(equipos, inv, rango)
+    print(f"\nRango {rango}: {len(equipos)} equipos respondieron — {len(c['nuevos'])} nuevos, "
+          f"{len(c['conocidos'])} ya inventariados, {len(c['ausentes'])} inventariados sin respuesta.")
+    if c["conocidos"]:
+        print("\nYa inventariados:")
+        for e in c["conocidos"]:
+            extra = f"  -> sugerencia: agregar perfil {', '.join(e['faltan_perfiles'])}" if e["faltan_perfiles"] else ""
+            print(f"  {e['ip']:<15} {e['host']:<28} {e['tipo_texto']}{extra}")
+    if c["ausentes"]:
+        print("\nInventariados (operativos) que no respondieron:")
+        for x in c["ausentes"]:
+            print(f"  {x['ip']:<15} {x['host']}")
+    if not c["nuevos"]:
+        print("\nNo hay equipos nuevos para proponer.")
+        return
+    print("\nEquipos nuevos:")
+    for e in c["nuevos"]:
+        print(f"  {e['ip']:<15} {e['tipo_texto']}" + (f" ({e['sysname']})" if e["sysname"] else ""))
+    yaml_txt = descubrimiento.propuesta_yaml(c["nuevos"], set(inv["por_host"]))
+    if args.salida:
+        Path(args.salida).write_text(yaml_txt, encoding="utf-8")
+        print(f"\nPropuesta guardada en {args.salida}")
+    else:
+        print("\n" + yaml_txt)
+
+
 def cmd_lab(args) -> None:
     inv = _inventario(args.inventario)
     {"levantar": lambda: lab.levantar(inv), "apagar": lab.apagar,
@@ -176,6 +230,17 @@ def main(argv=None) -> None:
     sub.add_parser("validar", help="valida el inventario (sin conectarse a Zabbix)").set_defaults(func=cmd_validar)
     sub.add_parser("verificar", help="chequeo de salud de la configuración").set_defaults(func=cmd_verificar)
     sub.add_parser("exportar", help="exporta templates y mapa a zabbix/export/").set_defaults(func=cmd_exportar)
+
+    d = sub.add_parser("descubrir", help="escanea un rango y propone los equipos que faltan en el inventario")
+    d.add_argument("rango", nargs="?", help="ej. 10.50.0.0/24 o 192.168.88.1-60 (sin rango: último escaneo)")
+    d.add_argument("--resultados", action="store_true", help="mostrar el último escaneo sin volver a escanear")
+    d.add_argument("--comunidad", help="comunidad SNMP v2c (por defecto SNMP_COMMUNITY de .env)")
+    d.add_argument("--sin-esperar", action="store_true", help="iniciar el escaneo y salir")
+    d.add_argument("--timeout", type=int, default=300, help="segundos máximos de espera (300)")
+    d.add_argument("--ignorar-solo-ping", action="store_true",
+                   help="descartar equipos que solo responden ping (útil en el LAB con Colima)")
+    d.add_argument("--salida", help="guardar la propuesta YAML en este archivo")
+    d.set_defaults(func=cmd_descubrir)
 
     ps = sub.add_parser("probar-snmp", help="verifica SNMP de un equipo antes de integrarlo")
     ps.add_argument("ip")

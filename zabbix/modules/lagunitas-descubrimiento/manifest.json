@@ -1,0 +1,35 @@
+{
+	"manifest_version": 2.0,
+	"id": "lagunitas_descubrimiento",
+	"name": "Descubrimiento de equipos - Las Lagunitas",
+	"namespace": "LagunitasDescubrimiento",
+	"version": "1.0.0",
+	"author": "Elías Coranti — PPS UNRC / Red Comunitaria y Científica Las Lagunitas",
+	"description": "Escanea un rango de IPs con el network discovery de Zabbix (ICMP, SNMP, HTTPS), clasifica lo que responde y propone el bloque YAML para sumar al inventario los equipos que faltan. No crea hosts.",
+	"url": "https://github.com/ecoranti/zabbix-lagunitas",
+	"actions": {
+		"lagunitas.descubrimiento": {
+			"class": "DescubrimientoVista",
+			"view": "lagunitas.descubrimiento",
+			"layout": "layout.htmlpage"
+		},
+		"lagunitas.descubrimiento.escanear": {
+			"class": "DescubrimientoEscanear",
+			"view": "lagunitas.descubrimiento.json",
+			"layout": "layout.json"
+		},
+		"lagunitas.descubrimiento.resultados": {
+			"class": "DescubrimientoResultados",
+			"view": "lagunitas.descubrimiento.json",
+			"layout": "layout.json"
+		}
+	},
+	"assets": {
+		"css": [
+			"descubrimiento.css"
+		],
+		"js": [
+			"descubrimiento.js"
+		]
+	}
+}

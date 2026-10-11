@@ -118,7 +118,13 @@ class Html {
 				.self::e($k).'">'.self::e($v).'</button>';
 		}
 
-		return $out.'</div></div>';
+		$out .= '</div>';
+		if (\CWebUser::getType() >= USER_TYPE_ZABBIX_ADMIN) {
+			$out .= '<a class="lg-chip lg-scan" href="zabbix.php?action=lagunitas.descubrimiento" '
+				.'title="Escanear un rango de IPs y proponer los equipos que faltan en el inventario">Escanear red</a>';
+		}
+
+		return $out.'</div>';
 	}
 
 	public static function seccion(string $titulo, array $ids, array $equipos): string {
