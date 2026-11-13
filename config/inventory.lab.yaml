@@ -30,6 +30,9 @@
 sitio: Las Lagunitas
 entorno: lab
 descripcion: Laboratorio Docker (Mac M3 / Colima) que replica la topología real.
+# Historial crudo que se conserva (las tendencias horarias se mantienen 365d). En el
+# lab, con mediciones cada 10 s, 90 días ocupan varios GB; producción no lo define.
+retencion_historial: 7d
 
 elementos:
   # --------------------------------------------------------------- Gateway

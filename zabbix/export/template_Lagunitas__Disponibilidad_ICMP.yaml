@@ -15,7 +15,7 @@ zabbix_export:
           name: 'Disponibilidad (ICMP)'
           type: SIMPLE
           key: icmpping
-          delay: 30s
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           description: '1 si el equipo responde al ping, 0 si no responde.'
           valuemap:
@@ -27,8 +27,9 @@ zabbix_export:
             - uuid: 735a342d9ee247cb9a37cb2de3fd2303
               expression: 'max(/Lagunitas - Disponibilidad ICMP/icmpping,{$ICMP.CAIDA.PERIODO})=0'
               name: '{HOST.NAME}: sin respuesta (ICMP)'
+              opdata: Caído
               priority: HIGH
-              description: 'El equipo no respondió al ping durante {$ICMP.CAIDA.PERIODO} (chequeo cada 30 s). Revisar alimentación (panel solar/batería), el enlace hacia su equipo padre y el propio equipo. Si el padre también está caído, esta alerta queda suprimida por dependencia.'
+              description: 'El equipo no respondió al ping durante {$ICMP.CAIDA.PERIODO} (chequeo cada {$LAGUNITAS.INTERVALO}). Revisar alimentación (panel solar/batería), el enlace hacia su equipo padre y el propio equipo. Si el padre también está caído, esta alerta queda suprimida por dependencia.'
               tags:
                 - tag: alcance
                   value: disponibilidad
@@ -38,6 +39,7 @@ zabbix_export:
           name: 'Pérdida de paquetes (ICMP)'
           type: SIMPLE
           key: icmppingloss
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           value_type: FLOAT
           units: '%'
@@ -63,6 +65,7 @@ zabbix_export:
           name: 'Latencia (ICMP)'
           type: SIMPLE
           key: icmppingsec
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           value_type: FLOAT
           units: s
@@ -88,7 +91,6 @@ zabbix_export:
           name: 'Disponibilidad últimos 7 días'
           type: CALCULATED
           key: 'lagunitas.disponibilidad[7d]'
-          delay: 15m
           history: 90d
           value_type: FLOAT
           units: '%'
@@ -100,7 +102,6 @@ zabbix_export:
           name: 'Disponibilidad últimas 24 h'
           type: CALCULATED
           key: 'lagunitas.disponibilidad[24h]'
-          delay: 5m
           history: 90d
           value_type: FLOAT
           units: '%'
@@ -116,7 +117,7 @@ zabbix_export:
       macros:
         - macro: '{$ICMP.CAIDA.PERIODO}'
           value: 90s
-          description: 'Tiempo sin respuesta al ping (chequeo cada 30 s) para declarar el equipo caído'
+          description: 'Tiempo sin respuesta al ping para declarar el equipo caído'
         - macro: '{$ICMP.LATENCIA.WARN}'
           value: '0.15'
           description: 'Latencia promedio (s) en 5 min que dispara advertencia (150 ms)'
@@ -139,6 +140,9 @@ zabbix_export:
                       value:
                         host: 'Lagunitas - Disponibilidad ICMP'
                         key: icmpping
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'
@@ -170,7 +174,7 @@ zabbix_export:
                   height: '6'
                   fields:
                     - type: STRING
-                      name: ds.0.color
+                      name: ds.0.color.0
                       value: 1E88E5
                     - type: INTEGER
                       name: ds.0.dataset_type
@@ -198,6 +202,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                 - type: svggraph
                   name: 'Disponibilidad (1 = activo, 0 = caído)'
                   'y': '10'
@@ -205,7 +212,7 @@ zabbix_export:
                   height: '5'
                   fields:
                     - type: STRING
-                      name: ds.0.color
+                      name: ds.0.color.0
                       value: 43A047
                     - type: INTEGER
                       name: ds.0.dataset_type
@@ -236,6 +243,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                 - type: item
                   name: 'Disponibilidad 24 h'
                   x: '18'
@@ -250,6 +260,9 @@ zabbix_export:
                       value:
                         host: 'Lagunitas - Disponibilidad ICMP'
                         key: 'lagunitas.disponibilidad[24h]'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'
@@ -292,6 +305,9 @@ zabbix_export:
                         host: 'Lagunitas - Disponibilidad ICMP'
                         key: 'lagunitas.disponibilidad[7d]'
                     - type: INTEGER
+                      name: rf_rate
+                      value: '10'
+                    - type: INTEGER
                       name: show.0
                       value: '1'
                     - type: INTEGER
@@ -326,7 +342,7 @@ zabbix_export:
                   height: '6'
                   fields:
                     - type: STRING
-                      name: ds.0.color
+                      name: ds.0.color.0
                       value: E53935
                     - type: INTEGER
                       name: ds.0.dataset_type
@@ -357,6 +373,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                 - type: item
                   name: 'Latencia actual'
                   x: '54'
@@ -371,6 +390,9 @@ zabbix_export:
                       value:
                         host: 'Lagunitas - Disponibilidad ICMP'
                         key: icmppingsec
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'

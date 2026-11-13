@@ -63,7 +63,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '127'
+          selementid: '211'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -88,7 +88,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '128'
+          selementid: '212'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -113,7 +113,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '129'
+          selementid: '213'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -138,7 +138,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '130'
+          selementid: '214'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -163,7 +163,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '119'
+          selementid: '203'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -188,7 +188,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '120'
+          selementid: '204'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -213,7 +213,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '118'
+          selementid: '202'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -238,7 +238,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '122'
+          selementid: '206'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -263,7 +263,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '132'
+          selementid: '216'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -288,7 +288,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '121'
+          selementid: '205'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -313,7 +313,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '140'
+          selementid: '224'
           icon_off:
             name: Hub_(48)
           icon_on: {  }
@@ -338,7 +338,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '131'
+          selementid: '215'
           icon_off:
             name: House_(64)
           icon_on: {  }
@@ -363,7 +363,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '114'
+          selementid: '198'
           icon_off:
             name: Satellite_antenna_(64)
           icon_on: {  }
@@ -388,7 +388,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '115'
+          selementid: '199'
           icon_off:
             name: Satellite_antenna_(64)
           icon_on: {  }
@@ -413,7 +413,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '123'
+          selementid: '207'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -438,7 +438,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '134'
+          selementid: '218'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -463,7 +463,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '113'
+          selementid: '197'
           icon_off:
             name: Router_(64)
           icon_on: {  }
@@ -488,7 +488,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '116'
+          selementid: '200'
           icon_off:
             name: Satellite_antenna_(64)
           icon_on: {  }
@@ -513,7 +513,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '117'
+          selementid: '201'
           icon_off:
             name: Satellite_antenna_(64)
           icon_on: {  }
@@ -538,7 +538,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '124'
+          selementid: '208'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -563,7 +563,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '135'
+          selementid: '219'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -588,7 +588,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '126'
+          selementid: '210'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -613,7 +613,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '125'
+          selementid: '209'
           icon_off:
             name: Switch_(48)
           icon_on: {  }
@@ -638,7 +638,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '133'
+          selementid: '217'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -663,7 +663,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '136'
+          selementid: '220'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -688,7 +688,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '137'
+          selementid: '221'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -713,7 +713,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '138'
+          selementid: '222'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -738,7 +738,7 @@ zabbix_export:
           height: '200'
           viewtype: '0'
           use_iconmap: '1'
-          selementid: '139'
+          selementid: '223'
           icon_off:
             name: House_(48)
           icon_on: {  }
@@ -879,8 +879,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '118'
-          selementid2: '127'
+          selementid1: '202'
+          selementid2: '211'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -891,8 +891,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '119'
-          selementid2: '128'
+          selementid1: '203'
+          selementid2: '212'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -903,8 +903,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '120'
-          selementid2: '129'
+          selementid1: '204'
+          selementid2: '213'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -915,14 +915,14 @@ zabbix_export:
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '122'
-          selementid2: '130'
+          selementid1: '206'
+          selementid2: '214'
           linktriggers: {  }
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '114'
-          selementid2: '119'
+          selementid1: '198'
+          selementid2: '203'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -933,8 +933,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '115'
-          selementid2: '120'
+          selementid1: '199'
+          selementid2: '204'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -945,8 +945,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '114'
-          selementid2: '118'
+          selementid1: '198'
+          selementid2: '202'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -957,14 +957,14 @@ zabbix_export:
         - drawtype: '4'
           color: F9A825
           label: ''
-          selementid1: '121'
-          selementid2: '122'
+          selementid1: '205'
+          selementid2: '206'
           linktriggers: {  }
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '131'
-          selementid2: '132'
+          selementid1: '215'
+          selementid2: '216'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -975,14 +975,14 @@ zabbix_export:
         - drawtype: '4'
           color: F9A825
           label: ''
-          selementid1: '115'
-          selementid2: '121'
+          selementid1: '199'
+          selementid2: '205'
           linktriggers: {  }
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '123'
-          selementid2: '131'
+          selementid1: '207'
+          selementid2: '215'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -993,8 +993,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '114'
-          selementid2: '115'
+          selementid1: '198'
+          selementid2: '199'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -1005,8 +1005,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '113'
-          selementid2: '114'
+          selementid1: '197'
+          selementid2: '198'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -1017,8 +1017,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '114'
-          selementid2: '116'
+          selementid1: '198'
+          selementid2: '200'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -1029,8 +1029,8 @@ zabbix_export:
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '117'
-          selementid2: '123'
+          selementid1: '201'
+          selementid2: '207'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -1041,14 +1041,14 @@ zabbix_export:
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '124'
-          selementid2: '134'
+          selementid1: '208'
+          selementid2: '218'
           linktriggers: {  }
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '116'
-          selementid2: '117'
+          selementid1: '200'
+          selementid2: '201'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -1059,20 +1059,20 @@ zabbix_export:
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '117'
-          selementid2: '124'
+          selementid1: '201'
+          selementid2: '208'
           linktriggers: {  }
         - drawtype: '4'
           color: F9A825
           label: ''
-          selementid1: '117'
-          selementid2: '126'
+          selementid1: '201'
+          selementid2: '210'
           linktriggers: {  }
         - drawtype: '0'
           color: 2E7D32
           label: ''
-          selementid1: '117'
-          selementid2: '133'
+          selementid1: '201'
+          selementid2: '217'
           linktriggers:
             - drawtype: '2'
               color: E53935
@@ -1083,36 +1083,36 @@ zabbix_export:
         - drawtype: '4'
           color: F9A825
           label: ''
-          selementid1: '117'
-          selementid2: '138'
+          selementid1: '201'
+          selementid2: '222'
           linktriggers: {  }
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '124'
-          selementid2: '135'
+          selementid1: '208'
+          selementid2: '219'
           linktriggers: {  }
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '124'
-          selementid2: '125'
+          selementid1: '208'
+          selementid2: '209'
           linktriggers: {  }
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '126'
-          selementid2: '136'
+          selementid1: '210'
+          selementid2: '220'
           linktriggers: {  }
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '126'
-          selementid2: '137'
+          selementid1: '210'
+          selementid2: '221'
           linktriggers: {  }
         - drawtype: '3'
           color: 9E9E9E
           label: ''
-          selementid1: '125'
-          selementid2: '139'
+          selementid1: '209'
+          selementid2: '223'
           linktriggers: {  }

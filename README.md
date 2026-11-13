@@ -1,5 +1,7 @@
 # Monitoreo de la Red Comunitaria y Científica Las Lagunitas (Zabbix 7.0)
 
+**Versión 2.3** · Zabbix 7.0 LTS
+
 Sistema de monitoreo para la red WISP comunitaria de **Las Lagunitas** (Alpa Corral, Córdoba),
 desarrollado en el marco de la Práctica Profesional Supervisada — Ingeniería en
 Telecomunicaciones, UNRC.
@@ -24,8 +26,8 @@ despliegue productivo, y cualquier cambio en la red se aplica con un solo comand
 | Dashboard **Las Lagunitas - Centro de monitoreo** | Páginas: Equipos · Estado de la red (panal + mapa + alertas) · Detalle por equipo (navegador) · AP UniFi · SLA. |
 | Servicios y SLA | Árbol de servicios Red → rol → equipo y SLA mensual (objetivo 99,5 %). |
 | Alertas | Grupo *Operadores Las Lagunitas*, acción de notificación (≥ Average) y Telegram opcional. |
-| `deploy/produccion/` | Stack productivo con HTTPS (Caddy), volúmenes con nombre y logs rotados. |
-| `scripts/` | Backup/restauración de la base y arranque automático (launchd). |
+| `deploy/produccion/` | Stack productivo para el servidor del nodo UNRC: HTTPS (Caddy), volúmenes con nombre y logs rotados. |
+| `scripts/` | Backup y restauración de la base (con verificación del volcado antes de restaurar), arranque automático (launchd) y generadores de la documentación en Word y de la presentación de capacitación. |
 
 ## Inicio rápido
 
@@ -58,8 +60,16 @@ bin/lagunitas lab escenario Walter normal
 - [Guía de integración de equipos](docs/guia-integracion-equipos.md): cómo incorporar cada tipo de equipo (airMAX, Mikrotik, airCube, UniFi), qué datos y alertas aporta, y cómo validarlo.
 - [Manual de administración](docs/manual-administracion.md): operación diaria, alarmas, altas/bajas de equipos, backups y resolución de problemas.
 - [Guía del laboratorio](docs/laboratorio.md): puesta en marcha y uso del laboratorio en la Mac (arranque, pruebas de alertas, AP real con sonda ICMP, problemas frecuentes). Solo desarrollo; no forma parte de producción.
-- Versiones Word de las guías: `docs/*.docx`. Se regeneran desde el Markdown con
-  `.venv/bin/pip install -r requirements-docs.txt` y `scripts/md2docx.py <origen.md> <destino.docx>`.
+- **Capacitación comunitaria** (`docs/Capacitacion comunitaria - Red Las Lagunitas.pptx`): presentación de unos 90 minutos para integrantes de la red, con notas del orador en cada diapositiva para dictarla o seguirla sin instructor. Cubre la red y sus dependencias, el tablero y el mapa, la ficha de cada equipo, qué hacer ante una alarma (incluido Telegram), el reporte de disponibilidad, una actividad práctica, preguntas de repaso y glosario.
+
+Todas las guías están en la versión 2.3 y sus versiones Word están en `docs/*.docx`. Para regenerarlas
+desde el Markdown (con la portada institucional) y regenerar la presentación:
+
+```bash
+.venv/bin/pip install -r requirements-docs.txt
+.venv/bin/python scripts/md2docx.py --portada docs/plantilla/portada-unrc.docx docs/guia-implementacion.md "docs/Guia de implementacion - Red Las Lagunitas.docx"
+.venv/bin/python scripts/capacitacion-pptx.py     # toma los umbrales del código
+```
 
 ## Estructura
 
@@ -72,7 +82,7 @@ lab/snmpsim/            agentes SNMP simulados (airMAX AP/SM, Mikrotik) para el 
 deploy/produccion/      docker compose + Caddy para el servidor productivo
 scripts/                backup, restauración, arranque automático
 legacy/                 scripts de la versión 1 (histórico, no usar)
-docs/                   guías y material de referencia
+docs/                   guías (Markdown y Word), informe de la PPS y presentación de capacitación
 ```
 
 ## Agradecimientos

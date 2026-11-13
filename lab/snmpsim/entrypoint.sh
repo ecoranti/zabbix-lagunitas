@@ -20,5 +20,7 @@ chown -R snmpsim /tmp/snmp
 SCRIPT
 chmod +x /usr/local/bin/perfil-reset
 /usr/local/bin/perfil-reset
+# Solo errores: con log-level info cada consulta de Zabbix (cada 10 s) queda en el log del
+# contenedor y en semanas ocupa GB por equipo.
 exec snmpsim-command-responder --data-dir=/tmp/snmp --agent-udpv4-endpoint=0.0.0.0:161 \
-  --process-user=snmpsim --process-group=snmpsim --cache-dir=/tmp/snmp/cache
+  --process-user=snmpsim --process-group=snmpsim --cache-dir=/tmp/snmp/cache --log-level=error

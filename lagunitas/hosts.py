@@ -267,3 +267,12 @@ def ensure_refresco_usuarios(api: ZabbixAPI, segundos: int, log=print) -> None:
     for userid in cambiar:
         api.call("user.update", {"userid": userid, "refresh": valor})
     log(f"  refresco del frontend: {valor} ({len(cambiar)} usuario(s) actualizados)")
+
+
+def ensure_retencion(api: ZabbixAPI, inv: dict, log=print) -> None:
+    """Retención global del historial (Housekeeping) si el inventario la define (`retencion_historial`)."""
+    periodo = inv.get("retencion_historial")
+    if not periodo:
+        return
+    api.call("housekeeping.update", {"hk_history_mode": 1, "hk_history_global": 1, "hk_history": periodo})
+    log(f"  historial: se conservan {periodo} (las tendencias no cambian)")

@@ -16,6 +16,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 'walk[1.3.6.1.2.1.25.3.3.1.2]'
           key: mikrotik.cpu
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           value_type: FLOAT
           units: '%'
@@ -45,6 +46,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.6.1.0]'
           key: mikrotik.dhcp.clientes
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           description: 'Dispositivos con IP asignada por el Mikrotik (aprox. usuarios conectados).'
           tags:
@@ -84,6 +86,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 'get[1.3.6.1.2.1.25.2.3.1.6.65536]'
           key: mikrotik.memoria.usada
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           units: B
           preprocessing:
@@ -97,6 +100,7 @@ zabbix_export:
           name: 'Memoria: uso'
           type: CALCULATED
           key: mikrotik.memoria.uso
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           value_type: FLOAT
           units: '%'
@@ -210,6 +214,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 'get[1.3.6.1.2.1.1.3.0]'
           key: mikrotik.sistema.uptime
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           units: uptime
           preprocessing:
@@ -245,7 +250,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.3.10.0]'
           key: mikrotik.temperatura
-          delay: 5m
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           value_type: FLOAT
           units: °C
@@ -272,7 +277,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.3.11.0]'
           key: mikrotik.temperatura.cpu
-          delay: 5m
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           value_type: FLOAT
           units: °C
@@ -288,6 +293,7 @@ zabbix_export:
           type: SNMP_AGENT
           snmp_oid: 'get[1.3.6.1.4.1.14988.1.1.3.8.0]'
           key: mikrotik.voltaje
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           value_type: FLOAT
           units: V
@@ -339,6 +345,7 @@ zabbix_export:
           name: 'SNMP: disponibilidad del agente'
           type: INTERNAL
           key: 'zabbix[host,snmp,available]'
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 30d
           valuemap:
             name: 'SNMP - Disponibilidad'
@@ -364,7 +371,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'get[1.3.6.1.2.1.2.2.1.14.{#SNMPINDEX}]'
               key: 'mikrotik.if.errin[{#IFNAME}]'
-              delay: 3m
+              delay: '{$LAGUNITAS.INTERVALO}'
               history: 30d
               value_type: FLOAT
               units: /s
@@ -395,7 +402,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'get[1.3.6.1.2.1.2.2.1.20.{#SNMPINDEX}]'
               key: 'mikrotik.if.errout[{#IFNAME}]'
-              delay: 3m
+              delay: '{$LAGUNITAS.INTERVALO}'
               history: 30d
               value_type: FLOAT
               units: /s
@@ -413,6 +420,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'get[1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}]'
               key: 'mikrotik.if.estado[{#IFNAME}]'
+              delay: '{$LAGUNITAS.INTERVALO}'
               history: 90d
               valuemap:
                 name: 'IF-MIB - Estado de interfaz'
@@ -446,6 +454,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.6.{#SNMPINDEX}]'
               key: 'mikrotik.if.in[{#IFNAME}]'
+              delay: '{$LAGUNITAS.INTERVALO}'
               history: 30d
               units: bps
               preprocessing:
@@ -465,6 +474,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'get[1.3.6.1.2.1.31.1.1.1.10.{#SNMPINDEX}]'
               key: 'mikrotik.if.out[{#IFNAME}]'
+              delay: '{$LAGUNITAS.INTERVALO}'
               history: 30d
               units: bps
               preprocessing:
@@ -517,6 +527,7 @@ zabbix_export:
               type: SNMP_AGENT
               snmp_oid: 'get[1.3.6.1.2.1.2.2.1.8.{#SNMPINDEX}]'
               key: 'mikrotik.wan.estado[{#IFNAME}]'
+              delay: '{$LAGUNITAS.INTERVALO}'
               history: 90d
               valuemap:
                 name: 'IF-MIB - Estado de interfaz'
@@ -601,6 +612,9 @@ zabbix_export:
                       name: min
                       value: '10'
                     - type: INTEGER
+                      name: rf_rate
+                      value: '10'
+                    - type: INTEGER
                       name: show.0
                       value: '1'
                     - type: INTEGER
@@ -663,6 +677,9 @@ zabbix_export:
                         host: 'Lagunitas - Mikrotik por SNMP'
                         key: mikrotik.dhcp.clientes
                     - type: INTEGER
+                      name: rf_rate
+                      value: '10'
+                    - type: INTEGER
                       name: show.0
                       value: '1'
                     - type: INTEGER
@@ -675,7 +692,7 @@ zabbix_export:
                   height: '6'
                   fields:
                     - type: STRING
-                      name: ds.0.color
+                      name: ds.0.color.0
                       value: FB8C00
                     - type: INTEGER
                       name: ds.0.dataset_type
@@ -700,6 +717,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                 - type: svggraph
                   name: 'Tráfico por interfaz'
                   'y': '14'
@@ -757,6 +777,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                 - type: gauge
                   name: CPU
                   x: '18'
@@ -777,6 +800,9 @@ zabbix_export:
                     - type: STRING
                       name: min
                       value: '0'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'
@@ -829,6 +855,9 @@ zabbix_export:
                         host: 'Lagunitas - Mikrotik por SNMP'
                         key: mikrotik.sistema.routeros
                     - type: INTEGER
+                      name: rf_rate
+                      value: '10'
+                    - type: INTEGER
                       name: show.0
                       value: '1'
                     - type: INTEGER
@@ -854,6 +883,9 @@ zabbix_export:
                     - type: STRING
                       name: min
                       value: '0'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'
@@ -906,6 +938,9 @@ zabbix_export:
                         host: 'Lagunitas - Mikrotik por SNMP'
                         key: mikrotik.sistema.modelo
                     - type: INTEGER
+                      name: rf_rate
+                      value: '10'
+                    - type: INTEGER
                       name: show.0
                       value: '1'
                     - type: INTEGER
@@ -919,7 +954,7 @@ zabbix_export:
                   height: '6'
                   fields:
                     - type: STRING
-                      name: ds.0.color
+                      name: ds.0.color.0
                       value: 43A047
                     - type: INTEGER
                       name: ds.0.dataset_type
@@ -950,6 +985,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                 - type: gauge
                   name: Temperatura
                   x: '54'
@@ -970,6 +1008,9 @@ zabbix_export:
                     - type: STRING
                       name: min
                       value: '0'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'
@@ -1021,6 +1062,9 @@ zabbix_export:
                       value:
                         host: 'Lagunitas - Mikrotik por SNMP'
                         key: mikrotik.sistema.uptime
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'

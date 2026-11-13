@@ -30,6 +30,7 @@ zabbix_export:
           name: 'AP: clientes del sitio (JSON crudo)'
           type: HTTP_AGENT
           key: ap.clients.raw
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 1d
           value_type: TEXT
           trends: '0'
@@ -78,7 +79,7 @@ zabbix_export:
           name: 'AP: dispositivo (JSON crudo)'
           type: HTTP_AGENT
           key: ap.device.raw
-          delay: 2m
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 1d
           value_type: TEXT
           trends: '0'
@@ -338,6 +339,7 @@ zabbix_export:
           name: 'AP: estadísticas (JSON crudo)'
           type: HTTP_AGENT
           key: ap.stats.raw
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 1d
           value_type: TEXT
           trends: '0'
@@ -359,7 +361,7 @@ zabbix_export:
               description: 'La API responde pero no entrega estadísticas: revisar API key, site/device ID.'
               dependencies:
                 - name: '{HOST.NAME}: controlador UniFi no accesible'
-                  expression: 'max(/Lagunitas - AP UniFi por API/net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}],#3)=0'
+                  expression: 'max(/Lagunitas - AP UniFi por API/net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}],3m)=0'
               tags:
                 - tag: alcance
                   value: api
@@ -434,6 +436,7 @@ zabbix_export:
           name: 'Controlador UniFi: HTTPS accesible'
           type: SIMPLE
           key: 'net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}]'
+          delay: '{$LAGUNITAS.INTERVALO}'
           history: 90d
           valuemap:
             name: 'Lagunitas - Servicio'
@@ -442,7 +445,7 @@ zabbix_export:
               value: api
           triggers:
             - uuid: 9bd1fb5cf21845f28832ff532c3115e9
-              expression: 'max(/Lagunitas - AP UniFi por API/net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}],#3)=0'
+              expression: 'max(/Lagunitas - AP UniFi por API/net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}],3m)=0'
               name: '{HOST.NAME}: controlador UniFi no accesible'
               priority: AVERAGE
               description: 'No se puede abrir conexión HTTPS con el controlador UniFi: sin él no hay métricas del AP. Verificar que UniFi OS Server esté encendido y el puerto.'
@@ -503,6 +506,9 @@ zabbix_export:
                         host: 'Lagunitas - AP UniFi por API'
                         key: ap.disponible
                     - type: INTEGER
+                      name: rf_rate
+                      value: '10'
+                    - type: INTEGER
                       name: show.0
                       value: '1'
                     - type: INTEGER
@@ -546,6 +552,9 @@ zabbix_export:
                     - type: STRING
                       name: min
                       value: '0'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'
@@ -592,7 +601,7 @@ zabbix_export:
                   height: '6'
                   fields:
                     - type: STRING
-                      name: ds.0.color
+                      name: ds.0.color.0
                       value: 1E88E5
                     - type: INTEGER
                       name: ds.0.dataset_type
@@ -615,7 +624,7 @@ zabbix_export:
                       name: ds.0.width
                       value: '2'
                     - type: STRING
-                      name: ds.1.color
+                      name: ds.1.color.0
                       value: E53935
                     - type: INTEGER
                       name: ds.1.dataset_type
@@ -646,6 +655,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                 - type: item
                   name: Uptime
                   x: '18'
@@ -657,6 +669,9 @@ zabbix_export:
                       value:
                         host: 'Lagunitas - AP UniFi por API'
                         key: ap.uptime
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'
@@ -687,6 +702,9 @@ zabbix_export:
                     - type: STRING
                       name: min
                       value: '0'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'
@@ -738,6 +756,9 @@ zabbix_export:
                         host: 'Lagunitas - AP UniFi por API'
                         key: ap.firmware
                     - type: INTEGER
+                      name: rf_rate
+                      value: '10'
+                    - type: INTEGER
                       name: show.0
                       value: '1'
                     - type: INTEGER
@@ -751,7 +772,7 @@ zabbix_export:
                   height: '6'
                   fields:
                     - type: STRING
-                      name: ds.0.color
+                      name: ds.0.color.0
                       value: 00897B
                     - type: INTEGER
                       name: ds.0.dataset_type
@@ -782,6 +803,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                 - type: gauge
                   name: 'Clientes conectados'
                   x: '48'
@@ -803,6 +827,9 @@ zabbix_export:
                     - type: STRING
                       name: min
                       value: '0'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                     - type: INTEGER
                       name: show.0
                       value: '1'
@@ -854,6 +881,9 @@ zabbix_export:
                         host: 'Lagunitas - AP UniFi por API'
                         key: 'net.tcp.service[https,{$UNIFI.HOST},{$UNIFI.PORT}]'
                     - type: INTEGER
+                      name: rf_rate
+                      value: '10'
+                    - type: INTEGER
                       name: show.0
                       value: '1'
                     - type: INTEGER
@@ -882,7 +912,7 @@ zabbix_export:
                   height: '6'
                   fields:
                     - type: STRING
-                      name: ds.0.color
+                      name: ds.0.color.0
                       value: 8E24AA
                     - type: INTEGER
                       name: ds.0.dataset_type
@@ -905,7 +935,7 @@ zabbix_export:
                       name: ds.0.width
                       value: '2'
                     - type: STRING
-                      name: ds.1.color
+                      name: ds.1.color.0
                       value: 43A047
                     - type: INTEGER
                       name: ds.1.dataset_type
@@ -928,7 +958,7 @@ zabbix_export:
                       name: ds.1.width
                       value: '2'
                     - type: STRING
-                      name: ds.2.color
+                      name: ds.2.color.0
                       value: FB8C00
                     - type: INTEGER
                       name: ds.2.dataset_type
@@ -959,6 +989,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                 - type: svggraph
                   name: 'CPU y memoria'
                   'y': '6'
@@ -966,7 +999,7 @@ zabbix_export:
                   height: '6'
                   fields:
                     - type: STRING
-                      name: ds.0.color
+                      name: ds.0.color.0
                       value: E53935
                     - type: INTEGER
                       name: ds.0.dataset_type
@@ -989,7 +1022,7 @@ zabbix_export:
                       name: ds.0.width
                       value: '2'
                     - type: STRING
-                      name: ds.1.color
+                      name: ds.1.color.0
                       value: 1E88E5
                     - type: INTEGER
                       name: ds.1.dataset_type
@@ -1020,6 +1053,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
                 - type: svggraph
                   name: 'Load average'
                   x: '36'
@@ -1028,7 +1064,7 @@ zabbix_export:
                   height: '6'
                   fields:
                     - type: STRING
-                      name: ds.0.color
+                      name: ds.0.color.0
                       value: 546E7A
                     - type: INTEGER
                       name: ds.0.dataset_type
@@ -1056,6 +1092,9 @@ zabbix_export:
                     - type: INTEGER
                       name: legend_statistic
                       value: '1'
+                    - type: INTEGER
+                      name: rf_rate
+                      value: '10'
       valuemaps:
         - uuid: db6d9e290671445885b6385e811f3e19
           name: 'Lagunitas - Estado AP'

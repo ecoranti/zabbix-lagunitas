@@ -12,6 +12,7 @@ STAMP="$(date +%Y%m%d_%H%M)"
 COMPOSE_DIR="${COMPOSE_DIR:-$ROOT}"   # en producción: $ROOT/deploy/produccion
 
 mkdir -p "$DEST"
+DEST="$(cd "$DEST" && pwd)"           # absoluta: a continuación se cambia de directorio
 cd "$COMPOSE_DIR"
 
 echo "==> Volcando base de datos..."
