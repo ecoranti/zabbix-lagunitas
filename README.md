@@ -1,6 +1,6 @@
 # Monitoreo de la Red Comunitaria y Científica Las Lagunitas (Zabbix 7.0)
 
-**Versión 2.3** · Zabbix 7.0 LTS
+**Versión 2.4** · Zabbix 7.0 LTS
 
 Sistema de monitoreo para la red WISP comunitaria de **Las Lagunitas** (Alpa Corral, Córdoba),
 desarrollado en el marco de la Práctica Profesional Supervisada — Ingeniería en
@@ -62,7 +62,7 @@ bin/lagunitas lab escenario Walter normal
 - [Guía del laboratorio](docs/laboratorio.md): puesta en marcha y uso del laboratorio en la Mac (arranque, pruebas de alertas, AP real con sonda ICMP, problemas frecuentes). Solo desarrollo; no forma parte de producción.
 - **Capacitación comunitaria** (`docs/Capacitacion comunitaria - Red Las Lagunitas.pptx`): presentación de unos 90 minutos para integrantes de la red, con notas del orador en cada diapositiva para dictarla o seguirla sin instructor. Cubre la red y sus dependencias, el tablero y el mapa, la ficha de cada equipo, qué hacer ante una alarma (incluido Telegram), el reporte de disponibilidad, una actividad práctica, preguntas de repaso y glosario.
 
-Todas las guías están en la versión 2.3 y sus versiones Word están en `docs/*.docx`. Para regenerarlas
+Todas las guías están en la versión 2.4 y sus versiones Word están en `docs/*.docx`. Para regenerarlas
 desde el Markdown (con la portada institucional) y regenerar la presentación:
 
 ```bash

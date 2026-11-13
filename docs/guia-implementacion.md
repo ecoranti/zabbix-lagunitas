@@ -1,6 +1,6 @@
 # Guía de implementación
 
-**Versión 2.3** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas (Alpa Corral, Córdoba)
+**Versión 2.4** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas (Alpa Corral, Córdoba)
 
 Esta guía explica cómo instalar y poner en marcha el sistema de monitoreo en el **servidor de
 producción** que supervisa la red real. La incorporación de cada equipo (radios, routers, access
@@ -414,12 +414,18 @@ Requiere salida HTTPS desde el servidor hacia `api.telegram.org`.
 
    El aprovisionamiento habilita el media type *Telegram* con mensajes en español
    (🔴 problema, ✅ resuelto, 💬 actualización) y lo asigna al usuario `Admin` para severidades
-   Average, High y Disaster. En Telegram, cada "Resuelto" aparece como respuesta al mensaje del
+   Warning, Average, High y Disaster. En Telegram, cada "Resuelto" aparece como respuesta al mensaje del
    problema.
 
-La acción *Las Lagunitas - Notificar caídas* avisa al grupo *Operadores Las Lagunitas* los
-problemas de severidad **Average o mayor**, envía un recordatorio a los 30 minutos si siguen
-abiertos y avisa la recuperación. Los problemas suprimidos por un mantenimiento no se notifican.
+Las notificaciones avisan al grupo *Operadores Las Lagunitas* los problemas de severidad
+**Warning o mayor**, envían un recordatorio a los 30 minutos si siguen abiertos y avisan la
+recuperación. Las alertas se notifican con dos acciones. *Las Lagunitas - Notificar caídas* atiende los
+problemas de disponibilidad (triggers con la etiqueta `alcance=disponibilidad`: un equipo que no
+responde al ping o un AP fuera de línea) y, cuando el equipo vuelve, avisa «volvió a estar en
+línea» junto con los enlaces que se restablecen, es decir, los equipos monitoreados que dependen de
+él según el inventario (macro `{$LAGUNITAS.RESTABLECE}`, que arma el provisionador).
+*Las Lagunitas - Notificar degradación* atiende el resto (señal, interferencia, energía, recursos)
+con el aviso de resuelto estándar. Los problemas suprimidos por un mantenimiento no se notifican.
 
 ### Seguridad del bot de Telegram
 
@@ -459,6 +465,160 @@ Cada chequeo debe decir `OK`; los que dicen `REVISAR` indican qué corregir. Si 
 @BotFather `/revoke` → elegir el bot → copiar el token nuevo en `TELEGRAM_BOT_TOKEN` de `.env` →
 `bin/lagunitas aprovisionar --solo alertas` → `bin/lagunitas probar-telegram`. El token anterior
 deja de funcionar en el acto.
+
+---
+
+## Del laboratorio a la red real
+
+El laboratorio reemplaza cada pieza de la red por un simulador. Esta sección indica, para cada
+una, qué la reemplaza en producción y qué hay que configurar, y cómo repetir las pruebas de
+validación sin el simulador. El código, los templates, los triggers, el mapa, el dashboard y las
+notificaciones son los mismos en los dos entornos: lo único que cambia es el inventario y los
+datos de acceso a los equipos.
+
+### Equivalencias
+
+| En el laboratorio | En la red real | Qué hay que hacer |
+|---|---|---|
+| Un contenedor Alpine por equipo, que responde ping en la red Docker `lagunitas_net` (10.50.0.0/24) | El equipo físico, en la red de gestión de Las Lagunitas | Poner la IP de gestión real en `ip` y permitir ICMP desde la `<IP_SERVIDOR>` (ver *Red*) |
+| Agente SNMP simulado `airmax-ap` / `airmax-sm` (`lab/snmpsim`) | Radio Ubiquiti airMAX | Habilitar SNMP en airOS con la comunidad propia, probar con `bin/lagunitas probar-snmp <IP_EQUIPO>` y cargar el perfil `airos_snmp` con la `funcion` real (`ap` o `sm`) |
+| Agente SNMP simulado `mikrotik` | Router Mikrotik RB750 del gateway | Habilitar SNMP en RouterOS y cargar el perfil `mikrotik_snmp`. El voltaje solo se mide si el modelo tiene sensor |
+| Router airCube de cada hogar (contenedor que solo responde ping) | airCube real | Solo ICMP (`[icmp]`). Necesita una IP de gestión alcanzable desde el servidor: la 192.168.1.1 de fábrica es la de su LAN y no sirve |
+| Escenarios SNMP (`lab escenario`: señal débil, interferencia, batería baja) | No existen: la degradación la produce el entorno (clima, vegetación, otras redes, carga de la batería) | Dejar correr el sistema una o dos semanas, revisar los valores normales de cada enlace y ajustar los umbrales de los equipos que lo necesiten con `macros` en el inventario |
+| Caídas simuladas (`lab caida`, `lab pruebas`) | Un corte real o un bloqueo en el firewall del Mikrotik | Ver *Pruebas de validación en producción* |
+| Perfil `icmp_sonda` y `bin/lagunitas lab sonda` (el ping lo hace la Mac, por una limitación de la red de Colima) | Perfil `icmp`: el ping lo hace Zabbix | Reemplazar `icmp_sonda` por `icmp` en el AP UniFi. No hace falta la sonda |
+| Controlador UniFi OS Server en la computadora del laboratorio (puerto 11443) | Controlador UniFi de la red, si hay APs UniFi | Cargar `{$UNIFI.HOST}`, `{$UNIFI.PORT}`, `{$UNIFI.SITE.ID}` y `{$UNIFI.DEVICE.ID}` en el inventario; los IDs se obtienen con `bin/lagunitas unifi-ids` |
+| Stack de la raíz (`docker-compose.yml`), HTTP en el puerto 8090 | `deploy/produccion/docker-compose.yml` con Caddy y HTTPS | Ver *Instalación* |
+| `config/inventory.lab.yaml` | `config/inventory.produccion.yaml` | `LAGUNITAS_INVENTORY=config/inventory.produccion.yaml` en `.env` |
+| Usuario `Admin` con clave por defecto | Usuario de servicio con API token | Ver *Primer acceso y endurecimiento* |
+| Comunidad SNMP `public` | Comunidad propia de solo lectura | `SNMP_COMMUNITY` en `.env`, la misma que se configura en los equipos |
+| Bot y grupo de Telegram de pruebas | Grupo *Operadores Las Lagunitas* | Ver *Telegram: separar laboratorio y producción* |
+
+Los comandos `bin/lagunitas lab ...` solo actúan sobre equipos con IP de la red del laboratorio
+(10.50.0.0/24). Con el inventario de producción no crean ni detienen nada.
+
+### Del relevamiento al inventario
+
+La planilla de relevamiento de la red registra las IP de gestión reales en la red 192.168.30.0/24.
+El inventario de producción todavía trae direcciones provisorias 192.168.88.x marcadas con
+`COMPLETAR`. La siguiente correspondencia sirve de punto de partida y debe confirmarse en campo:
+
+| Equipo en la planilla | IP | Host del inventario |
+|---|---|---|
+| Mikrotik Torre Walter (RB750) | 192.168.30.1 | `Gateway_Mikrotik` |
+| Router Torre Carrizal (airCube) | 192.168.30.160 | `El_Carrizal` |
+| AP a Mesada (LiteBeam) | 192.168.30.101 | Nuevo dispositivo de `El_Carrizal` |
+| AP a Guindas (LiteBeam) | 192.168.30.102 | Nuevo dispositivo de `El_Carrizal` |
+| AP Martin (NanoStation Loco) | 192.168.30.104 | Nuevo dispositivo de `El_Carrizal` |
+| SM Mesada (LiteBeam) | 192.168.30.107 | `Mesada` |
+| AP Mesada a Escuelita (LiteBeam) | 192.168.30.108 | `Mesada_AP_Escuela` |
+| SM Escuelita (NanoStation Loco) | 192.168.30.109 | `Escuela_Rural` |
+| AP Escuela-Ester (NanoStation Loco) | 192.168.30.112 | `Escuela_AP_Esther` |
+| Router Escuela (airCube) | 192.168.30.161 | `Escuela_Router` |
+| SM Ester (NanoStation Loco) | 192.168.30.111 | `Esther` |
+| Router Ester (airCube) | 192.168.30.162 | `Esther_Router` |
+| SM Martín (NanoStation Loco) | 192.168.30.110 | `Martin` |
+| Nano Loco Casa Walter | 192.168.30.105 | `Walter` |
+| Router AirCube Walter | 192.168.1.1 (LAN) | `Walter_Router`: falta su IP de gestión |
+| AP Torre Antena TV y SM Torre Walter (PowerBeam) | 192.168.30.99 y .100 | Enlace troncal: ubicar en la topología |
+| Equipo sin nombre | 192.168.30.106 | A relevar |
+| Nano Loco (no funciona) | 192.168.30.103 | No se carga mientras no funcione |
+
+Las torres Unión de los Ríos, Rodeo del Padre y Ex Aserradero, los nodos y la mayoría de los
+hogares no figuran en la planilla y quedan como "A relevar" en el inventario.
+
+Al agregar los AP de El Carrizal como dispositivos, conviene usarlos como `padre` de los equipos
+que alimentan (por ejemplo, `Mesada` con padre en el AP a Mesada). Así, si cae ese AP, la única
+alerta es la del AP y el aviso de recuperación nombra exactamente los equipos que vuelven a tener
+servicio. Ese texto (`{$LAGUNITAS.RESTABLECE}`) y los tiempos de detección por nivel
+(`{$ICMP.CAIDA.PERIODO}`) los recalcula el provisionador desde el inventario en cada
+aprovisionamiento, por lo que no hay que configurarlos a mano.
+
+Orden recomendado para pasar cada tramo a producción:
+
+1. Configurar el equipo (IP de gestión, SNMP con la comunidad propia y acceso solo desde la
+   `<IP_SERVIDOR>`) según la [Guía de integración de equipos](guia-integracion-equipos.md).
+2. Probarlo desde el servidor (ver *Preparar los equipos de la red*).
+3. Cargar en el inventario la IP real, los perfiles, el modelo y el padre, y dejar
+   `estado: operativo` solo cuando el tramo esté en servicio.
+4. `bin/lagunitas validar`, `bin/lagunitas aprovisionar` y `bin/lagunitas verificar`.
+5. Revisar en el dashboard que el equipo esté "En línea" y que sus pestañas de detalle tengan
+   datos.
+
+Conviene incorporar los tramos de a uno, del gateway hacia los hogares, y no marcar como
+`operativo` un equipo antes que su padre.
+
+### Pruebas de validación en producción
+
+Las tres pruebas del laboratorio (ver la [Guía del laboratorio](laboratorio.md)) se pueden
+repetir sobre la red real sin cortarle el servicio a nadie. Antes de cada prueba avisar al grupo
+de operadores, porque las alertas y los avisos de Telegram son reales.
+
+**Caída de un equipo o de un tramo troncal.** En lugar de apagar el equipo, se bloquea en el
+Mikrotik el tráfico del servidor hacia él: Zabbix deja de recibir el ping y el SNMP y lo declara
+caído, mientras los usuarios siguen navegando. En la terminal del Mikrotik:
+
+```
+/ip firewall address-list add list=prueba-caida address=<IP_EQUIPO>
+/ip firewall filter add chain=forward src-address=<IP_SERVIDOR> dst-address-list=prueba-caida \
+    action=drop comment="prueba de validacion" place-before=0
+```
+
+Para la caída troncal hay que agregar a la lista `prueba-caida` la IP de la torre y las de todos
+los equipos que dependen de ella. Si solo se bloquea la torre, los equipos que dependen de ella
+siguen respondiendo y no se ve la supresión de alertas. Si el equipo bloqueado es el propio
+Mikrotik, la regla va en `chain=input` con `dst-address=<IP del Mikrotik>`. La regla solo surte
+efecto si el tráfico del servidor pasa por el Mikrotik (servidor por VPN o en otra subred).
+
+Resultado esperado: una única alerta High entre 1,5 y 3 minutos después (cada nivel de la
+topología espera 15 s más que su padre), un único aviso por Telegram y, al quitar el bloqueo, el
+aviso «volvió a estar en línea» con los enlaces restablecidos, como respuesta al primero:
+
+```
+/ip firewall filter remove [find comment="prueba de validacion"]
+/ip firewall address-list remove [find list=prueba-caida]
+```
+
+**Degradación de un enlace o de la batería.** No se puede empeorar la señal a voluntad, pero sí
+mover el umbral por encima del valor real del equipo. En el frontend, en *Data collection →
+Hosts →* el equipo *→ Macros*, agregar temporalmente una de estas macros de host:
+
+| Macro | Valor de prueba | Alerta que se abre |
+|---|---|---|
+| `{$AIRMAX.SENAL.WARN}` | `-30` | Señal débil y señal débil de la estación (Warning) |
+| `{$AIRMAX.RUIDO.WARN}` | `-110` | Ruido alto en el canal (Warning) |
+| `{$MIKROTIK.VOLTAJE.WARN}` | `30` | Voltaje bajo (Warning), solo si el modelo mide voltaje |
+
+Las alertas aparecen entre 10 y 15 minutos después, porque los triggers usan promedios de 10 y
+15 minutos. Para terminar la prueba, borrar la macro o ejecutar
+`bin/lagunitas aprovisionar --solo hosts`, que restituye las macros del inventario. Las alertas
+se cierran solas en los minutos siguientes.
+
+### Telegram: separar laboratorio y producción
+
+Si el laboratorio sigue funcionando después de la puesta en producción, no debe avisar al grupo
+de operadores: sus caídas simuladas se confundirían con fallas reales. Usar en el laboratorio un
+bot o un grupo de Telegram de pruebas (`TELEGRAM_CHAT_ID` del `.env` del laboratorio) y ejecutar
+`bin/lagunitas aprovisionar --solo alertas` en el laboratorio. Para que deje de notificar del
+todo no alcanza con vaciar esas variables: hay que deshabilitar el medio Telegram del usuario
+`Admin` en el frontend del laboratorio (*Users → Users → Admin → Media*).
+
+### Checklist del paso a producción
+
+- [ ] Inventario de producción con las IP reales del relevamiento, sin ninguna marca `COMPLETAR`
+      en los equipos operativos.
+- [ ] Perfil `icmp` en lugar de `icmp_sonda` en el AP UniFi, y macros `{$UNIFI.*}` del
+      controlador real.
+- [ ] `SNMP_COMMUNITY` propia, la misma en `.env` y en todos los equipos, con SNMP permitido solo
+      desde la `<IP_SERVIDOR>`.
+- [ ] Cada equipo SNMP probado con `probar-snmp`; los airCube con IP de gestión alcanzable.
+- [ ] `padre` de cada equipo confirmado en campo (define las dependencias, el mapa y el aviso de
+      enlaces restablecidos).
+- [ ] Prueba de caída de un hogar, de un nodo y de una torre con bloqueo en el firewall, con su
+      aviso y su recuperación por Telegram.
+- [ ] Prueba de degradación con una macro de umbral temporal, y la macro retirada al terminar.
+- [ ] Laboratorio desconectado del grupo de Telegram de operadores.
+- [ ] Umbrales revisados después de una o dos semanas de datos reales.
 
 ---
 
@@ -714,5 +874,6 @@ producción. Se describen en la [Guía del laboratorio](laboratorio.md).
 
 | Versión | Cambios |
 |---|---|
+| 2.4 | Sección *Del laboratorio a la red real*: equivalencias entre el simulador y los equipos reales, correspondencia del relevamiento con el inventario, pruebas de validación en producción sin cortar el servicio y separación de Telegram entre laboratorio y producción. Notificaciones desde Warning y aviso de enlaces restablecidos. |
 | 2.3 | Alcance y estado del despliegue; flujos de red y puertos; verificación después de cada paso; variables de los dos archivos `.env`; clave `retencion_historial`; restauración y reconstrucción del servidor; actualización; seguridad; resolución de problemas de la instalación; referencia completa del CLI. |
 | 2.2 | Notificaciones por Telegram al grupo de operadores y seguridad del bot. |

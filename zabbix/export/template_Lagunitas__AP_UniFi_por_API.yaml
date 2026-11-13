@@ -474,6 +474,8 @@ zabbix_export:
         - macro: '{$AP.SIN.DATOS}'
           value: 5m
           description: 'Tiempo sin datos de la API'
+        - macro: '{$LAGUNITAS.RESTABLECE}'
+          description: 'Equipos que recuperan el servicio cuando este vuelve (lo completa el provisionador)'
         - macro: '{$UNIFI.API.KEY}'
           type: SECRET_TEXT
           description: 'API key (macro secreta, se define a nivel host)'

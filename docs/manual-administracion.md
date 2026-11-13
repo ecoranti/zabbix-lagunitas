@@ -1,6 +1,6 @@
 # Manual de administración
 
-**Versión 2.3** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
+**Versión 2.4** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
 
 Referencia operativa del día a día: cómo leer el estado de la red, atender alarmas, dar de alta
 o de baja equipos, generar reportes, respaldar y resolver los problemas más frecuentes. La
@@ -39,7 +39,7 @@ se ejecutan en el servidor de monitoreo desde la carpeta del proyecto.
 | Mapa | `Las Lagunitas - Topología` |
 | Dashboard | `Las Lagunitas - Centro de monitoreo` |
 | Servicios / SLA | `Red Las Lagunitas` (y sub-servicios por rol y por sitio) · SLA `Las Lagunitas - Disponibilidad mensual` (objetivo 99,5 %) |
-| Alertas | Grupo `Operadores Las Lagunitas` · Acción `Las Lagunitas - Notificar caídas` |
+| Alertas | Grupo `Operadores Las Lagunitas` · Acciones `Las Lagunitas - Notificar caídas` y `Las Lagunitas - Notificar degradación` |
 | Módulos | `Red Las Lagunitas` (widget) · `Reporte de disponibilidad - Las Lagunitas` |
 
 ---
@@ -307,10 +307,16 @@ radio se saturan o el servidor queda corto de recursos, subirlo a `30s` o `1m`.
 
 ### Notificaciones
 
-La acción *Las Lagunitas - Notificar caídas* avisa los problemas de severidad Average o mayor al
-grupo *Operadores Las Lagunitas* por todos sus medios, envía un recordatorio a los 30 minutos si
-el problema sigue abierto y avisa la recuperación y las actualizaciones (por ejemplo, un
-*Acknowledge*). Los problemas suprimidos por mantenimiento no se notifican. Configuración de
+Las notificaciones avisan los problemas de severidad Warning o mayor al grupo *Operadores Las
+Lagunitas* por todos sus medios, envían un recordatorio a los 30 minutos si el problema sigue
+abierto y avisan la recuperación y las actualizaciones (por ejemplo, un *Acknowledge*). Las alertas se notifican con dos acciones. *Las Lagunitas - Notificar caídas* atiende los
+problemas de disponibilidad (triggers con la etiqueta `alcance=disponibilidad`: un equipo que no
+responde al ping o un AP fuera de línea) y, cuando el equipo vuelve, avisa «volvió a estar en
+línea» junto con los enlaces que se restablecen, es decir, los equipos monitoreados que dependen de
+él según el inventario (macro `{$LAGUNITAS.RESTABLECE}`, que arma el provisionador).
+*Las Lagunitas - Notificar degradación* atiende el resto (señal, interferencia, energía, recursos)
+con el aviso de resuelto estándar.
+ Los problemas suprimidos por mantenimiento no se notifican. Configuración de
 Telegram: ver la Guía de implementación, sección *Notificaciones por Telegram*.
 
 Para agregar a otra persona: sumarla al grupo de Telegram de operadores (no hace falta tocar
@@ -596,7 +602,7 @@ Corregir el archivo y repetir `bin/lagunitas validar`. Si el error es de YAML, p
 comillas los textos que contengan dos puntos o numeral.
 
 **Las notificaciones no llegan.** `bin/lagunitas probar-telegram`; luego *Reports → Action log*.
-Recordar que solo se notifican los problemas de severidad Average o mayor y que no se notifican
+Recordar que solo se notifican los problemas de severidad Warning o mayor y que no se notifican
 los equipos en mantenimiento.
 
 **El widget "Red Las Lagunitas" no aparece o el reporte no está en el menú.**
@@ -653,4 +659,5 @@ El subcomando `bin/lagunitas lab` (simulador) es exclusivo del laboratorio.
 | 2.0 | 2026-09-29 | Primera edición del manual para la versión 2 del sistema |
 | 2.1 | 2026-09-29 | Detalle por tipo de equipo y reporte técnico |
 | 2.2 | 2026-09-30 | Medición cada 10 s, notificaciones por Telegram y escalonado de la detección de caídas |
+| 2.4 | 2026-11-13 | Telegram notifica desde Warning, con una acción para caídas y otra para degradación; el aviso de recuperación informa los enlaces restablecidos |
 | 2.3 | 2026-11-12 | Revisión técnica contra el código. Se agregan el catálogo completo de alarmas con su respuesta, los procedimientos de Internet y de energía, las tareas periódicas, el detalle de backup y restauración y la política de retención del historial (`retencion_historial`); se corrigen los estados del widget, el ajuste de umbrales y los tiempos de las pruebas de alarma |

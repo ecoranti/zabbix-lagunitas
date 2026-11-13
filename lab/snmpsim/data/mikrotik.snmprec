@@ -1,6 +1,6 @@
 1.3.6.1.2.1.1.1.0|4|RouterOS RB750Gr3
 1.3.6.1.2.1.1.2.0|6|1.3.6.1.4.1.14988.1
-1.3.6.1.2.1.1.3.0|67:numeric|rate=100,initial=86400000,cumulative=1
+1.3.6.1.2.1.1.3.0|67:numeric|rate=100,offset=86400000
 1.3.6.1.2.1.1.4.0|4|Red Las Lagunitas
 1.3.6.1.2.1.1.5.0|4|__NOMBRE__
 1.3.6.1.2.1.1.6.0|4|Las Lagunitas, Alpa Corral
@@ -73,20 +73,20 @@
 1.3.6.1.2.1.31.1.1.1.1.5|4|ether5
 1.3.6.1.2.1.31.1.1.1.1.6|4|bridge
 1.3.6.1.2.1.31.1.1.1.1.7|4|pppoe-out1
-1.3.6.1.2.1.31.1.1.1.6.1|70:numeric|rate=250000,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.6.2|70:numeric|rate=55000,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.6.3|70:numeric|rate=3000,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.6.4|70:numeric|rate=0,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.6.5|70:numeric|rate=0,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.6.6|70:numeric|rate=60000,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.6.7|70:numeric|rate=240000,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.10.1|70:numeric|rate=60000,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.10.2|70:numeric|rate=230000,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.10.3|70:numeric|rate=9000,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.10.4|70:numeric|rate=0,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.10.5|70:numeric|rate=0,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.10.6|70:numeric|rate=240000,initial=1000000,cumulative=1
-1.3.6.1.2.1.31.1.1.1.10.7|70:numeric|rate=58000,initial=1000000,cumulative=1
+1.3.6.1.2.1.31.1.1.1.6.1|70:numeric|rate=250000,offset=1000000
+1.3.6.1.2.1.31.1.1.1.6.2|70:numeric|rate=55000,offset=1000000
+1.3.6.1.2.1.31.1.1.1.6.3|70:numeric|rate=3000,offset=1000000
+1.3.6.1.2.1.31.1.1.1.6.4|70:numeric|rate=0,offset=1000000
+1.3.6.1.2.1.31.1.1.1.6.5|70:numeric|rate=0,offset=1000000
+1.3.6.1.2.1.31.1.1.1.6.6|70:numeric|rate=60000,offset=1000000
+1.3.6.1.2.1.31.1.1.1.6.7|70:numeric|rate=240000,offset=1000000
+1.3.6.1.2.1.31.1.1.1.10.1|70:numeric|rate=60000,offset=1000000
+1.3.6.1.2.1.31.1.1.1.10.2|70:numeric|rate=230000,offset=1000000
+1.3.6.1.2.1.31.1.1.1.10.3|70:numeric|rate=9000,offset=1000000
+1.3.6.1.2.1.31.1.1.1.10.4|70:numeric|rate=0,offset=1000000
+1.3.6.1.2.1.31.1.1.1.10.5|70:numeric|rate=0,offset=1000000
+1.3.6.1.2.1.31.1.1.1.10.6|70:numeric|rate=240000,offset=1000000
+1.3.6.1.2.1.31.1.1.1.10.7|70:numeric|rate=58000,offset=1000000
 1.3.6.1.2.1.31.1.1.1.15.1|66|1000
 1.3.6.1.2.1.31.1.1.1.15.2|66|1000
 1.3.6.1.2.1.31.1.1.1.15.3|66|1000

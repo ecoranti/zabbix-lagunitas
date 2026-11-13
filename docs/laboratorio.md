@@ -1,6 +1,6 @@
 # Guía del laboratorio
 
-**Versión 2.3** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas (Alpa Corral, Córdoba)
+**Versión 2.4** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas (Alpa Corral, Córdoba)
 
 Esta guía explica cómo **levantar, usar y mantener el laboratorio** del sistema de monitoreo de
 la Red Las Lagunitas sobre una Mac. Describe los componentes, la instalación desde cero, el uso
@@ -11,7 +11,8 @@ aparecieron durante el desarrollo.
 > con la topología de la red reproducida mediante equipos simulados. Para el servidor real están
 > la [Guía de implementación](guia-implementacion.md), la
 > [Guía de integración de equipos](guia-integracion-equipos.md) y el
-> [Manual de administración](manual-administracion.md).
+> [Manual de administración](manual-administracion.md). Qué reemplaza en la red real a cada pieza
+> del laboratorio está en la sección *Del laboratorio a la red real* de la Guía de implementación.
 
 ---
 
@@ -254,6 +255,8 @@ Pasos disponibles para `--solo`: `templates`, `hosts`, `dependencias`, `servidor
 | `bin/lagunitas lab estado` | Lista IP, perfil simulado, estado en el inventario y estado del contenedor |
 | `bin/lagunitas lab caida <equipo> [--solo]` | Detiene el equipo y sus dependientes (con `--solo`, únicamente ese equipo) |
 | `bin/lagunitas lab recuperar <equipo> [--solo]` | Vuelve a iniciarlos |
+| `bin/lagunitas lab latencia <equipo> [ms\|normal]` | Agrega un retardo a las respuestas del equipo con `tc netem` (por defecto 300 ms) o lo quita |
+| `bin/lagunitas lab pruebas [1-4]` | Menú interactivo (con flechas) para disparar y deshacer todas las fallas simuladas; con un número, corre la prueba de validación guiada |
 | `bin/lagunitas lab escenario <equipo> <escenario>` | Aplica una falla de radio o energía al agente SNMP simulado |
 | `bin/lagunitas lab sonda [--intervalo N] [--una-vez]` | Sonda ICMP desde la Mac para los equipos con perfil `icmp_sonda` |
 
@@ -320,6 +323,43 @@ bin/lagunitas lab caida Union_de_los_Rios    # caída troncal: 1 alerta, el rest
 bin/lagunitas lab recuperar Union_de_los_Rios
 bin/lagunitas lab caida Kika --solo          # solo ese equipo, sin sus dependientes
 ```
+
+Todas las fallas se pueden disparar y deshacer desde un menú interactivo
+(`scripts/pruebas-validacion.sh` o `bin/lagunitas lab pruebas`). El menú lista los equipos
+simulados con su estado, la falla simulada que tienen activa y cuántos equipos arrastra cada uno,
+y marca con `↳` los que caerían junto con el seleccionado. Se navega con las flechas:
+
+| Tecla | Acción |
+|---|---|
+| `Enter` | Tira abajo el equipo (con sus dependientes) si está en línea, o lo levanta si está caído |
+| `s` | Lo mismo, solo con ese equipo |
+| `e` | Aplica al equipo un escenario SNMP (`normal` lo restaura); solo los que corresponden a su perfil |
+| `l` | Agrega o quita 300 ms de latencia («latencia alta», Warning, en ~3 min) |
+| `1` a `4` | Activa o deshace la prueba documentada completa (ver la tabla siguiente) |
+| `t` | Restaura todo: levanta los equipos y quita escenarios y latencia |
+| `q` | Sale; si quedó algo caído o con falla, ofrece restaurarlo |
+
+El panel inferior muestra los problemas abiertos en Zabbix y los avisos de Telegram de la última
+media hora (enviado o falló), y se actualiza cada 10 s. Así se ve cada alerta abrirse y cerrarse,
+y su notificación, sin salir del menú.
+
+### Pruebas de validación guiadas
+
+Las pruebas de la etapa de validación se corren de punta a punta con
+`scripts/pruebas-validacion.sh N` (o `bin/lagunitas lab pruebas N`). Cada una aplica la falla,
+muestra en vivo los problemas que abre Zabbix y el estado de cada aviso de Telegram (leídos de la
+API), restaura el equipo, espera el cierre y el aviso de resuelto, y termina con un resumen de
+tiempos:
+
+| N | Prueba | Qué hace | Qué se espera |
+|---|---|---|---|
+| 1 | Degradación por SNMP | `senal-debil` en Walter, `interferencia` en Mesada y `bateria-baja` en el Gateway. Restaura con Enter o a los 15 min | 6 o 7 alertas Warning entre los 6 y 11 min (SNR y calidad dependen de la oscilación simulada) y cierre automático en menos de 10 min |
+| 2 | Caída troncal | Detiene Unión de los Ríos y sus 18 dependientes; restaura 60 s después del aviso | Una única alerta High en ~90 s y un único aviso por Telegram |
+| 3 | Telegram | Detiene el Nodo Kika (y el hogar Kika); restaura 60 s después del aviso | Un aviso al grupo de operadores y, como respuesta a ese mensaje, «Nodo Kika volvió a estar en línea» con el enlace restablecido (Kika) |
+| 4 | Latencia alta | 300 ms de retardo en las respuestas de Mesada (`tc netem`); lo quita cuando sale el aviso | «Mesada: latencia alta» (Warning) en ~3 min con su aviso, y cierre ~3 min después de quitarla |
+
+Ctrl+C interrumpe la prueba y restaura los equipos. Las cuatro pruebas notifican por Telegram
+porque la acción avisa desde Warning.
 
 `caida` detiene también a los equipos aguas abajo, porque en la red real pierden el camino. Así
 se ve el efecto de las dependencias: **una sola alerta** por la caída troncal. La alerta aparece
@@ -532,5 +572,6 @@ mano.
 
 | Versión | Cambios |
 |---|---|
+| 2.4 | Menú interactivo de pruebas (`lab pruebas`) con caídas, escenarios SNMP y latencia simulada (`lab latencia`, con `tc netem`); pruebas guiadas 1 a 4 con seguimiento de las alertas y de los avisos de Telegram; uptime y contadores del simulador SNMP al ritmo real. |
 | 2.3 | Redacción impersonal y línea de versión; requisitos y recursos de Colima; diferencias con producción (`--skip-log-bin`, `retencion_historial`); subcomandos del simulador; alertas de cada escenario revisadas contra los umbrales; datos del repositorio y de la cantidad de equipos corregidos. |
 | Anterior | Guía sin número de versión, contemporánea de la versión 2.2 de las demás guías (puesta en marcha, uso, sonda ICMP y problemas frecuentes). |

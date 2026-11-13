@@ -11,6 +11,17 @@ zabbix_export:
       groups:
         - name: 'Templates/Las Lagunitas'
       items:
+        - uuid: 45cba755bf0a4d2998cc5233e4c2cd5c
+          name: 'SNMP: referencia de ping'
+          type: SIMPLE
+          key: 'icmpping[,1]'
+          delay: '{$LAGUNITAS.INTERVALO}'
+          history: 7d
+          trends: '0'
+          description: '1 si el equipo responde al ping. Solo lo usa el trigger «sin datos SNMP».'
+          tags:
+            - tag: componente
+              value: snmp
         - uuid: 5b865555b6834e2f8579683762a05f52
           name: 'Sistema: uso de CPU'
           type: SNMP_AGENT
@@ -60,7 +71,7 @@ zabbix_export:
               description: 'Ningún dispositivo tiene IP asignada en 30 min: posible caída de la red de distribución o del servidor DHCP.'
               dependencies:
                 - name: '{HOST.NAME}: sin datos SNMP'
-                  expression: 'nodata(/Lagunitas - Mikrotik por SNMP/mikrotik.sistema.uptime,{$SNMP.SIN.DATOS})=1'
+                  expression: 'nodata(/Lagunitas - Mikrotik por SNMP/mikrotik.sistema.uptime,{$SNMP.SIN.DATOS})=1 and min(/Lagunitas - Mikrotik por SNMP/icmpping[,1],{$SNMP.SIN.DATOS})=1'
               tags:
                 - tag: alcance
                   value: clientes
@@ -233,16 +244,6 @@ zabbix_export:
               tags:
                 - tag: alcance
                   value: sistema
-                - tag: equipo
-                  value: '{HOST.HOST}'
-            - uuid: 41e4ea67b3cb493c9946953e223d3f59
-              expression: 'nodata(/Lagunitas - Mikrotik por SNMP/mikrotik.sistema.uptime,{$SNMP.SIN.DATOS})=1'
-              name: '{HOST.NAME}: sin datos SNMP'
-              priority: AVERAGE
-              description: 'El router no responde SNMP: verificar /snmp (enabled, comunidad, addresses) y el firewall (UDP 161 desde la IP del servidor Zabbix).'
-              tags:
-                - tag: alcance
-                  value: snmp
                 - tag: equipo
                   value: '{HOST.HOST}'
         - uuid: ae66a7e0e5244fb2a07b4cef9c2be9dd
@@ -1098,3 +1099,14 @@ zabbix_export:
               newvalue: Disponible
             - value: '2'
               newvalue: 'No disponible'
+  triggers:
+    - uuid: 41e4ea67b3cb493c9946953e223d3f59
+      expression: 'nodata(/Lagunitas - Mikrotik por SNMP/mikrotik.sistema.uptime,{$SNMP.SIN.DATOS})=1 and min(/Lagunitas - Mikrotik por SNMP/icmpping[,1],{$SNMP.SIN.DATOS})=1'
+      name: '{HOST.NAME}: sin datos SNMP'
+      priority: AVERAGE
+      description: 'El router no responde SNMP: verificar /snmp (enabled, comunidad, addresses) y el firewall (UDP 161 desde la IP del servidor Zabbix).'
+      tags:
+        - tag: alcance
+          value: snmp
+        - tag: equipo
+          value: '{HOST.HOST}'

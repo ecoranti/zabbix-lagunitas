@@ -466,7 +466,7 @@ Desde cada fila se accede al detalle técnico del equipo, que reúne los indicad
 
 ### Alertas y notificaciones
 
-Los problemas de severidad Average o superior disparan la acción "Las Lagunitas - Notificar caídas", que avisa al grupo de usuarios Operadores Las Lagunitas. Las notificaciones se envían por Telegram al grupo "Operadores Las Lagunitas" mediante un bot de solo envío, es decir, un bot que publica las alertas pero no procesa los mensajes que recibe, por lo que no constituye una vía de acceso al sistema.
+Los problemas de severidad Warning o superior se notifican al grupo de usuarios Operadores Las Lagunitas mediante dos acciones. La acción "Las Lagunitas - Notificar caídas" atiende los problemas de disponibilidad y, cuando el equipo vuelve, avisa que volvió a estar en línea junto con los enlaces que se restablecen, es decir, los equipos que dependen de él según el inventario. La acción "Las Lagunitas - Notificar degradación" atiende el resto de los problemas, como la señal, la interferencia o la energía. Las notificaciones se envían por Telegram al grupo "Operadores Las Lagunitas" mediante un bot de solo envío, es decir, un bot que publica las alertas pero no procesa los mensajes que recibe, por lo que no constituye una vía de acceso al sistema.
 
 ### Validación
 

@@ -58,7 +58,7 @@ zabbix_export:
               value: disponibilidad
           triggers:
             - uuid: 3f169c4da17941c1a06c0e3d275d6f4a
-              expression: 'min(/Lagunitas - Disponibilidad ICMP - sonda externa/icmppingloss,5m)>{$ICMP.PERDIDA.WARN} and min(/Lagunitas - Disponibilidad ICMP - sonda externa/icmppingloss,5m)<100'
+              expression: 'min(/Lagunitas - Disponibilidad ICMP - sonda externa/icmppingloss,5m)>{$ICMP.PERDIDA.WARN} and max(/Lagunitas - Disponibilidad ICMP - sonda externa/icmppingloss,5m)<100'
               name: '{HOST.NAME}: pérdida de paquetes alta'
               opdata: 'Pérdida: {ITEM.LASTVALUE1}'
               priority: WARNING
@@ -134,6 +134,8 @@ zabbix_export:
         - macro: '{$ICMP.PERDIDA.WARN}'
           value: '20'
           description: 'Pérdida de paquetes (%) sostenida 5 min que dispara advertencia'
+        - macro: '{$LAGUNITAS.RESTABLECE}'
+          description: 'Equipos que recuperan el servicio cuando este vuelve (lo completa el provisionador)'
       dashboards:
         - uuid: 2eb4b42d5edc4c70a3c63bb2c9f45e03
           name: 'Detalle del equipo'
