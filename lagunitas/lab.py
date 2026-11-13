@@ -175,8 +175,10 @@ def caida(inv: dict, nombre: str, solo: bool = False, log=print) -> None:
 
 def recuperar(inv: dict, nombre: str, solo: bool = False, log=print) -> None:
     afectados = _afectados(inv, nombre, solo)
-    for h in afectados:
-        _docker("start", h)
+    # Al volver el enlace, en la red real todo lo que cuelga de él vuelve a la vez. Se
+    # levantan primero los descendientes y el equipo al final: si este volviera antes,
+    # Zabbix quitaría la supresión de dependientes que todavía están arrancando.
+    _docker("start", *reversed(afectados))
     log(f"  {', '.join(afectados)} iniciado(s): el problema se resuelve solo en ~30-60 s")
 
 
