@@ -13,7 +13,10 @@ se describen se validaron en el laboratorio, con agentes SNMP simulados que resp
 Ubiquiti airMAX y de Mikrotik y con un access point UniFi real consultado por su API. El
 despliegue sobre la red física quedó pendiente, por lo que los pasos que se ejecutan en cada
 equipo (airOS, RouterOS, UniFi Network) deben confirmarse durante la primera integración de cada
-modelo. Los puntos que requieren esa confirmación están indicados en el texto.
+modelo. Los puntos que requieren esa confirmación están indicados en el texto. Qué reemplaza en
+la red real a cada pieza simulada, cómo pasar las IP del relevamiento al inventario y cómo repetir
+las pruebas de validación sin el simulador se explica en la sección *Del laboratorio a la red
+real* de la [Guía de implementación](guia-implementacion.md).
 
 ---
 
@@ -131,7 +134,7 @@ mediciones dinámicas (ICMP, SNMP y API de UniFi).
 | Alerta | Condición por defecto | Severidad | Macro |
 |---|---|---|---|
 | Sin respuesta (ICMP) | Ninguna respuesta durante `{$ICMP.CAIDA.PERIODO}` | High | `{$ICMP.CAIDA.PERIODO}` (90 s en la raíz, más 15 s por nivel) |
-| Pérdida de paquetes alta | Mínimo de 5 min mayor que 20 % y menor que 100 % | Warning | `{$ICMP.PERDIDA.WARN}` |
+| Pérdida de paquetes alta | Mínimo de 5 min mayor que 20 %, sin ninguna medición con pérdida total en esos 5 min | Warning | `{$ICMP.PERDIDA.WARN}` |
 | Latencia alta | Promedio de 5 min mayor que 0,15 s (150 ms) | Warning | `{$ICMP.LATENCIA.WARN}` |
 
 **Por qué esos valores:**
@@ -323,7 +326,7 @@ el receptor; en ese caso se reduce la potencia de transmisión.
 | Señal débil de una estación | Promedio de 10 min menor que `{$AIRMAX.SENAL.WARN}` | Warning | `{$AIRMAX.SENAL.WARN}` |
 | Interfaz sin enlace | La interfaz pasa de *up* a *down* | Average | — |
 | Errores en una interfaz | Errores de entrada por encima de 2 por segundo durante 5 min | Warning | `{$IF.ERRORES.WARN}` |
-| Sin datos SNMP | 5 min sin respuesta del agente | Average | `{$SNMP.SIN.DATOS}` |
+| Sin datos SNMP | 5 min sin respuesta del agente mientras el equipo responde al ping | Average | `{$SNMP.SIN.DATOS}` |
 | Uso de CPU alto | Mínimo de 5 min mayor que 90 % | Warning | `{$AIRMAX.CPU.WARN}` |
 | Uso de memoria alto | Mínimo de 5 min mayor que 90 % | Warning | `{$AIRMAX.MEMORIA.WARN}` |
 | Temperatura alta | Promedio de 10 min mayor que 75 °C | Warning | `{$AIRMAX.TEMP.WARN}` |
@@ -332,7 +335,11 @@ el receptor; en ese caso se reduce la potencia de transmisión.
 
 Relaciones entre alertas: "señal débil" depende de "señal crítica" (se informa solo la más
 grave), "radio AP sin estaciones" depende de "sin datos SNMP", y "sin datos SNMP" depende de la
-caída ICMP del mismo equipo, de modo que un equipo apagado genera una sola alerta. Las alertas de
+caída ICMP del mismo equipo, de modo que un equipo apagado genera una sola alerta. Además, "sin
+datos SNMP" exige que el equipo haya respondido el ping durante todo el período (ítem
+`icmpping[,1]` del template SNMP) y "pérdida de paquetes alta" se descarta si en los 5 minutos hubo
+una medición sin respuesta. Así, cuando se recupera un tramo troncal, los equipos aguas abajo no
+abren alertas mientras reanudan las consultas. Las alertas de
 severidad Information se ven en los dashboards y reportes pero no se notifican; la acción de
 notificación avisa a partir de Warning.
 
@@ -522,7 +529,7 @@ dispositivos conectados en toda la red.
 | Temperatura alta | Promedio de 10 min de la temperatura de placa mayor que 65 °C | Warning | `{$MIKROTIK.TEMP.WARN}` |
 | Interfaz sin enlace | La interfaz pasa de *up* a *down* | Average | — |
 | Errores en una interfaz | Errores de entrada por encima de 2 por segundo durante 5 min | Warning | `{$IF.ERRORES.WARN}` |
-| Sin datos SNMP | 5 min sin respuesta del agente | Average | `{$SNMP.SIN.DATOS}` |
+| Sin datos SNMP | 5 min sin respuesta del agente mientras el equipo responde al ping | Average | `{$SNMP.SIN.DATOS}` |
 | El router se reinició | Uptime menor que 10 min | Information | — |
 | Cambió la versión de RouterOS | Cambio de valor | Information | — |
 

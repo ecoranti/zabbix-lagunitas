@@ -195,7 +195,8 @@ def install_icmp(api: ZabbixAPI, groupid: str, sonda: bool = False) -> dict:
                     "alerta queda suprimida por dependencia."})
     ensure_trigger(api, tid, {
         "description": "{HOST.NAME}: pérdida de paquetes alta",
-        "expression": f"min(/{t}/icmppingloss,5m)>{{$ICMP.PERDIDA.WARN}} and min(/{t}/icmppingloss,5m)<100",
+        # max<100: si en los 5 min hubo una muestra sin respuesta, es una caída (o su recuperación), no pérdida.
+        "expression": f"min(/{t}/icmppingloss,5m)>{{$ICMP.PERDIDA.WARN}} and max(/{t}/icmppingloss,5m)<100",
         "priority": SEVERIDAD["warning"], "opdata": "Pérdida: {ITEM.LASTVALUE1}",
         "tags": _tags(alcance="calidad", equipo="{HOST.HOST}"),
         "dependencies": [{"triggerid": caida}],

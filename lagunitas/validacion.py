@@ -10,6 +10,10 @@ muestra un resumen con los tiempos medidos, listo para el informe o la presentac
      de ella. Una única alerta High y una única notificación.
   3  Telegram: caída del Nodo Kika. Un aviso al grupo de operadores y el aviso de
      resuelto como respuesta a ese mensaje.
+  4  Latencia alta: 300 ms de retardo en las respuestas de Mesada (tc netem). Alerta
+     Warning en ~3 min y cierre ~3 min después de quitarla.
+
+aplicar() y restaurar() son las mismas acciones que dispara el menú interactivo.
 """
 from __future__ import annotations
 
@@ -20,8 +24,8 @@ import time
 from . import lab
 from .hosts import ensure_hostgroup
 from .model import ACCION_DEGRADACION, ACCION_NOMBRE, SITIO_GRUPO
-from .pruebas import SEVERIDAD
 
+SEVERIDAD = ["No clasif.", "Info", "Advertencia", "Media", "Alta", "Desastre"]
 POLL = 5  # segundos entre consultas a Zabbix
 ESTADO_AVISO = {"0": "pendiente", "1": "enviado", "2": "FALLÓ"}
 
@@ -32,8 +36,44 @@ PRUEBAS = {
         "espera": 15 * 60, "cierre": 20 * 60},
     2: {"titulo": "Caída troncal", "equipo": "Union_de_los_Rios", "espera": 5 * 60, "cierre": 5 * 60},
     3: {"titulo": "Notificación por Telegram", "equipo": "Nodo_Kika", "espera": 5 * 60, "cierre": 5 * 60},
+    4: {"titulo": "Latencia alta", "latencia": "Mesada", "espera": 10 * 60, "cierre": 10 * 60},
 }
 OBSERVAR_TRAS_ALERTA = 60  # caídas: segundos extra para confirmar que no se abre ninguna otra alerta
+
+
+def equipos_de(p: dict) -> list[str]:
+    if "escenarios" in p:
+        return [h for h, _ in p["escenarios"]]
+    return [p.get("equipo") or p["latencia"]]
+
+
+def activa(p: dict, estados: dict[str, str], fallas: dict[str, dict]) -> bool:
+    """Si la falla de la prueba está aplicada (según los contenedores y sus marcas)."""
+    if "escenarios" in p:
+        return any(fallas.get(h, {}).get("escenario") == esc for h, esc in p["escenarios"])
+    if "latencia" in p:
+        return bool(fallas.get(p["latencia"], {}).get("latencia"))
+    return estados.get(p["equipo"]) != "running"
+
+
+def aplicar(inv: dict, p: dict) -> None:
+    if "escenarios" in p:
+        for h, esc in p["escenarios"]:
+            lab.escenario(inv, h, esc, log=lambda *_: None)
+    elif "latencia" in p:
+        lab.latencia(inv, p["latencia"], lab.LATENCIA_PRUEBA, log=lambda *_: None)
+    else:
+        lab.caida(inv, p["equipo"], log=lambda *_: None)
+
+
+def restaurar(inv: dict, p: dict) -> None:
+    if "escenarios" in p:
+        for h, _ in p["escenarios"]:
+            lab.escenario(inv, h, "normal", log=lambda *_: None)
+    elif "latencia" in p:
+        lab.latencia(inv, p["latencia"], 0, log=lambda *_: None)
+    else:
+        lab.recuperar(inv, p["equipo"], log=lambda *_: None)
 
 
 def _mmss(seg: float | None) -> str:
@@ -171,16 +211,16 @@ def _resumen(n: int, seg: _Seguimiento, extra: str, log) -> None:
 
 def correr(inv: dict, api, n: int, log=print) -> None:
     if n not in PRUEBAS:
-        raise SystemExit(f"Prueba desconocida: {n}. Disponibles: 1, 2, 3")
+        raise SystemExit(f"Prueba desconocida: {n}. Disponibles: {', '.join(map(str, PRUEBAS))}")
     p = PRUEBAS[n]
     estados = {k: c["State"] for k, c in lab._contenedores().items()}
-    equipos = [h for h, _ in p["escenarios"]] if "escenarios" in p else [p["equipo"]]
+    equipos = equipos_de(p)
     abajo = [h for h in equipos if estados.get(h) != "running"]
     if abajo:
         raise SystemExit(f"{', '.join(abajo)} no está en línea. Primero: bin/lagunitas lab levantar")
     log(f"=== Prueba {n} · {p['titulo']} ===")
 
-    observados = equipos if "escenarios" in p else equipos + lab.descendientes(inv, p["equipo"])
+    observados = equipos + (lab.descendientes(inv, p["equipo"]) if "equipo" in p else [])
     t0 = time.time()
     seg = _Seguimiento(api, t0, observados, log)
     restaurado = False
@@ -191,28 +231,31 @@ def correr(inv: dict, api, n: int, log=print) -> None:
             return
         restaurado = True
         seg.t_restaura = time.time()
-        if "escenarios" in p:
-            for h, _ in p["escenarios"]:
-                lab.escenario(inv, h, "normal", log=lambda *_: None)
-            log(f"  {time.strftime('%H:%M:%S')}  valores normales restaurados")
-        else:
-            lab.recuperar(inv, p["equipo"], log=lambda *_: None)
-            log(f"  {time.strftime('%H:%M:%S')}  {p['equipo']} y sus dependientes levantados")
+        restaurar(inv, p)
+        log(f"  {time.strftime('%H:%M:%S')}  " + (
+            "valores normales restaurados" if "escenarios" in p else
+            f"latencia de {p['latencia']} quitada" if "latencia" in p else
+            f"{p['equipo']} y sus dependientes levantados"))
 
     extra = ""
+    avisado = lambda: any(d["aviso"] and d["aviso"]["status"] != "0" for d in seg.eventos.values())
     try:
         if "escenarios" in p:
+            aplicar(inv, p)
             for h, esc in p["escenarios"]:
-                lab.escenario(inv, h, esc, log=lambda *_: None)
                 log(f"  {time.strftime('%H:%M:%S')}  escenario '{esc}' aplicado en {h}")
             log(f"  Los triggers usan promedios de 10 y 15 min: las alertas tardan entre 6 y 11 min.")
             _esperar(seg, t0 + p["espera"], lambda: False, log, enter=True)
+        elif "latencia" in p:
+            aplicar(inv, p)
+            extra = f"{lab.LATENCIA_PRUEBA} ms de retardo en {p['latencia']}"
+            log(f"  {time.strftime('%H:%M:%S')}  {extra}. El trigger usa el promedio de 5 min: ~3 min.")
+            _esperar(seg, t0 + p["espera"], avisado, log)
         else:
             caidos = lab._afectados(inv, p["equipo"], False)
-            lab.caida(inv, p["equipo"], log=lambda *_: None)
+            aplicar(inv, p)
             extra = f"{len(caidos)} equipos detenidos"
             log(f"  {time.strftime('%H:%M:%S')}  {p['equipo']} detenido ({extra})")
-            avisado = lambda: any(d["aviso"] and d["aviso"]["status"] != "0" for d in seg.eventos.values())
             _esperar(seg, t0 + p["espera"], avisado, log)
             if avisado():
                 log(f"  observando {OBSERVAR_TRAS_ALERTA} s más para confirmar que no se abre ninguna otra alerta...")

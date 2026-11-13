@@ -185,6 +185,12 @@ def install_airmax(api: ZabbixAPI, groupid: str) -> dict:
     item({"name": "SNMP: disponibilidad del agente", "key_": "zabbix[host,snmp,available]", "type": INTERNO,
           "value_type": UINT, "delay": INTERVALO, "history": "30d", "trends": "365d", "valuemapid": vm_snmp,
           "tags": tg["snmp"]})
+    # Ping propio del template (un template no puede usar ítems de otro): "sin datos SNMP" solo se
+    # abre si el equipo respondió el ping durante todo el período. Sin esto, al recuperarse un tramo
+    # troncal cada equipo aguas abajo abría "sin datos SNMP" hasta su primera consulta SNMP.
+    item({"name": "SNMP: referencia de ping", "key_": "icmpping[,1]", "type": 3, "value_type": UINT,
+          "delay": INTERVALO, "history": "7d", "trends": "0", "tags": tg["snmp"],
+          "description": "1 si el equipo responde al ping. Solo lo usa el trigger «sin datos SNMP»."})
 
     # --- radio (ubntRadioTable)
     item(_snmp("Radio: modo", "airmax.radio.modo", f"{AIROS}.1.1.2.1", UINT, delay=INTERVALO, vm=vm_modo,
@@ -266,7 +272,8 @@ def install_airmax(api: ZabbixAPI, groupid: str) -> dict:
     # --- triggers
     sin_datos = ensure_trigger(api, tid, {
         "description": "{HOST.NAME}: sin datos SNMP",
-        "expression": f"nodata(/{t}/airmax.sistema.uptime,{{$SNMP.SIN.DATOS}})=1",
+        "expression": f"nodata(/{t}/airmax.sistema.uptime,{{$SNMP.SIN.DATOS}})=1 and "
+                      f"min(/{t}/icmpping[,1],{{$SNMP.SIN.DATOS}})=1",
         "priority": SEVERIDAD["average"], "tags": _tags(alcance="snmp", equipo="{HOST.HOST}"),
         "comments": "El equipo no responde SNMP. Si responde al ping: revisar que el agente SNMP "
                     "de airOS esté habilitado, la comunidad y el firewall."})
@@ -467,6 +474,12 @@ def install_mikrotik(api: ZabbixAPI, groupid: str) -> dict:
     item({"name": "SNMP: disponibilidad del agente", "key_": "zabbix[host,snmp,available]", "type": INTERNO,
           "value_type": UINT, "delay": INTERVALO, "history": "30d", "trends": "365d", "valuemapid": vm_snmp,
           "tags": tg["snmp"]})
+    # Ping propio del template (un template no puede usar ítems de otro): "sin datos SNMP" solo se
+    # abre si el equipo respondió el ping durante todo el período. Sin esto, al recuperarse un tramo
+    # troncal cada equipo aguas abajo abría "sin datos SNMP" hasta su primera consulta SNMP.
+    item({"name": "SNMP: referencia de ping", "key_": "icmpping[,1]", "type": 3, "value_type": UINT,
+          "delay": INTERVALO, "history": "7d", "trends": "0", "tags": tg["snmp"],
+          "description": "1 si el equipo responde al ping. Solo lo usa el trigger «sin datos SNMP»."})
 
     _interfaces(api, tid, "mikrotik", vm_oper, "{$MIKROTIK.IF.MATCHES}", t)
 
@@ -492,7 +505,8 @@ def install_mikrotik(api: ZabbixAPI, groupid: str) -> dict:
 
     sin_datos = ensure_trigger(api, tid, {
         "description": "{HOST.NAME}: sin datos SNMP",
-        "expression": f"nodata(/{t}/mikrotik.sistema.uptime,{{$SNMP.SIN.DATOS}})=1",
+        "expression": f"nodata(/{t}/mikrotik.sistema.uptime,{{$SNMP.SIN.DATOS}})=1 and "
+                      f"min(/{t}/icmpping[,1],{{$SNMP.SIN.DATOS}})=1",
         "priority": SEVERIDAD["average"], "tags": _tags(alcance="snmp", equipo="{HOST.HOST}"),
         "comments": "El router no responde SNMP: verificar /snmp (enabled, comunidad, addresses) "
                     "y el firewall (UDP 161 desde la IP del servidor Zabbix)."})

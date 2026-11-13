@@ -18,7 +18,7 @@ SUBRED = "10.50.0.0/24"
 from .config import ROOT
 
 IMAGEN = "alpine:3.20"
-VERSION_SNMPSIM = "3"  # subir si cambia la imagen, para reconstruirla y recrear los contenedores
+VERSION_SNMPSIM = "4"  # subir si cambia la imagen, para reconstruirla y recrear los contenedores
 IMAGEN_SNMP = f"lagunitas/snmpsim:lab-v{VERSION_SNMPSIM}"
 
 AIROS = "1.3.6.1.4.1.41112.1.4"
@@ -188,7 +188,7 @@ def escenario(inv: dict, nombre: str, escenario_: str, log=print) -> None:
     if perfil == "icmp":
         raise SystemExit(f"{nombre} no tiene agente SNMP simulado (perfil solo icmp)")
     if escenario_ == "normal":
-        _docker("exec", nombre, "perfil-reset")
+        _docker("exec", nombre, "sh", "-c", f"perfil-reset && rm -f {MARCA_ESCENARIO}")
         log(f"  {nombre}: valores normales restaurados")
         return
     if escenario_ not in ESCENARIOS:
@@ -197,9 +197,61 @@ def escenario(inv: dict, nombre: str, escenario_: str, log=print) -> None:
     if perfil not in perfiles:
         raise SystemExit(f"El escenario '{escenario_}' aplica a {', '.join(perfiles)}; {nombre} es {perfil}")
     expr = " ".join(f"-e 's#^{oid}|.*#{oid}|{valor}#'" for oid, valor in cambios)
-    _docker("exec", nombre, "sh", "-c", f"sed -i {expr} /tmp/snmp/public.snmprec")
+    _docker("exec", nombre, "sh", "-c", f"perfil-reset && sed -i {expr} /tmp/snmp/public.snmprec && "
+                                       f"echo {escenario_} > {MARCA_ESCENARIO}")
     log(f"  {nombre}: escenario '{escenario_}' aplicado. Zabbix lo refleja en 1-15 min según el "
         f"trigger (promedios de 5-15 min). Volver con: bin/lagunitas lab escenario {nombre} normal")
+
+
+IMAGEN_NETEM = "lagunitas/netem:1"
+# Marcas de las fallas simuladas activas. /dev/shm es tmpfs: se borran solas si el contenedor se
+# reinicia, que es justo cuando la falla desaparece.
+MARCA_LATENCIA = "/dev/shm/lagunitas-latencia"
+MARCA_ESCENARIO = "/dev/shm/lagunitas-escenario"
+LATENCIA_PRUEBA = 300  # ms: supera el umbral de 150 ms sin llegar al timeout del ping (500 ms)
+
+
+def _asegurar_imagen_netem(log) -> None:
+    if _docker("image", "inspect", IMAGEN_NETEM, check=False).returncode != 0:
+        log("  construyendo la imagen auxiliar de tc netem...")
+        subprocess.run(["docker", "build", "-q", "-t", IMAGEN_NETEM, "-"],
+                       input="FROM alpine:3.20\nRUN apk add --no-cache iproute2-tc\n",
+                       text=True, capture_output=True, check=True)
+
+
+def latencia(inv: dict, nombre: str, ms: int, log=print) -> None:
+    """Agrega (ms > 0) o quita (ms = 0) un retardo a las respuestas del equipo con tc netem.
+
+    Lo aplica un contenedor auxiliar que comparte la red del equipo, así los contenedores
+    simulados no necesitan NET_ADMIN. El retardo desaparece si el contenedor se reinicia."""
+    if nombre not in inv["por_host"]:
+        raise SystemExit(f"'{nombre}' no está en el inventario")
+    c = _contenedores().get(nombre)
+    if not c or c["State"] != "running":
+        raise SystemExit(f"{nombre} no está en línea")
+    _asegurar_imagen_netem(log)
+    tc = (f"tc qdisc replace dev eth0 root netem delay {ms}ms" if ms
+          else "tc qdisc del dev eth0 root 2>/dev/null || true")
+    _docker("run", "--rm", "--network", f"container:{nombre}", "--cap-add", "NET_ADMIN", IMAGEN_NETEM, "sh", "-c", tc)
+    _docker("exec", nombre, "sh", "-c", f"echo {ms} > {MARCA_LATENCIA}" if ms else f"rm -f {MARCA_LATENCIA}")
+    if ms:
+        log(f"  {nombre}: latencia de {ms} ms aplicada. Zabbix abre «latencia alta» (promedio de 5 min > "
+            f"150 ms) en ~3 min. Quitar con: bin/lagunitas lab latencia {nombre} normal")
+    else:
+        log(f"  {nombre}: latencia normal restaurada; el problema se cierra en ~3 min")
+
+
+def fallas(nombres: list[str]) -> dict[str, dict]:
+    """Fallas simuladas vigentes de cada contenedor en línea: {"latencia": ms, "escenario": nombre}."""
+    from concurrent.futures import ThreadPoolExecutor
+
+    def leer(n: str) -> dict:
+        r = _docker("exec", n, "sh", "-c", f"cat {MARCA_LATENCIA} 2>/dev/null; echo '|'; "
+                                           f"cat {MARCA_ESCENARIO} 2>/dev/null; true", check=False)
+        lat, _, esc = r.stdout.partition("|") if r.returncode == 0 else ("", "", "")
+        return {"latencia": int(lat.strip()) if lat.strip().isdigit() else 0, "escenario": esc.strip()}
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        return dict(zip(nombres, pool.map(leer, nombres)))
 
 
 def estado(inv: dict, log=print) -> None:
