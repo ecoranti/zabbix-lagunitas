@@ -18,8 +18,8 @@ SUBRED = "10.50.0.0/24"
 from .config import ROOT
 
 IMAGEN = "alpine:3.20"
-IMAGEN_SNMP = "lagunitas/snmpsim:lab"
-VERSION_SNMPSIM = "2"  # subir si cambia la imagen, para recrear los contenedores
+VERSION_SNMPSIM = "3"  # subir si cambia la imagen, para reconstruirla y recrear los contenedores
+IMAGEN_SNMP = f"lagunitas/snmpsim:lab-v{VERSION_SNMPSIM}"
 
 AIROS = "1.3.6.1.4.1.41112.1.4"
 STA = "1.24.232.41.138.27.44"  # índice de la estación simulada
@@ -111,7 +111,8 @@ def levantar(inv: dict, log=print) -> None:
         if c is None:
             base = ["run", "-d", "--name", nombre, "--hostname", nombre, "--network", RED,
                     "--ip", str(e["ip"]), "--restart", "unless-stopped", "--label", LABEL,
-                    "--label", f"ar.lagunitas.rol={e['rol']}", "--label", etiqueta_perfil]
+                    "--label", f"ar.lagunitas.rol={e['rol']}", "--label", etiqueta_perfil,
+                    "--log-opt", "max-size=5m", "--log-opt", "max-file=2"]
             if perfil == "icmp":
                 _docker(*base, "--memory", "16m", IMAGEN, "sleep", "infinity")
             else:

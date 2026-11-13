@@ -11,6 +11,7 @@ services:
       - --collation-server=utf8mb4_bin
       - --log-bin-trust-function-creators=1
       - --innodb-buffer-pool-size=512M
+      - --skip-log-bin             # sin replicación: los binlogs solo ocupaban disco (GB)
     environment:
       MYSQL_DATABASE: ${MYSQL_DATABASE}
       MYSQL_USER: ${MYSQL_USER}
@@ -26,6 +27,9 @@ services:
       timeout: 5s
       retries: 12
       start_period: 30s
+    logging: &logs
+      driver: json-file
+      options: {max-size: "20m", max-file: "3"}
     restart: unless-stopped
 
   zabbix-server:
@@ -49,6 +53,7 @@ services:
     depends_on:
       mysql-server:
         condition: service_healthy
+    logging: *logs
     restart: unless-stopped
 
   zabbix-web:
@@ -76,6 +81,7 @@ services:
       interval: 30s
       timeout: 5s
       retries: 5
+    logging: *logs
     restart: unless-stopped
 
   # Agente para el auto-monitoreo del servidor (host "Zabbix server").
@@ -88,6 +94,7 @@ services:
     networks:
       zabbix_net:
         aliases: [zabbix-agent]
+    logging: *logs
     restart: unless-stopped
 
 networks:
