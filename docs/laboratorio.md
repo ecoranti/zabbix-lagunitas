@@ -343,7 +343,7 @@ tiempos:
 |---|---|---|---|
 | 1 | Degradación por SNMP | `senal-debil` en Walter, `interferencia` en Mesada y `bateria-baja` en el Gateway. Restaura con Enter o a los 15 min | 6 o 7 alertas Warning entre los 6 y 11 min (SNR y calidad dependen de la oscilación simulada) y cierre automático en menos de 10 min |
 | 2 | Caída troncal | Detiene Unión de los Ríos y sus 18 dependientes; restaura 60 s después del aviso | Una única alerta High en ~90 s y un único aviso por Telegram |
-| 3 | Telegram | Detiene el Nodo Kika (y el hogar Kika); restaura 60 s después del aviso | Un aviso al grupo de operadores y el aviso de resuelto como respuesta a ese mensaje |
+| 3 | Telegram | Detiene el Nodo Kika (y el hogar Kika); restaura 60 s después del aviso | Un aviso al grupo de operadores y, como respuesta a ese mensaje, «Nodo Kika volvió a estar en línea» con el enlace restablecido (Kika) |
 
 Ctrl+C interrumpe la prueba y restaura los equipos. Las tres pruebas notifican por Telegram
 porque la acción avisa desde Warning.

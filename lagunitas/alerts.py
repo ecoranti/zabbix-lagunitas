@@ -3,11 +3,11 @@ from __future__ import annotations
 
 import os
 
-from .model import ACCION_NOMBRE, GRUPO_USUARIOS, SITIO_GRUPO
+from .model import ACCION_DEGRADACION, ACCION_NOMBRE, GRUPO_USUARIOS, SITIO_GRUPO
 from .zbx import ZabbixAPI
 
-COND_GRUPO, COND_SEVERIDAD, COND_SUPRIMIDO = 0, 4, 16
-OP_IGUAL, OP_MAYOR_IGUAL, OP_NO = 0, 5, 11
+COND_GRUPO, COND_SEVERIDAD, COND_SUPRIMIDO, COND_TAG_VALOR = 0, 4, 16, 26
+OP_IGUAL, OP_DISTINTO, OP_MAYOR_IGUAL, OP_NO = 0, 1, 5, 11
 
 
 def ensure_usergroup(api: ZabbixAPI, groupid: str) -> str:
@@ -22,7 +22,18 @@ def ensure_usergroup(api: ZabbixAPI, groupid: str) -> str:
     return api.call("usergroup.create", {"name": GRUPO_USUARIOS, **params})["usrgrpids"][0]
 
 
-def ensure_action(api: ZabbixAPI, hostgroupid: str, usrgrpid: str, severidad_min: int = 2) -> str:
+# Aviso de recuperación propio de las caídas: además de que el equipo volvió, dice qué equipos
+# recuperan el servicio a través de él ({$LAGUNITAS.RESTABLECE}, lo arma hosts.py del inventario).
+RECUPERACION_CAIDA = {
+    "subject": "✅ {HOST.NAME} volvió a estar en línea",
+    "message": "Estuvo caído: {EVENT.DURATION}\nResuelto: {EVENT.RECOVERY.DATE} {EVENT.RECOVERY.TIME}\n"
+               "{$LAGUNITAS.RESTABLECE}\nRed Las Lagunitas"}
+
+
+def ensure_action(api: ZabbixAPI, nombre: str, hostgroupid: str, usrgrpid: str, caidas: bool,
+                  severidad_min: int = 2) -> str:
+    """Las caídas (triggers con tag alcance=disponibilidad) y el resto van en acciones separadas
+    para que la recuperación de una caída tenga su propio mensaje."""
     params = {
         "status": 0, "esc_period": "30m", "pause_symptoms": 1, "pause_suppressed": 1,
         "notify_if_canceled": 1,
@@ -30,6 +41,8 @@ def ensure_action(api: ZabbixAPI, hostgroupid: str, usrgrpid: str, severidad_min
             {"conditiontype": COND_GRUPO, "operator": OP_IGUAL, "value": hostgroupid},
             {"conditiontype": COND_SEVERIDAD, "operator": OP_MAYOR_IGUAL, "value": str(severidad_min)},
             {"conditiontype": COND_SUPRIMIDO, "operator": OP_NO},
+            {"conditiontype": COND_TAG_VALOR, "operator": OP_IGUAL if caidas else OP_DISTINTO,
+             "value2": "alcance", "value": "disponibilidad"},
         ]},
         # Aviso inmediato y recordatorio a los 30 min si el problema sigue abierto.
         "operations": [
@@ -37,15 +50,16 @@ def ensure_action(api: ZabbixAPI, hostgroupid: str, usrgrpid: str, severidad_min
              "opmessage": {"default_msg": 1, "mediatypeid": "0"},
              "opmessage_grp": [{"usrgrpid": usrgrpid}]},
         ],
-        "recovery_operations": [{"operationtype": 11, "opmessage": {"default_msg": 1}}],
+        "recovery_operations": [{"operationtype": 11, "opmessage":
+                                 {"default_msg": 0, **RECUPERACION_CAIDA} if caidas else {"default_msg": 1}}],
         "update_operations": [{"operationtype": 12, "opmessage": {"default_msg": 1}}],
     }
-    found = api.call("action.get", {"filter": {"name": [ACCION_NOMBRE]}, "output": ["actionid"]})
+    found = api.call("action.get", {"filter": {"name": [nombre]}, "output": ["actionid"]})
     if found:
         aid = found[0]["actionid"]
         api.call("action.update", {"actionid": aid, **params})
         return aid
-    return api.call("action.create", {"name": ACCION_NOMBRE, "eventsource": 0, **params})["actionids"][0]
+    return api.call("action.create", {"name": nombre, "eventsource": 0, **params})["actionids"][0]
 
 
 # Mensajes en español (texto plano: el script de Zabbix escapa el texto según el modo de formato,
@@ -92,6 +106,7 @@ def ensure_telegram(api: ZabbixAPI, log=print) -> None:
 
 def ensure_alerting(api: ZabbixAPI, groups: dict[str, str], log=print) -> None:
     ug = ensure_usergroup(api, groups[SITIO_GRUPO])
-    ensure_action(api, groups[SITIO_GRUPO], ug)
-    log(f"  grupo '{GRUPO_USUARIOS}' y acción '{ACCION_NOMBRE}' (severidad >= Warning)")
+    ensure_action(api, ACCION_NOMBRE, groups[SITIO_GRUPO], ug, caidas=True)
+    ensure_action(api, ACCION_DEGRADACION, groups[SITIO_GRUPO], ug, caidas=False)
+    log(f"  grupo '{GRUPO_USUARIOS}' y acciones '{ACCION_NOMBRE}' y '{ACCION_DEGRADACION}' (severidad >= Warning)")
     ensure_telegram(api, log)

@@ -155,6 +155,8 @@ def install_icmp(api: ZabbixAPI, groupid: str, sonda: bool = False) -> dict:
              "description": "Latencia promedio (s) en 5 min que dispara advertencia (150 ms)"},
             {"macro": "{$ICMP.CAIDA.PERIODO}", "value": "90s",
              "description": "Tiempo sin respuesta al ping para declarar el equipo caído"},
+            {"macro": "{$LAGUNITAS.RESTABLECE}", "value": "",
+             "description": "Equipos que recuperan el servicio cuando este vuelve (lo completa el provisionador)"},
         ],
         tags=_tags(clase="red", objetivo="disponibilidad"),
     )
@@ -246,6 +248,8 @@ def install_unifi(api: ZabbixAPI, groupid: str) -> dict:
         "secreta {$UNIFI.API.KEY} del host.",
         macros=[
             {"macro": "{$UNIFI.HOST}", "value": "", "description": "IP/DNS del controlador UniFi"},
+            {"macro": "{$LAGUNITAS.RESTABLECE}", "value": "",
+             "description": "Equipos que recuperan el servicio cuando este vuelve (lo completa el provisionador)"},
             {"macro": "{$UNIFI.PORT}", "value": "443", "description": "Puerto HTTPS del controlador"},
             {"macro": "{$UNIFI.API.PATH}", "value": "/proxy/network/integration/v1",
              "description": "Ruta base de la API de integración"},

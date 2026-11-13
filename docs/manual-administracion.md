@@ -39,7 +39,7 @@ se ejecutan en el servidor de monitoreo desde la carpeta del proyecto.
 | Mapa | `Las Lagunitas - Topología` |
 | Dashboard | `Las Lagunitas - Centro de monitoreo` |
 | Servicios / SLA | `Red Las Lagunitas` (y sub-servicios por rol y por sitio) · SLA `Las Lagunitas - Disponibilidad mensual` (objetivo 99,5 %) |
-| Alertas | Grupo `Operadores Las Lagunitas` · Acción `Las Lagunitas - Notificar caídas` |
+| Alertas | Grupo `Operadores Las Lagunitas` · Acciones `Las Lagunitas - Notificar caídas` y `Las Lagunitas - Notificar degradación` |
 | Módulos | `Red Las Lagunitas` (widget) · `Reporte de disponibilidad - Las Lagunitas` |
 
 ---
@@ -307,10 +307,16 @@ radio se saturan o el servidor queda corto de recursos, subirlo a `30s` o `1m`.
 
 ### Notificaciones
 
-La acción *Las Lagunitas - Notificar caídas* avisa los problemas de severidad Warning o mayor al
-grupo *Operadores Las Lagunitas* por todos sus medios, envía un recordatorio a los 30 minutos si
-el problema sigue abierto y avisa la recuperación y las actualizaciones (por ejemplo, un
-*Acknowledge*). Los problemas suprimidos por mantenimiento no se notifican. Configuración de
+Las notificaciones avisan los problemas de severidad Warning o mayor al grupo *Operadores Las
+Lagunitas* por todos sus medios, envían un recordatorio a los 30 minutos si el problema sigue
+abierto y avisan la recuperación y las actualizaciones (por ejemplo, un *Acknowledge*). Las alertas se notifican con dos acciones. *Las Lagunitas - Notificar caídas* atiende los
+problemas de disponibilidad (triggers con la etiqueta `alcance=disponibilidad`: un equipo que no
+responde al ping o un AP fuera de línea) y, cuando el equipo vuelve, avisa «volvió a estar en
+línea» junto con los enlaces que se restablecen, es decir, los equipos monitoreados que dependen de
+él según el inventario (macro `{$LAGUNITAS.RESTABLECE}`, que arma el provisionador).
+*Las Lagunitas - Notificar degradación* atiende el resto (señal, interferencia, energía, recursos)
+con el aviso de resuelto estándar.
+ Los problemas suprimidos por mantenimiento no se notifican. Configuración de
 Telegram: ver la Guía de implementación, sección *Notificaciones por Telegram*.
 
 Para agregar a otra persona: sumarla al grupo de Telegram de operadores (no hace falta tocar

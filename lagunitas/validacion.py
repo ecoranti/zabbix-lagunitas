@@ -19,7 +19,7 @@ import time
 
 from . import lab
 from .hosts import ensure_hostgroup
-from .model import ACCION_NOMBRE, SITIO_GRUPO
+from .model import ACCION_DEGRADACION, ACCION_NOMBRE, SITIO_GRUPO
 from .pruebas import SEVERIDAD
 
 POLL = 5  # segundos entre consultas a Zabbix
@@ -52,8 +52,8 @@ class _Seguimiento:
         self.t_restaura: float | None = None
         self.hostids = [h["hostid"] for h in api.call("host.get", {
             "groupids": [ensure_hostgroup(api, SITIO_GRUPO)], "filter": {"host": hosts}, "output": ["hostid"]})]
-        accion = api.call("action.get", {"filter": {"name": [ACCION_NOMBRE]}, "output": ["actionid"]})
-        self.accion = accion[0]["actionid"] if accion else None
+        self.acciones = [a["actionid"] for a in api.call("action.get", {
+            "filter": {"name": [ACCION_NOMBRE, ACCION_DEGRADACION]}, "output": ["actionid"]})]
         self.eventos: dict[str, dict] = {}
         self._vistos: set[tuple] = set()
 
@@ -65,8 +65,8 @@ class _Seguimiento:
         rec = {r["eventid"]: int(r["clock"]) for r in self.api.call(
             "event.get", {"eventids": rids, "output": ["eventid", "clock"]})} if rids else {}
         avisos = self.api.call("alert.get", {
-            "actionids": [self.accion], "time_from": self.t0, "sortfield": "clock", "sortorder": "ASC",
-            "output": ["eventid", "p_eventid", "clock", "status", "error"]}) if self.accion else []
+            "actionids": self.acciones, "time_from": self.t0, "sortfield": "clock", "sortorder": "ASC",
+            "output": ["eventid", "p_eventid", "clock", "status", "error"]}) if self.acciones else []
         for e in evs:
             d = self.eventos.setdefault(e["eventid"], {
                 "host": e["hosts"][0]["host"] if e["hosts"] else "?", "nombre": e["name"],

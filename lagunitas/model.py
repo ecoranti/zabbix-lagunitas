@@ -33,7 +33,10 @@ DASHBOARD_NOMBRE = "Las Lagunitas - Centro de monitoreo"
 SERVICIO_RAIZ = "Red Las Lagunitas"
 SLA_NOMBRE = "Las Lagunitas - Disponibilidad mensual"
 GRUPO_USUARIOS = "Operadores Las Lagunitas"
-ACCION_NOMBRE = "Las Lagunitas - Notificar caídas"
+ACCION_NOMBRE = "Las Lagunitas - Notificar caídas"          # triggers con alcance=disponibilidad
+ACCION_DEGRADACION = "Las Lagunitas - Notificar degradación"  # el resto (señal, energía, recursos...)
+# Texto del aviso de recuperación de una caída: qué equipos vuelven a tener servicio.
+MACRO_RESTABLECE = "{$LAGUNITAS.RESTABLECE}"
 
 ROLES = {
     "gateway": {"grupo": "Las Lagunitas/Gateway", "etiqueta": "Gateway",

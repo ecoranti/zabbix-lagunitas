@@ -414,12 +414,18 @@ Requiere salida HTTPS desde el servidor hacia `api.telegram.org`.
 
    El aprovisionamiento habilita el media type *Telegram* con mensajes en español
    (🔴 problema, ✅ resuelto, 💬 actualización) y lo asigna al usuario `Admin` para severidades
-   Average, High y Disaster. En Telegram, cada "Resuelto" aparece como respuesta al mensaje del
+   Warning, Average, High y Disaster. En Telegram, cada "Resuelto" aparece como respuesta al mensaje del
    problema.
 
-La acción *Las Lagunitas - Notificar caídas* avisa al grupo *Operadores Las Lagunitas* los
-problemas de severidad **Warning o mayor**, envía un recordatorio a los 30 minutos si siguen
-abiertos y avisa la recuperación. Los problemas suprimidos por un mantenimiento no se notifican.
+Las notificaciones avisan al grupo *Operadores Las Lagunitas* los problemas de severidad
+**Warning o mayor**, envían un recordatorio a los 30 minutos si siguen abiertos y avisan la
+recuperación. Las alertas se notifican con dos acciones. *Las Lagunitas - Notificar caídas* atiende los
+problemas de disponibilidad (triggers con la etiqueta `alcance=disponibilidad`: un equipo que no
+responde al ping o un AP fuera de línea) y, cuando el equipo vuelve, avisa «volvió a estar en
+línea» junto con los enlaces que se restablecen, es decir, los equipos monitoreados que dependen de
+él según el inventario (macro `{$LAGUNITAS.RESTABLECE}`, que arma el provisionador).
+*Las Lagunitas - Notificar degradación* atiende el resto (señal, interferencia, energía, recursos)
+con el aviso de resuelto estándar. Los problemas suprimidos por un mantenimiento no se notifican.
 
 ### Seguridad del bot de Telegram
 

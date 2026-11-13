@@ -3,7 +3,8 @@ from __future__ import annotations
 
 import os
 
-from .model import ESTADOS, PERFILES, ROLES, SITIO_GRUPO, TPL_ICMP, TPL_ICMP_SONDA, TPL_UNIFI, TRIGGER_CAIDA
+from .model import (ESTADOS, MACRO_RESTABLECE, PERFILES, ROLES, SITIO_GRUPO, TPL_ICMP, TPL_ICMP_SONDA, TPL_UNIFI,
+                    TRIGGER_CAIDA)
 from .zbx import ZabbixAPI
 
 # Objetos de la versión anterior del laboratorio (scripts sueltos, v1).
@@ -93,9 +94,36 @@ def profundidad(inv: dict, host: str) -> int:
     return n
 
 
+def dependientes_monitoreados(inv: dict, host: str) -> list[str]:
+    """Nombres de los equipos monitoreados que dependen (directa o indirectamente) del dado."""
+    hijos: dict[str, list[str]] = {}
+    for x in inv["todos"]:
+        if x.get("padre"):
+            hijos.setdefault(x["padre"], []).append(x["host"])
+    out, pila = [], list(hijos.get(host, []))
+    while pila:
+        h = pila.pop(0)
+        out.append(h)
+        pila.extend(hijos.get(h, []))
+    return [inv["por_host"][h]["nombre"] for h in out if ESTADOS[inv["por_host"][h]["estado"]]["monitoreado"]]
+
+
+def texto_restablece(inv: dict, host: str) -> str:
+    """Línea del aviso de recuperación de una caída (vacía si nadie depende del equipo)."""
+    deps = dependientes_monitoreados(inv, host)
+    if not deps:
+        return ""
+    if len(deps) == 1:
+        return f"🔗 Enlace restablecido: {deps[0]} vuelve a tener servicio."
+    return f"🔗 {len(deps)} enlaces restablecidos: vuelven a tener servicio {', '.join(deps[:-1])} y {deps[-1]}."
+
+
 def _macros(e: dict, log, inv: dict) -> list[dict] | None:
     """Macros del host. Devuelve None si falta un secreto (no se tocan las existentes)."""
     macros = [{"macro": k, "value": str(v)} for k, v in (e.get("macros") or {}).items()]
+    if texto := texto_restablece(inv, e["host"]):
+        macros.append({"macro": MACRO_RESTABLECE, "value": texto,
+                       "description": "Aviso de recuperación: equipos que dependen de este (del inventario)"})
     # Cada nivel espera 15 s más que su padre para declarar la caída: si caen juntos (corte
     # troncal), el padre entra primero en problema y la dependencia suprime a los hijos.
     # Sin esto, un hijo que "gana la carrera" genera una alerta propia además de la del padre.

@@ -1062,7 +1062,7 @@ IDEA PARA REPETIR: no hace falta resolver el problema uno mismo; hace falta ente
     # ---------------------------------------------------------------- 30. Telegram
     d.nueva("Así llega una alarma por Telegram", f"""
 QUÉ DECIR: Las alarmas llegan al grupo de Telegram «Operadores Las Lagunitas». El mensaje con el círculo rojo avisa un problema. Se lee así: primero la gravedad (High), después el equipo y qué le pasa («Nodo Kika: sin respuesta (ICMP)», es decir, no contesta el ping). Debajo, el estado («Caído»), el nombre y la dirección del equipo, y la fecha y hora de inicio.
-Cuando el equipo vuelve, llega un segundo mensaje con la tilde verde, «Resuelto», como respuesta al primero, con cuánto duró el problema. En el ejemplo, un minuto y medio.
+Cuando el equipo vuelve, llega un segundo mensaje con la tilde verde, «volvió a estar en línea», como respuesta al primero, con cuánto duró la caída y qué enlaces se restablecieron, es decir, qué equipos que dependían de él vuelven a tener servicio. En el ejemplo, la caída duró un minuto y medio y vuelve a tener servicio la casa de Kika.
 REGLAS: 1) Llegan los problemas de gravedad Warning o mayor. 2) Si el problema sigue abierto, el aviso se repite una vez, a los {u['repite']} minutos. 3) Siempre se avisa cuando se resuelve. 4) Durante un mantenimiento programado no se envían avisos.
 MUY IMPORTANTE: el bot solo envía. No lee ni contesta lo que se le escriba, así que no sirve responderle. Para coordinar, escriban en el grupo entre personas.
 SI APARECE UN MENSAJE RARO que no parece una alarma, avisar a quien administra: puede haberse filtrado la clave del bot.
@@ -1076,7 +1076,7 @@ FUENTE: lagunitas/alerts.py (plantillas del mensaje, repetición a los {u['repit
     d.leyenda(8.05, 1.6, ANCHO - MX - 8.05, [
         ("Qué pasó", "Gravedad, equipo y problema."),
         ("Dónde y cuándo", "Estado, dirección y hora de inicio."),
-        ("Resuelto", "Llega solo cuando el equipo vuelve, con la duración.")], size=16, paso=1.15)
+        ("En línea", "Llega solo cuando el equipo vuelve: duración y enlaces restablecidos.")], size=16, paso=1.15)
     reglas = [("Qué llega", "Gravedad Warning o mayor"), ("Recordatorio", f"Una vez, a los {u['repite']} minutos"),
               ("Aviso de resuelto", "Cuando el equipo vuelve"), ("El bot solo envía", "No lee ni responde mensajes")]
     rw = (CW - 3 * 0.2) / 4
