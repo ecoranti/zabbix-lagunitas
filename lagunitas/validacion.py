@@ -79,7 +79,7 @@ def restaurar(inv: dict, p: dict) -> None:
 def _mmss(seg: float | None) -> str:
     if seg is None:
         return "—"
-    seg = int(round(seg))
+    seg = max(0, int(round(seg)))  # el reloj de Zabbix puede ir ~1 s detrás del de la Mac
     return f"{seg // 60}:{seg % 60:02d}"
 
 
@@ -150,9 +150,10 @@ class _Seguimiento:
             for d in self.eventos.values())
 
 
-def _esperar(seg: _Seguimiento, hasta: float, listo, log, enter: bool = False) -> None:
+def _esperar(seg: _Seguimiento, hasta: float, listo, log, enter: bool = False,
+             avisar_plazo: bool = True) -> None:
     """Consulta Zabbix cada POLL s hasta que listo() sea verdadero, se cumpla el plazo o,
-    si enter=True, se presione Enter."""
+    si enter=True, se presione Enter. avisar_plazo=False para esperas de duración fija."""
     ultimo = 0.0
     while time.time() < hasta:
         try:
@@ -171,7 +172,8 @@ def _esperar(seg: _Seguimiento, hasta: float, listo, log, enter: bool = False) -
                 return
         else:
             time.sleep(POLL)
-    log("  se cumplió el tiempo máximo de espera")
+    if avisar_plazo:
+        log("  se cumplió el tiempo máximo de espera")
 
 
 def _resumen(n: int, seg: _Seguimiento, extra: str, log) -> None:
@@ -225,7 +227,7 @@ def correr(inv: dict, api, n: int, log=print) -> None:
     seg = _Seguimiento(api, t0, observados, log)
     restaurado = False
 
-    def restaurar() -> None:
+    def deshacer() -> None:
         nonlocal restaurado
         if restaurado:
             return
@@ -245,7 +247,7 @@ def correr(inv: dict, api, n: int, log=print) -> None:
             for h, esc in p["escenarios"]:
                 log(f"  {time.strftime('%H:%M:%S')}  escenario '{esc}' aplicado en {h}")
             log(f"  Los triggers usan promedios de 10 y 15 min: las alertas tardan entre 6 y 11 min.")
-            _esperar(seg, t0 + p["espera"], lambda: False, log, enter=True)
+            _esperar(seg, t0 + p["espera"], lambda: False, log, enter=True, avisar_plazo=False)
         elif "latencia" in p:
             aplicar(inv, p)
             extra = f"{lab.LATENCIA_PRUEBA} ms de retardo en {p['latencia']}"
@@ -259,10 +261,10 @@ def correr(inv: dict, api, n: int, log=print) -> None:
             _esperar(seg, t0 + p["espera"], avisado, log)
             if avisado():
                 log(f"  observando {OBSERVAR_TRAS_ALERTA} s más para confirmar que no se abre ninguna otra alerta...")
-                _esperar(seg, time.time() + OBSERVAR_TRAS_ALERTA, lambda: False, log)
-        restaurar()
+                _esperar(seg, time.time() + OBSERVAR_TRAS_ALERTA, lambda: False, log, avisar_plazo=False)
+        deshacer()
         _esperar(seg, seg.t_restaura + p["cierre"], seg.todos_resueltos, log)
     except KeyboardInterrupt:
         log("\n  interrumpida: restaurando...")
-        restaurar()
+        deshacer()
     _resumen(n, seg, extra, log)
