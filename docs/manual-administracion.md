@@ -1,6 +1,6 @@
 # Manual de administración
 
-**Versión 2.3** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
+**Versión 2.4** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
 
 Referencia operativa del día a día: cómo leer el estado de la red, atender alarmas, dar de alta
 o de baja equipos, generar reportes, respaldar y resolver los problemas más frecuentes. La
@@ -659,4 +659,5 @@ El subcomando `bin/lagunitas lab` (simulador) es exclusivo del laboratorio.
 | 2.0 | 2026-09-29 | Primera edición del manual para la versión 2 del sistema |
 | 2.1 | 2026-09-29 | Detalle por tipo de equipo y reporte técnico |
 | 2.2 | 2026-09-30 | Medición cada 10 s, notificaciones por Telegram y escalonado de la detección de caídas |
+| 2.4 | 2026-11-13 | Telegram notifica desde Warning, con una acción para caídas y otra para degradación; el aviso de recuperación informa los enlaces restablecidos |
 | 2.3 | 2026-11-12 | Revisión técnica contra el código. Se agregan el catálogo completo de alarmas con su respuesta, los procedimientos de Internet y de energía, las tareas periódicas, el detalle de backup y restauración y la política de retención del historial (`retencion_historial`); se corrigen los estados del widget, el ajuste de umbrales y los tiempos de las pruebas de alarma |

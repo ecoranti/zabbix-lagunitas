@@ -1,6 +1,6 @@
 # Guía del laboratorio
 
-**Versión 2.3** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas (Alpa Corral, Córdoba)
+**Versión 2.4** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas (Alpa Corral, Córdoba)
 
 Esta guía explica cómo **levantar, usar y mantener el laboratorio** del sistema de monitoreo de
 la Red Las Lagunitas sobre una Mac. Describe los componentes, la instalación desde cero, el uso
@@ -572,5 +572,6 @@ mano.
 
 | Versión | Cambios |
 |---|---|
+| 2.4 | Menú interactivo de pruebas (`lab pruebas`) con caídas, escenarios SNMP y latencia simulada (`lab latencia`, con `tc netem`); pruebas guiadas 1 a 4 con seguimiento de las alertas y de los avisos de Telegram; uptime y contadores del simulador SNMP al ritmo real. |
 | 2.3 | Redacción impersonal y línea de versión; requisitos y recursos de Colima; diferencias con producción (`--skip-log-bin`, `retencion_historial`); subcomandos del simulador; alertas de cada escenario revisadas contra los umbrales; datos del repositorio y de la cantidad de equipos corregidos. |
 | Anterior | Guía sin número de versión, contemporánea de la versión 2.2 de las demás guías (puesta en marcha, uso, sonda ICMP y problemas frecuentes). |

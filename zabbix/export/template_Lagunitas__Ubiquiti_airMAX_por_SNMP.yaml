@@ -312,16 +312,6 @@ zabbix_export:
                   value: sistema
                 - tag: equipo
                   value: '{HOST.HOST}'
-            - uuid: d3afe08dd3c4499183f9f9af5d45e2e4
-              expression: 'nodata(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.sistema.uptime,{$SNMP.SIN.DATOS})=1'
-              name: '{HOST.NAME}: sin datos SNMP'
-              priority: AVERAGE
-              description: 'El equipo no responde SNMP. Si responde al ping: revisar que el agente SNMP de airOS esté habilitado, la comunidad y el firewall.'
-              tags:
-                - tag: alcance
-                  value: snmp
-                - tag: equipo
-                  value: '{HOST.HOST}'
         - uuid: 64f511468cc94d8c9502545e33789722
           name: 'Sistema: temperatura'
           type: SNMP_AGENT
@@ -537,6 +527,17 @@ zabbix_export:
           tags:
             - tag: componente
               value: radio
+        - uuid: a533961a20814e51b5e5e012c56dc22b
+          name: 'SNMP: referencia de ping'
+          type: SIMPLE
+          key: 'icmpping[,1]'
+          delay: '{$LAGUNITAS.INTERVALO}'
+          history: 7d
+          trends: '0'
+          description: '1 si el equipo responde al ping. Solo lo usa el trigger «sin datos SNMP».'
+          tags:
+            - tag: componente
+              value: snmp
         - uuid: afa602c2379642d59514c8ec4d49d076
           name: 'SNMP: disponibilidad del agente'
           type: INTERNAL
@@ -1890,9 +1891,19 @@ zabbix_export:
       description: 'El AP no tiene clientes conectados: el enlace con la(s) estación(es) remota(s) cayó.'
       dependencies:
         - name: '{HOST.NAME}: sin datos SNMP'
-          expression: 'nodata(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.sistema.uptime,{$SNMP.SIN.DATOS})=1'
+          expression: 'nodata(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.sistema.uptime,{$SNMP.SIN.DATOS})=1 and min(/Lagunitas - Ubiquiti airMAX por SNMP/icmpping[,1],{$SNMP.SIN.DATOS})=1'
       tags:
         - tag: alcance
           value: radio
+        - tag: equipo
+          value: '{HOST.HOST}'
+    - uuid: d3afe08dd3c4499183f9f9af5d45e2e4
+      expression: 'nodata(/Lagunitas - Ubiquiti airMAX por SNMP/airmax.sistema.uptime,{$SNMP.SIN.DATOS})=1 and min(/Lagunitas - Ubiquiti airMAX por SNMP/icmpping[,1],{$SNMP.SIN.DATOS})=1'
+      name: '{HOST.NAME}: sin datos SNMP'
+      priority: AVERAGE
+      description: 'El equipo no responde SNMP. Si responde al ping: revisar que el agente SNMP de airOS esté habilitado, la comunidad y el firewall.'
+      tags:
+        - tag: alcance
+          value: snmp
         - tag: equipo
           value: '{HOST.HOST}'

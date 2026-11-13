@@ -1,6 +1,6 @@
 # Guía de integración de equipos
 
-**Versión 2.3** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
+**Versión 2.4** · Zabbix 7.0 LTS · Red Comunitaria y Científica Las Lagunitas
 
 Esta guía explica, equipo por equipo, cómo incorporar al monitoreo cada dispositivo de la red
 real: qué configurar en el equipo, cómo comprobar desde el servidor que responde, cómo cargarlo
@@ -807,4 +807,5 @@ exportada en `zabbix/export/`.
 |---|---|---|
 | 2.1 | 2026-09-29 | Primera edición de la guía |
 | 2.2 | 2026-09-30 | Medición cada 10 s; guía orientada a producción |
+| 2.4 | 2026-11-13 | Notificación desde Warning; «sin datos SNMP» solo si el equipo responde ping y «pérdida de paquetes» excluye la caída total, para evitar falsas alertas al recuperarse un tramo |
 | 2.3 | 2026-11-12 | Revisión técnica contra el código. Se agregan las secciones de disponibilidad por ICMP, métricas con unidad por tipo de equipo, fundamento de los umbrales y validación en laboratorio; se completan las tablas de alertas de Mikrotik y UniFi y la referencia de OIDs |
