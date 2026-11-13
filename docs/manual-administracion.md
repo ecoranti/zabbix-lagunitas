@@ -307,7 +307,7 @@ radio se saturan o el servidor queda corto de recursos, subirlo a `30s` o `1m`.
 
 ### Notificaciones
 
-La acción *Las Lagunitas - Notificar caídas* avisa los problemas de severidad Average o mayor al
+La acción *Las Lagunitas - Notificar caídas* avisa los problemas de severidad Warning o mayor al
 grupo *Operadores Las Lagunitas* por todos sus medios, envía un recordatorio a los 30 minutos si
 el problema sigue abierto y avisa la recuperación y las actualizaciones (por ejemplo, un
 *Acknowledge*). Los problemas suprimidos por mantenimiento no se notifican. Configuración de
@@ -596,7 +596,7 @@ Corregir el archivo y repetir `bin/lagunitas validar`. Si el error es de YAML, p
 comillas los textos que contengan dos puntos o numeral.
 
 **Las notificaciones no llegan.** `bin/lagunitas probar-telegram`; luego *Reports → Action log*.
-Recordar que solo se notifican los problemas de severidad Average o mayor y que no se notifican
+Recordar que solo se notifican los problemas de severidad Warning o mayor y que no se notifican
 los equipos en mantenimiento.
 
 **El widget "Red Las Lagunitas" no aparece o el reporte no está en el menú.**

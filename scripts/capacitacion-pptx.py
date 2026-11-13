@@ -890,8 +890,8 @@ HIGH: un equipo dejó de responder, o la batería del gateway está en un nivel 
 AVERAGE: algo serio pero parcial: la señal de un enlace está al borde de cortarse, una antena dejó de dar datos o se quedó sin equipos conectados.
 WARNING: algo se está degradando: señal débil, interferencia, se pierden respuestas, la batería está bajando.
 INFORMATION: solo para saber: un equipo se reinició o cambió de versión.
-REGLA PARA RECORDAR: por Telegram llegan únicamente los problemas de gravedad Average o mayor. Los Warning y los Information se ven en el tablero, pero no suenan en el celular. Por eso conviene mirar el tablero cada tanto aunque no haya llegado ningún aviso.
-FUENTE: severidades en lagunitas/templates.py y lagunitas/templates_snmp.py; regla de notificación en lagunitas/alerts.py (severidad mínima 3 = Average).
+REGLA PARA RECORDAR: por Telegram llegan los problemas de gravedad Warning o mayor, así un enlace que se degrada se ve antes de que se corte. Los Information solo se ven en el tablero.
+FUENTE: severidades en lagunitas/templates.py y lagunitas/templates_snmp.py; regla de notificación en lagunitas/alerts.py (severidad mínima 2 = Warning).
 """)
     niveles = [("Disaster", "Desastre", "Toda la red sin conexión a Internet.", True),
                ("High", "Alta", "Un equipo no responde. Voltaje crítico en el gateway.", True),
@@ -909,7 +909,7 @@ FUENTE: severidades en lagunitas/templates.py y lagunitas/templates_snmp.py; reg
         d.chip(10.8, y + 0.14, 1.5, 0.47, "Sí" if tg else "No", AZUL if tg else BLANCO, BLANCO if tg else GRIS, size=15,
                linea=None if tg else GRIS_CLARO)
     d.tarjeta(MX, 6.12, CW, 0.62, AZUL)
-    d.txt(MX + 0.3, 6.12, CW - 0.6, 0.62, "Por Telegram solo llega lo que es Average o más grave. Lo demás se ve en el tablero.",
+    d.txt(MX + 0.3, 6.12, CW - 0.6, 0.62, "Por Telegram llega lo que es Warning o más grave. Information solo se ve en el tablero.",
           size=17, bold=True, color=BLANCO, anchor="m")
 
     # ================================================================ BLOQUE 4
@@ -969,7 +969,7 @@ FUENTE: lagunitas/templates.py (macros ICMP.LATENCIA.WARN e ICMP.PERDIDA.WARN).
 QUÉ DECIR: La señal dice con cuánta fuerza una antena escucha a la otra. Se mide en dBm y siempre es un número negativo. La regla es simple: cuanto más cerca de cero, más fuerte. Menos 60 es mejor que menos 80.
 ANALOGÍA: es como escuchar a alguien que habla desde lejos. Si se aleja, hay árboles en el medio o la antena se movió con el viento, se escucha más bajo.
 VALORES DE REFERENCIA: entre -50 y -65 dBm la señal es buena; entre -65 y {u['senal_warn']} es aceptable.
-CUÁNDO AVISA EL SISTEMA: si el promedio de 10 minutos baja de {u['senal_warn']} dBm abre un problema «señal débil» (Warning, se ve en el tablero). Si baja de {u['senal_crit']} dBm abre «señal crítica» (Average, llega por Telegram): el enlace está al borde de cortarse.
+CUÁNDO AVISA EL SISTEMA: si el promedio de 10 minutos baja de {u['senal_warn']} dBm abre un problema «señal débil» (Warning, llega por Telegram). Si baja de {u['senal_crit']} dBm abre «señal crítica» (Average, llega por Telegram): el enlace está al borde de cortarse.
 OTROS NÚMEROS DE LA PESTAÑA RADIO: el CCQ es el porcentaje de transmisiones que salen bien al primer intento; avisa por debajo de {u['ccq']} %. El piso de ruido mide la interferencia; avisa por encima de {u['ruido']} dBm. El SNR es la diferencia entre señal y ruido; avisa por debajo de {u['snr']} dB. Los tres son Warning y usan el promedio de 15 minutos.
 CAUSAS HABITUALES DE SEÑAL BAJA: antena desalineada por el viento, vegetación que creció en la línea entre antenas, problemas en el otro extremo.
 ENLACES LARGOS: quien administra puede ajustar el umbral para un equipo cuyo enlace es naturalmente más débil.
@@ -994,7 +994,7 @@ FUENTE: umbrales en lagunitas/templates_snmp.py (macros AIRMAX.*); rangos de ref
     d.txt(MX, ey - 0.42, 6, 0.34, "Señal recibida, en dBm", size=14, bold=True, color=GRIS)
     d.txt(ANCHO - MX - 6, ey - 0.42, 6, 0.34, "más lejos de cero: peor", size=14, color=GRIS, align="r")
     d.tarjeta(MX, 5.3, 5.95, 1.3)
-    d.txt(MX + 0.3, 5.3, 5.4, 1.3, [[("Señal débil", {"b": True, "c": AZUL}), f": promedio de 10 min por debajo de {u['senal_warn']} dBm. Warning."],
+    d.txt(MX + 0.3, 5.3, 5.4, 1.3, [[("Señal débil", {"b": True, "c": AZUL}), f": promedio de 10 min por debajo de {u['senal_warn']} dBm. Warning, llega por Telegram."],
                                     [("Señal crítica", {"b": True, "c": AZUL}), f": por debajo de {u['senal_crit']} dBm. Average, llega por Telegram."]],
           size=14, anchor="m", esp=5)
     d.tarjeta(6.8, 5.3, ANCHO - MX - 6.8, 1.3, TINTE_2, GRIS_CLARO)
@@ -1005,7 +1005,7 @@ FUENTE: umbrales en lagunitas/templates_snmp.py (macros AIRMAX.*); rangos de ref
     d.nueva("Batería: el voltaje dice cuánta carga queda", f"""
 QUÉ DECIR: El router Mikrotik informa con cuántos voltios se está alimentando. Si se alimenta de la batería del nodo, ese número indica cómo está la batería. Se ve en la ficha del gateway, pestaña «Router y energía».
 VALORES DE REFERENCIA de una batería de 12 V como las de la red, en reposo: 12,7 V es batería llena; 12,2 V es aproximadamente la mitad; por debajo de 11,8 V la descarga es profunda y la batería se daña.
-CUÁNDO AVISA EL SISTEMA: «voltaje bajo» (Warning, se ve en el tablero) si el promedio de 10 minutos baja de {u['v_warn']} V. «Voltaje crítico» (High, llega por Telegram) si el promedio de 5 minutos baja de {u['v_crit']} V: el nodo está por apagarse. «Voltaje excesivo» (Average, llega por Telegram) si el promedio de 10 minutos supera {u['v_max']} V: puede estar fallando el regulador de carga.
+CUÁNDO AVISA EL SISTEMA: «voltaje bajo» (Warning, llega por Telegram) si el promedio de 10 minutos baja de {u['v_warn']} V. «Voltaje crítico» (High, llega por Telegram) si el promedio de 5 minutos baja de {u['v_crit']} V: el nodo está por apagarse. «Voltaje excesivo» (Average, llega por Telegram) si el promedio de 10 minutos supera {u['v_max']} V: puede estar fallando el regulador de carga.
 QUÉ HACER: mirar si el panel está sucio o tiene sombra, si hubo varios días nublados, y avisar al referente técnico. No desconectar la batería ni el regulador.
 OTRA PISTA: un aviso de «el equipo se reinició» de madrugada, repetido, suele indicar que la batería no llega al amanecer.
 LÍMITE: de día, con sol, el voltaje sube porque el panel está cargando; el dato más útil es el de la noche y la madrugada.
@@ -1027,7 +1027,7 @@ FUENTE: umbrales en lagunitas/templates_snmp.py (macros MIKROTIK.VOLTAJE.*); ref
     d.txt(posv(vm) - 0.6, ey + eh + 0.06, 1.2, 0.32, f"{u['v_max']} V", size=15, bold=True, color=AZUL, align="c")
     d.txt(MX, ey - 0.42, 8, 0.34, "Voltaje de alimentación del router Mikrotik", size=14, bold=True, color=GRIS)
     d.tarjeta(MX, 5.3, 5.95, 1.3)
-    d.txt(MX + 0.3, 5.3, 5.4, 1.3, [[("Voltaje bajo", {"b": True, "c": AZUL}), f": menos de {u['v_warn']} V. Warning, se ve en el tablero."],
+    d.txt(MX + 0.3, 5.3, 5.4, 1.3, [[("Voltaje bajo", {"b": True, "c": AZUL}), f": menos de {u['v_warn']} V. Warning, llega por Telegram."],
                                     [("Voltaje crítico", {"b": True, "c": AZUL}), f": menos de {u['v_crit']} V. High, llega por Telegram."]],
           size=14, anchor="m", esp=5)
     d.tarjeta(6.8, 5.3, ANCHO - MX - 6.8, 1.3, TINTE_2, GRIS_CLARO)
@@ -1063,11 +1063,11 @@ IDEA PARA REPETIR: no hace falta resolver el problema uno mismo; hace falta ente
     d.nueva("Así llega una alarma por Telegram", f"""
 QUÉ DECIR: Las alarmas llegan al grupo de Telegram «Operadores Las Lagunitas». El mensaje con el círculo rojo avisa un problema. Se lee así: primero la gravedad (High), después el equipo y qué le pasa («Nodo Kika: sin respuesta (ICMP)», es decir, no contesta el ping). Debajo, el estado («Caído»), el nombre y la dirección del equipo, y la fecha y hora de inicio.
 Cuando el equipo vuelve, llega un segundo mensaje con la tilde verde, «Resuelto», como respuesta al primero, con cuánto duró el problema. En el ejemplo, un minuto y medio.
-REGLAS: 1) Solo llegan los problemas de gravedad Average o mayor. 2) Si el problema sigue abierto, el aviso se repite una vez, a los {u['repite']} minutos. 3) Siempre se avisa cuando se resuelve. 4) Durante un mantenimiento programado no se envían avisos.
+REGLAS: 1) Llegan los problemas de gravedad Warning o mayor. 2) Si el problema sigue abierto, el aviso se repite una vez, a los {u['repite']} minutos. 3) Siempre se avisa cuando se resuelve. 4) Durante un mantenimiento programado no se envían avisos.
 MUY IMPORTANTE: el bot solo envía. No lee ni contesta lo que se le escriba, así que no sirve responderle. Para coordinar, escriban en el grupo entre personas.
 SI APARECE UN MENSAJE RARO que no parece una alarma, avisar a quien administra: puede haberse filtrado la clave del bot.
 PARA SUMAR A ALGUIEN A LAS ALARMAS: alcanza con agregarlo al grupo de Telegram; lo hace un administrador del grupo.
-FUENTE: lagunitas/alerts.py (plantillas del mensaje, repetición a los {u['repite']} min, severidad mínima Average) y guía de implementación (Seguridad del bot de Telegram). Captura de la prueba de laboratorio (informe, sección Validación).
+FUENTE: lagunitas/alerts.py (plantillas del mensaje, repetición a los {u['repite']} min, severidad mínima Warning) y guía de implementación (Seguridad del bot de Telegram). Captura de la prueba de laboratorio (informe, sección Validación).
 """)
     f = d.imagen("telegram", MX, 1.55, 7.0, 3.5, alt="Mensajes del bot en el grupo de Telegram: aviso de problema y aviso de resuelto", alinear="l")
     d.marca(f, 30, 110, 1)
@@ -1077,7 +1077,7 @@ FUENTE: lagunitas/alerts.py (plantillas del mensaje, repetición a los {u['repit
         ("Qué pasó", "Gravedad, equipo y problema."),
         ("Dónde y cuándo", "Estado, dirección y hora de inicio."),
         ("Resuelto", "Llega solo cuando el equipo vuelve, con la duración.")], size=16, paso=1.15)
-    reglas = [("Solo lo importante", "Gravedad Average o mayor"), ("Recordatorio", f"Una vez, a los {u['repite']} minutos"),
+    reglas = [("Qué llega", "Gravedad Warning o mayor"), ("Recordatorio", f"Una vez, a los {u['repite']} minutos"),
               ("Aviso de resuelto", "Cuando el equipo vuelve"), ("El bot solo envía", "No lee ni responde mensajes")]
     rw = (CW - 3 * 0.2) / 4
     for i, (t, c) in enumerate(reglas):
@@ -1457,7 +1457,7 @@ RESPUESTAS:
 2) «Caído» es el equipo que falló y origina el problema. «Sin servicio» es un equipo que no responde porque cayó otro del que depende.
 3) Es débil: está por debajo de {u['senal_warn']} dBm. Cuanto más cerca de cero, mejor.
 4) Es voltaje bajo (menos de {u['v_warn']} V): la batería se está descargando. Reviso el panel y aviso al referente. Si baja de {u['v_crit']} V es crítico.
-5) No. «Señal débil» es Warning y por Telegram llega solo lo que es Average o mayor. Se ve en el tablero.
+5) Sí. «Señal débil» es Warning y por Telegram llega todo lo que es Warning o mayor.
 6) Unas {sla_tiempo} en un mes de 30 días.
 """)
     preguntas = ["Llega «High: Unión de los Ríos: sin respuesta» y en tu casa no hay Internet. ¿Dónde está el problema?",
@@ -1483,7 +1483,7 @@ PARA QUIEN SE AUTOCAPACITA: si acertaste cuatro o más, ya podés atender una al
                   "Caído es el que falló. Sin servicio es el que perdió el camino por culpa de otro.",
                   f"Débil: está por debajo de {u['senal_warn']} dBm. Más cerca de cero es mejor.",
                   f"Voltaje bajo (menos de {u['v_warn']} V). Revisar el panel y avisar al referente.",
-                  "No. Es Warning: se ve en el tablero. Telegram avisa desde Average.",
+                  "Sí. Es Warning, y Telegram avisa desde Warning.",
                   f"Hasta {sla_tiempo}, en un mes de 30 días."]
     for i, r in enumerate(respuestas):
         x = MX + (i % 2) * (tw + 0.3)

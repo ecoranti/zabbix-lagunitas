@@ -418,7 +418,7 @@ Requiere salida HTTPS desde el servidor hacia `api.telegram.org`.
    problema.
 
 La acción *Las Lagunitas - Notificar caídas* avisa al grupo *Operadores Las Lagunitas* los
-problemas de severidad **Average o mayor**, envía un recordatorio a los 30 minutos si siguen
+problemas de severidad **Warning o mayor**, envía un recordatorio a los 30 minutos si siguen
 abiertos y avisa la recuperación. Los problemas suprimidos por un mantenimiento no se notifican.
 
 ### Seguridad del bot de Telegram

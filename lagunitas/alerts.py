@@ -22,7 +22,7 @@ def ensure_usergroup(api: ZabbixAPI, groupid: str) -> str:
     return api.call("usergroup.create", {"name": GRUPO_USUARIOS, **params})["usrgrpids"][0]
 
 
-def ensure_action(api: ZabbixAPI, hostgroupid: str, usrgrpid: str, severidad_min: int = 3) -> str:
+def ensure_action(api: ZabbixAPI, hostgroupid: str, usrgrpid: str, severidad_min: int = 2) -> str:
     params = {
         "status": 0, "esc_period": "30m", "pause_symptoms": 1, "pause_suppressed": 1,
         "notify_if_canceled": 1,
@@ -85,7 +85,7 @@ def ensure_telegram(api: ZabbixAPI, log=print) -> None:
                                   "selectMedias": ["mediatypeid", "sendto", "active", "severity", "period"]})[0]
     medias = [m for m in admin["medias"] if m["mediatypeid"] != mt["mediatypeid"]]
     medias.append({"mediatypeid": mt["mediatypeid"], "sendto": chat, "active": 0,
-                   "severity": 56, "period": "1-7,00:00-24:00"})  # 56 = average + high + disaster
+                   "severity": 60, "period": "1-7,00:00-24:00"})  # 60 = warning + average + high + disaster
     api.call("user.update", {"userid": admin["userid"], "medias": medias})
     log(f"  Telegram: media type habilitado (mensajes en español) y asignado al usuario Admin (chat {chat})")
 
@@ -93,5 +93,5 @@ def ensure_telegram(api: ZabbixAPI, log=print) -> None:
 def ensure_alerting(api: ZabbixAPI, groups: dict[str, str], log=print) -> None:
     ug = ensure_usergroup(api, groups[SITIO_GRUPO])
     ensure_action(api, groups[SITIO_GRUPO], ug)
-    log(f"  grupo '{GRUPO_USUARIOS}' y acción '{ACCION_NOMBRE}' (severidad >= Average)")
+    log(f"  grupo '{GRUPO_USUARIOS}' y acción '{ACCION_NOMBRE}' (severidad >= Warning)")
     ensure_telegram(api, log)

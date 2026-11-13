@@ -254,6 +254,7 @@ Pasos disponibles para `--solo`: `templates`, `hosts`, `dependencias`, `servidor
 | `bin/lagunitas lab estado` | Lista IP, perfil simulado, estado en el inventario y estado del contenedor |
 | `bin/lagunitas lab caida <equipo> [--solo]` | Detiene el equipo y sus dependientes (con `--solo`, únicamente ese equipo) |
 | `bin/lagunitas lab recuperar <equipo> [--solo]` | Vuelve a iniciarlos |
+| `bin/lagunitas lab pruebas [1\|2\|3]` | Menú interactivo (con flechas) para tirar abajo y levantar equipos; con un número, corre la prueba de validación guiada |
 | `bin/lagunitas lab escenario <equipo> <escenario>` | Aplica una falla de radio o energía al agente SNMP simulado |
 | `bin/lagunitas lab sonda [--intervalo N] [--una-vez]` | Sonda ICMP desde la Mac para los equipos con perfil `icmp_sonda` |
 
@@ -320,6 +321,32 @@ bin/lagunitas lab caida Union_de_los_Rios    # caída troncal: 1 alerta, el rest
 bin/lagunitas lab recuperar Union_de_los_Rios
 bin/lagunitas lab caida Kika --solo          # solo ese equipo, sin sus dependientes
 ```
+
+Las mismas pruebas se pueden hacer desde un menú interactivo (`scripts/pruebas-validacion.sh` o
+`bin/lagunitas lab pruebas`). El menú lista los equipos simulados con su estado y cuántos equipos
+arrastra cada uno, y marca con `↳` los que caerían junto con el seleccionado. Se navega con las
+flechas: `Enter` tira abajo el equipo si está en línea y lo levanta si está caído, `s` hace lo mismo
+solo con ese equipo y `t` levanta todos. El panel inferior muestra los problemas abiertos en Zabbix
+y se actualiza cada 10 s, para comprobar que se abre una sola alerta por la causa raíz y que se
+resuelve al recuperar el equipo. Al salir con `q`, ofrece levantar los equipos que hayan quedado
+caídos.
+
+### Pruebas de validación guiadas
+
+Las tres pruebas de la etapa de validación se corren de punta a punta con
+`scripts/pruebas-validacion.sh N` (o `bin/lagunitas lab pruebas N`). Cada una aplica la falla,
+muestra en vivo los problemas que abre Zabbix y el estado de cada aviso de Telegram (leídos de la
+API), restaura el equipo, espera el cierre y el aviso de resuelto, y termina con un resumen de
+tiempos:
+
+| N | Prueba | Qué hace | Qué se espera |
+|---|---|---|---|
+| 1 | Degradación por SNMP | `senal-debil` en Walter, `interferencia` en Mesada y `bateria-baja` en el Gateway. Restaura con Enter o a los 15 min | 6 o 7 alertas Warning entre los 6 y 11 min (SNR y calidad dependen de la oscilación simulada) y cierre automático en menos de 10 min |
+| 2 | Caída troncal | Detiene Unión de los Ríos y sus 18 dependientes; restaura 60 s después del aviso | Una única alerta High en ~90 s y un único aviso por Telegram |
+| 3 | Telegram | Detiene el Nodo Kika (y el hogar Kika); restaura 60 s después del aviso | Un aviso al grupo de operadores y el aviso de resuelto como respuesta a ese mensaje |
+
+Ctrl+C interrumpe la prueba y restaura los equipos. Las tres pruebas notifican por Telegram
+porque la acción avisa desde Warning.
 
 `caida` detiene también a los equipos aguas abajo, porque en la red real pierden el camino. Así
 se ve el efecto de las dependencias: **una sola alerta** por la caída troncal. La alerta aparece

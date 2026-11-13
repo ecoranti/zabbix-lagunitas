@@ -333,8 +333,8 @@ el receptor; en ese caso se reduce la potencia de transmisión.
 Relaciones entre alertas: "señal débil" depende de "señal crítica" (se informa solo la más
 grave), "radio AP sin estaciones" depende de "sin datos SNMP", y "sin datos SNMP" depende de la
 caída ICMP del mismo equipo, de modo que un equipo apagado genera una sola alerta. Las alertas de
-severidad Information y Warning se ven en los dashboards y reportes pero no se notifican; la
-acción de notificación avisa a partir de Average.
+severidad Information se ven en los dashboards y reportes pero no se notifican; la acción de
+notificación avisa a partir de Warning.
 
 **Enlaces largos.** Si un enlace es naturalmente débil (por ejemplo -74 dBm estable), ajustar el
 umbral **solo para ese equipo** en el inventario, sin tocar el template:

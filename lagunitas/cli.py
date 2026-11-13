@@ -5,7 +5,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import __version__, alerts, dashboards, diagnostico, hosts, lab, modules, services, templates, topology_map
+from . import __version__, alerts, dashboards, diagnostico, hosts, lab, modules, pruebas, services, templates, topology_map, validacion
 from .config import InventoryError, ROOT, load_env, load_inventory, settings
 from .model import SITIO_GRUPO, TEMPLATE_GRUPO
 from .zbx import ZabbixAPI
@@ -160,7 +160,18 @@ def cmd_lab(args) -> None:
      "escenario": lambda: lab.escenario(inv, args.equipo, args.escenario),
      "caida": lambda: lab.caida(inv, args.equipo, args.solo),
      "recuperar": lambda: lab.recuperar(inv, args.equipo, args.solo),
-     "sonda": lambda: lab.sonda(inv, _api(), args.intervalo, args.una_vez)}[args.accion]()
+     "sonda": lambda: lab.sonda(inv, _api(), args.intervalo, args.una_vez),
+     "pruebas": lambda: (validacion.correr(inv, _api(), int(args.equipo)) if args.equipo
+                         else pruebas.menu(inv, _api_opcional()))}[args.accion]()
+
+
+def _api_opcional() -> ZabbixAPI | None:
+    """API de Zabbix si está disponible: el menú de pruebas funciona igual sin ella."""
+    try:
+        return _api()
+    except Exception as exc:
+        print(f"(aviso) sin conexión a Zabbix, no se mostrarán los problemas: {exc}")
+        return None
 
 
 def main(argv=None) -> None:
@@ -193,8 +204,10 @@ def main(argv=None) -> None:
                    ).set_defaults(func=lambda a: diagnostico.probar_telegram())
 
     l = sub.add_parser("lab", help="simulador de la red en Docker (solo entorno LAB)")
-    l.add_argument("accion", choices=["levantar", "apagar", "estado", "caida", "recuperar", "escenario", "sonda"])
-    l.add_argument("equipo", nargs="?", help="nombre técnico del equipo (caida/recuperar/escenario)")
+    l.add_argument("accion", choices=["levantar", "apagar", "estado", "caida", "recuperar", "escenario", "sonda",
+                                     "pruebas"])
+    l.add_argument("equipo", nargs="?",
+                   help="nombre técnico del equipo (caida/recuperar/escenario) o número de prueba (pruebas 1|2|3)")
     l.add_argument("escenario", nargs="?", help="escenario SNMP: normal, " + ", ".join(lab.ESCENARIOS))
     l.add_argument("--solo", action="store_true",
                    help="caida/recuperar: solo ese equipo, sin sus dependientes")
@@ -206,6 +219,8 @@ def main(argv=None) -> None:
     load_env()
     if getattr(args, "accion", None) in ("caida", "recuperar", "escenario") and not args.equipo:
         p.error("indicá el equipo, ej: bin/lagunitas lab caida Nodo_Kika")
+    if getattr(args, "accion", None) == "pruebas" and args.equipo not in (None, "1", "2", "3"):
+        p.error("pruebas guiadas: 1 (degradación SNMP), 2 (caída troncal) o 3 (Telegram)")
     if getattr(args, "accion", None) == "escenario" and not args.escenario:
         p.error("indicá el escenario, ej: bin/lagunitas lab escenario Mesada senal-debil")
     args.func(args)
